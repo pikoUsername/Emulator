@@ -1,5 +1,5 @@
 class BaseNotFound(Exception):
-    def __init__(self, ctx):
+    pass
 
 class UserNotFound(BaseNotFound):
     pass

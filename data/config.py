@@ -1,6 +1,7 @@
 import asyncio
 from typing import Optional
 import os
+from pathlib import Path
 
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -9,6 +10,8 @@ from src.utils.db_api.api.guild import GuildAPI
 from src.utils.misc.errors import UserNotFound
 
 load_dotenv()
+
+LOGS_BASE_PATH = str(Path(__name__).parent.parent / "logs")
 
 def dstr(key: str, default: Optional[str] = None):
     return str(os.getenv(key, default))
@@ -60,9 +63,13 @@ class UserConfigProxy:
 
         del self._data[key]
 
-class UserConfig:
+class UserConfig(UserConfigProxy):
     def __init__(self, ctx):
-        self.ctx = ctx
+        if not ctx:
+            self.ctx = commands.Context
+        else:
+            self.ctx = ctx
+        super().__init__(ctx)
 
     def proxy(self):
         return UserConfigProxy(self)

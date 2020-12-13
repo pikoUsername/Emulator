@@ -1,6 +1,10 @@
 from discord.ext import commands
 import discord
 
+from .utils.urlcheck import UrlCheck
+
+_ = i18n()
+
 class VimCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -22,3 +26,15 @@ class VimCog(commands.Cog):
 
     @commands.command()
     async def problems(self, ctx: commands.Context):
+        pass
+
+
+
+    @commands.command()
+    async def load_file(self, ctx: commands.Context):
+        check_url = UrlCheck(ctx.message.content)
+        check = check_url.check()
+
+        if check is False:
+            return await ctx.send(_("Dont try load other file, we only load from cdn.discord.com"))
+
