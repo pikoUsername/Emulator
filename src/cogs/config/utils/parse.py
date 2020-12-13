@@ -1,0 +1,2 @@
+class ConfigParserFile:
+    pass
