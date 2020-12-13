@@ -3,7 +3,7 @@ import discord
 
 from .utils.urlcheck import UrlCheck
 
-_ = i18n()
+_ = i18n.getext
 
 class VimCog(commands.Cog):
     def __init__(self, bot):
@@ -18,16 +18,23 @@ class VimCog(commands.Cog):
         pass
 
     @commands.command()
-    async def go_to(self, ctx: commands.Context, *, line: str):
+    async def go_to_line(self, ctx: commands.Context, *, line: str):
         if not line.isdigit():
             return
 
-        # here goto to file
+        # here goto to line file
+
+    @commands.command()
+    async def go_to_file(self, ctx: commands.Context, *, file: str):
+        pass
 
     @commands.command()
     async def problems(self, ctx: commands.Context):
         pass
 
+    @commands.command()
+    async def remove_line(self, ctx: commands.Context, *, line: str):
+        if not line.isdigit():
 
 
     @commands.command()

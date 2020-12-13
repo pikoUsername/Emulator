@@ -1,8 +1,9 @@
-import datetime
 from typing import List
 
 import sqlalchemy as sa
 from gino import Gino
+
+from data.base_cfg import POSTGRES_URI
 
 db = Gino()
 
@@ -22,8 +23,8 @@ class BaseModel(db.Model):
         return f"<{model} {values_str}>"
 
 async def create_db(drop: bool=True):
-    await db.set_bind()
+    await db.set_bind(POSTGRES_URI)
 
     if drop:
         await db.gino.drop_all()
-    await db.gino.create_all
+    await db.gino.create_all()
