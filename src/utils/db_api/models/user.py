@@ -6,5 +6,6 @@ class User:
     user_id: int
     user_name: str
     state=None
-    files_path=None
+    files_path: File
+    file: {files_path}str
     """

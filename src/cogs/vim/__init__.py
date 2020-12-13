@@ -19,3 +19,6 @@ class VimCog(commands.Cog):
             return
 
         # here goto to file
+
+    @commands.command()
+    async def problems(self, ctx: commands.Context):

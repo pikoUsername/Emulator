@@ -1,8 +1,10 @@
-class File:
+from .base import db, BaseModel
+
+class File(BaseModel):
     """
     describes:
     id: int
     path: int
-    text: BigText
+    file: str
     line: int
     """
