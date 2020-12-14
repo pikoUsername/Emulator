@@ -1,16 +1,21 @@
 import asyncio
 
+import typing
 import discord
 from discord.ext import commands
 from loguru import logger
 
 from data.config import dstr, dbool
-from src.utils.db_api.models.base import create_db
+from src.db.base import create_db
 from data.config import UserConfig
-from src.utils.misc import log
+from src.utils import log
+from src.utils.fsm_storage.storage import FSMContext
+from src.db.guild import Guild
+from src.db.user import User
 
 class Bot(commands.AutoShardedBot):
     def __init__(self, *args, **kwargs):
+        self.storage = kwargs.get("storage")
         super().__init__(*args, **kwargs)
 
         self._main_loop = asyncio.get_event_loop()
@@ -49,7 +54,17 @@ class Bot(commands.AutoShardedBot):
             except asyncio.TimeoutError:
                 pass
 
+    def current_state(self, *,
+                      guild: typing.Union[str, int, None] = None,
+                      user: typing.Union[str, int, None] = None) -> FSMContext:
+        if guild is None:
+            guild_obj = Guild.get_current()
+            guild = guild_obj.id if guild_obj else None
+        if user is None:
+            user_obj = User.get_current()
+            user = user_obj.id if user_obj else None
 
+        return FSMContext(storage=self.storage, chat=guild, user=user)
 
 
 

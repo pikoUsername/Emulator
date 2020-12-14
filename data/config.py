@@ -6,8 +6,9 @@ from pathlib import Path
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from src.utils.db_api.api.guild import GuildAPI
-from src.utils.misc.errors import UserNotFound
+from src.db.guild import GuildAPI, Guild
+from src.db.user import User
+from src.utils.errors import UserNotFound
 
 load_dotenv()
 
@@ -22,33 +23,29 @@ def dint(key: str, default: Optional[int] = 0):
 def dbool(key: str, default: Optional[bool]=True):
     return os.getenv(key, default)
 
-class UserConfigProxy:
+class ConfigProxy:
     def __init__(self, ctx):
         self.ready_event = asyncio.Event()
         self._data = {}
-        self.ctx: commands.Context = ctx
 
     async def wait_until_ready(self):
         await self.ready_event.wait()
 
     async def update(self, data=None, **kwargs):
+        await self.update_guild_config(**kwargs)
+
+    async def _check_user(self):
+        user = User.get_current().id
+
+        if not user:
+            return
+
+        return user
+
+    async def update_guild_config(self, *args, **kwargs):
         await self._check_user()
-        await self.update_user_config(**kwargs)
 
-    async def update_user_config(self, *args, **kwargs):
-        await self._check_user()
-
-        user_id = self.ctx.message.author.id
-
-
-    async def _check_user(self, *args, **kwargs):
-        ctx = self.ctx
-
-        guild_model = await GuildAPI.get_guild(ctx.guild.id)
-
-        if guild_model is None:
-            raise UserNotFound("This User Dont exists in Bot DB!", self.ctx)
-
+        # here update config of user
 
     def __getitem__(self, item):
         return self._data[item]
@@ -63,7 +60,7 @@ class UserConfigProxy:
 
         del self._data[key]
 
-class UserConfig(UserConfigProxy):
+class UserConfig(ConfigProxy):
     def __init__(self, ctx):
         if not ctx:
             self.ctx = commands.Context
@@ -72,5 +69,5 @@ class UserConfig(UserConfigProxy):
         super().__init__(ctx)
 
     def proxy(self):
-        return UserConfigProxy(self)
+        return ConfigProxy(self)
 

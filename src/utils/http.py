@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 
-from src.utils.misc import cache
+from src.utils import cache
 
 
 # From https://github.com/AlexFlipnote/discord_bot.py/blob/master/utils/http.py
