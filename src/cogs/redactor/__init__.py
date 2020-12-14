@@ -4,6 +4,8 @@ from loguru import logger
 
 from .utils.urlcheck import UrlCheck
 from src.db.user import UserApi
+from src.utils.file_manager import FileManager
+from data.config import dstr
 
 class TextRedacotorCog(commands.Cog):
     def __init__(self, bot):
@@ -24,8 +26,14 @@ class TextRedacotorCog(commands.Cog):
 
 
     @commands.command()
-    async def add(self, ctx: commands.Context, *, kwargs):
-        pass
+    async def add(self, ctx: commands.Context, *, text):
+        user = await UserApi.get_user_by_id(ctx.author.id)
+
+        if not user:
+            await ctx.send(f"You must be a registrated as a user, type {dstr('PREFIX')}start")
+            return
+
+
 
     @commands.command()
     async def delete(self, ctx: commands.Context, **kwargs):

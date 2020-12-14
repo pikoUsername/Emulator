@@ -44,5 +44,27 @@ class FileManager:
     async def open_file(self, filename: str):
         pass
 
+    def _write_to_file(self, text: str):
+        current_file = self.user.current_file
+
+        if not self.list_files:
+            return
+
+        with open(current_file, "w") as file:
+            file.write(text)
+
+    async def write_to_file(self, text: str):
+        if not text:
+            return
+
+        loop = self._loop
+        loop.run_in_executor(None, self._write_to_file, text)
+
+    @property
     async def list_files(self):
         file_path = self.path
+
+        files = os.listdir(file_path)
+        if not files:
+            return
+        return files

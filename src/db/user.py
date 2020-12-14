@@ -1,6 +1,7 @@
 import discord
 
 from .base import BaseModel, db
+from data.base_cfg import BASE_PATH
 
 class User(BaseModel):
     """
@@ -37,10 +38,10 @@ class UserApi:
             return old_user
 
         new_user = User()
-        new_user.user_path = f"guild_{guild.id}/{user.name}"
+        new_user.user_path = fr"{BASE_PATH}guild_{guild.id}\{user.name}"
         new_user.user_id = user.id
         new_user.username = user.name
-        new_user.current_file = None
+        new_user.current_file = fr"{BASE_PATH}guild_{guild.id}\{user.name}\main.py"
         
         await new_user.create()
         return new_user

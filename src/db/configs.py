@@ -15,6 +15,5 @@ class Config(BaseModel):
     query: db.sql.Select
 
     id = db.Column(db.Integer, db.Sequence("config_id_seq"), primary_key=True)
-    name = db.Column(db.String(100))
-
-
+    prefix = db.Columb(db.String(10))
+    

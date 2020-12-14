@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from .config import dstr, dint
+
+BASE_PATH = str(Path(__name__).parent.parent / "files")
 
 POSTGRES_NAME = dstr("DB_NAME")
 POSTGRES_HOST = dstr("DB_HOST")
