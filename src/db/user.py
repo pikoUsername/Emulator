@@ -9,7 +9,6 @@ class User(BaseModel):
     user_name: str
     current_state=None
     current_file: str
-    user_path: {guild.id}/{username}/
     """
     __tablename__ = 'users'
 
