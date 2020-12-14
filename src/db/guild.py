@@ -4,6 +4,7 @@ from sqlalchemy import ForeignKey
 import discord
 # here guild register
 from .base import BaseModel, db
+from data.base_cfg import BASE_PATH
 
 
 class Guild(BaseModel):
@@ -18,7 +19,6 @@ class Guild(BaseModel):
 
     def __repr__(self):
         return "<Guild(id='{0.id}', guild_id='{0.guild_id}', guild_name='{0.guild_name}'".format(self)
-
 
 
 class GuildAPI:
@@ -37,6 +37,8 @@ class GuildAPI:
         new_guild.guild_id = guild.id
         new_guild.guild_name = guild.name
 
+        await new_guild.create()
+        return new_guild
 
     async def change_config_guild(self, guild: discord.Guild):
         pass
@@ -53,8 +55,4 @@ class GuildAPI:
         if not guild_:
             await self.create_guild_folder(guild)
 
-        base_path = str(Path(__name__).parent.parent / "files")
-        return f"{base_path}/{guild.id}"
-
-
-
+        return f"{BASE_PATH}guild_{guild.id}"

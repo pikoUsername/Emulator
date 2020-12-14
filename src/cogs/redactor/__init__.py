@@ -40,14 +40,6 @@ class TextRedacotorCog(commands.Cog):
         pass
 
     @commands.command()
-    async def go_to_line(self, ctx: commands.Context, *, line: str):
-        if not line.isdigit():
-            return
-
-
-        # here goto to line file
-
-    @commands.command()
     async def go_to_file(self, ctx: commands.Context, *, file: str):
         pass
 
