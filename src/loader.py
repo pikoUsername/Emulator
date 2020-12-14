@@ -1,42 +1,42 @@
 import asyncio
 
-import typing
 import discord
 from discord.ext import commands
 from loguru import logger
 
-from data.config import dstr, dbool
 from src.db.base import create_db
-from data.config import UserConfig
 from src.utils import log
-from src.db.guild import Guild
-from src.db.user import User
+from data.config import dstr, dbool
 
 class Bot(commands.AutoShardedBot):
-    def __init__(self, *args, **kwargs):
-        self.storage = kwargs.get("storage")
-        super().__init__(*args, **kwargs)
+    def __init__(self):
+        super().__init__(command_prefix=dstr("PREFIX", "text"),
+                         help_attrs=dict(hidden=True), pm_help=None,)
 
         self._main_loop = asyncio.get_event_loop()
         self.token = dstr("BOT_TOKEN", None)
         self._drop_after_restart = dbool("DROP_AFTER_RESTART", True)
         self._connected = asyncio.Event()
-        self.config = UserConfig
+
+    async def on_ready(self):
+        await self.wait_for_connected()
+        logger.info("BOT READY")
 
     async def on_message(self, message: discord.Message):
         if message.author.bot or self.is_ready():
             return
 
+        message.content.lower()
         await self.process_commands(message)
 
     async def wait_for_connected(self) -> None:
         await self.wait_until_ready()
         await self._connected.wait()
-        await self.config.wait_until_ready()
 
     async def run_itself(self):
         _loop = self._main_loop
 
+        await create_db()
         log.setup()
 
         try:
