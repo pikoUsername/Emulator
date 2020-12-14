@@ -1,12 +1,27 @@
 from discord.ext import commands
 import discord
+from loguru import logger
 
-from .utils.delete import DeleteCheck
 from .utils.urlcheck import UrlCheck
+from src.db.user import UserApi
 
 class TextRedacotorCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command()
+    async def start(self, ctx: commands.Context):
+        user = await UserApi.get_user_by_id(ctx.author.id)
+
+        if not user:
+            try:
+                await UserApi.add_new_user(ctx.author, ctx.guild)
+                await ctx.send("You was loged in, and you have a folder!")
+            except Exception as e:
+                logger.exception(e)
+                await ctx.send(f"ERROR:{e}")
+                return
+
 
     @commands.command()
     async def add(self, ctx: commands.Context, *, kwargs):
@@ -62,7 +77,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def mkdir(self, ctx: commands.Context, *, name: str):
-        pass # here creating file(only owner)
+        pass # here creating folder(only owner)
 
 def setup(bot):
     bot.add_cog(TextRedacotorCog(bot))
