@@ -18,7 +18,7 @@ class User(BaseModel):
     user_id = db.Column(db.Integer())
     username = db.Column(db.String(200))
     current_file = db.Column(db.String(100))
-    current_path = db.Column(db.String(200))
+    user_path = db.Column(db.String(200))
     # current_state = db.Column(db.String())
 
     def __repr__(self):
@@ -37,7 +37,7 @@ class UserApi:
             return old_user
 
         new_user = User()
-        new_user.current_path = f"guild_{guild.id}/{user.name}"
+        new_user.user_path = f"guild_{guild.id}/{user.name}"
         new_user.user_id = user.id
         new_user.username = user.name
         new_user.current_file = None

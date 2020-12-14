@@ -5,6 +5,7 @@ from src.db.user import User
 
 class FileManager:
     def __init__(self, user: User, path: str=None):
+        self.user = user
         if not path:
             self.path = user.get_current().user_path
         else:
@@ -28,3 +29,20 @@ class FileManager:
             return
         with open(f"{self.path}/{name}.{type_}", "w"):
             pass
+
+    async def remove_file(self, filename: str):
+        user = self.user
+        user_path = user.user_path
+
+        if not os.path.exists(f"{user_path}/{filename}"):
+            return
+        if not filename:
+            return
+        await self._loop.run_in_executor(None, os.remove, filename)
+
+
+    async def open_file(self, filename: str):
+        pass
+
+    async def list_files(self):
+        file_path = self.path
