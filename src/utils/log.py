@@ -27,5 +27,5 @@ class InterceptHandler(logging.Handler):
 def setup():
     logger.add(sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO")
     logger.add(config.LOGS_BASE_PATH + "/file_{time}.log")
-    logger.disable("sqlalchemy_log")
+    logger.disable("sqlalchemy.engine.base")
     logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)

@@ -13,11 +13,11 @@ class TextRedacotorCog(commands.Cog):
 
     @commands.command()
     async def start(self, ctx: commands.Context):
-        user = await UserApi.get_user_by_id(ctx.author.id)
+        user = await UserApi.get_user_by_id(user_id=ctx.author.id)
 
         if not user:
             try:
-                await UserApi.add_new_user(ctx.author, ctx.guild)
+                await UserApi.add_new_user(user=ctx.author, guild=ctx.guild)
                 await ctx.send("You was loged in, and you have a folder!")
             except Exception as e:
                 logger.exception(e)
@@ -34,7 +34,6 @@ class TextRedacotorCog(commands.Cog):
             return
 
 
-
     @commands.command()
     async def delete(self, ctx: commands.Context, **kwargs):
         pass
@@ -43,11 +42,6 @@ class TextRedacotorCog(commands.Cog):
     async def go_to_file(self, ctx: commands.Context, *, file: str):
         pass
 
-    @commands.command()
-    async def change_line(self, ctx: commands.Context, *, text: str):
-        if len(text) <= 200:
-            await ctx.send("Limit 200 letters")
-            return
 
     @commands.command()
     async def remove_line(self, ctx: commands.Context, *, line: str):

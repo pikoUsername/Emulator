@@ -19,7 +19,7 @@ class DiscordEvents(commands.Cog):
         logger.info("<User name={0.author.name}, id={0.id}, content={0.content}>".format(msg))
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx, err):
+    async def on_command_error(self, ctx: commands.Context, err):
         if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
             helper = str(ctx.invoked_subcommand) if ctx.invoked_subcommand else str(ctx.command)
             await ctx.send_help(helper)
@@ -33,16 +33,16 @@ class DiscordEvents(commands.Cog):
                     "Both error and command will be ignored."
                 )
 
-            await ctx.send(f"There was an error processing the command ;-;\n{err}")
+            await ctx.send(f"There was an error processing the command ;-;\n{err}", delete_after=30)
 
         elif isinstance(err, errors.CheckFailure):
             pass
 
         elif isinstance(err, errors.MaxConcurrencyReached):
-            await ctx.send("You've reached max capacity of command usage at once, please finish the previous one...")
+            await ctx.send("You've reached max capacity of command usage at once, please finish the previous one...", delete_after=30)
 
         elif isinstance(err, errors.CommandOnCooldown):
-            await ctx.send(f"This command is on cooldown... try again in {err.retry_after:.2f} seconds.")
+            await ctx.send(f"This command is on cooldown... try again in {err.retry_after:.2f} seconds.", delete_after=30)
 
         elif isinstance(err, errors.CommandNotFound):
             pass

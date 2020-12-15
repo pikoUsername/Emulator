@@ -1,8 +1,9 @@
-from pathlib import Path
+import asyncio
+import os
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, sql
 import discord
-# here guild register
+
 from .base import BaseModel, db
 from data.base_cfg import BASE_PATH
 
@@ -10,10 +11,10 @@ from data.base_cfg import BASE_PATH
 class Guild(BaseModel):
     __tablename__ = 'guilds'
 
-    query: db.sql.Select
+    query: sql.Select
 
     id = db.Column(db.Integer, db.Sequence("user_id_seq"), primary_key=True)
-    guild_id = db.Column(db.Integer)
+    guild_id = db.Column(db.BigInteger)
     guild_name = db.Column(db.String(200))
     config = ForeignKey('Config')
 
@@ -40,14 +41,14 @@ class GuildAPI:
         await new_guild.create()
         return new_guild
 
-    async def change_config_guild(self, guild: discord.Guild):
-        pass
 
     async def create_guild_folder(self, guild: discord.Guild): # create folder in FILES path, and file path ll base on guild.id
         await self.add_guild(guild)
-
         # here creating folder
-        pass
+        loop = asyncio.get_event_loop()
+
+        await loop.run_in_executor(None, os.mkdir, f"{BASE_PATH}guild_{guild.id}")
+
 
     async def get_guild_path(self, guild: discord.Guild):
         guild_ = await self.get_guild(guild.id)

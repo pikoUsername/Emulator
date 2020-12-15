@@ -1,4 +1,5 @@
 import discord
+from sqlalchemy import sql
 
 from .base import BaseModel, db
 from data.base_cfg import BASE_PATH
@@ -13,14 +14,13 @@ class User(BaseModel):
     """
     __tablename__ = 'users'
 
-    query: db.sql.Select
+    query: sql.Select
 
     id = db.Column(db.Integer(), db.Sequence("user_id_seq"), primary_key=True)
-    user_id = db.Column(db.Integer())
+    user_id = db.Column(db.BigInteger())
     username = db.Column(db.String(200))
     current_file = db.Column(db.String(100))
     user_path = db.Column(db.String(200))
-    # current_state = db.Column(db.String())
 
     def __repr__(self):
         return "<Users id='{0.id}', user_id='{0.user_id}', name='{0.name}', user_path='{0.user_path}'>".format(self)
@@ -31,8 +31,9 @@ class UserApi:
         user = await User.query.where(User.user_id == user_id).gino.first()
         return user
 
-    async def add_new_user(self, user: discord.User, guild: discord.Guild):
-        old_user = await self.get_user_by_id(user.id)
+    @staticmethod
+    async def add_new_user(user: discord.User, guild: discord.Guild):
+        old_user = await User.query.where(User.user_id == user.id).gino.first()
 
         if old_user:
             return old_user

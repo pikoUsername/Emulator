@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 import os
 from pathlib import Path
 
@@ -16,3 +16,6 @@ def dint(key: str, default: Optional[int] = 0):
 
 def dbool(key: str, default: Optional[bool]=True):
     return os.getenv(key, default)
+
+def dlist(key: str, default: Union[str, int]):
+    return [os.getenv(key, default)]
