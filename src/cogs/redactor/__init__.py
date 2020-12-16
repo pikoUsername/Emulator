@@ -21,16 +21,18 @@ class TextRedacotorCog(commands.Cog):
         if not user:
             try:
                 await UserApi.add_new_user(user=ctx.author, guild=ctx.guild)
-                await ctx.send("You was loged in, and you have a folder!")
+                await ctx.send("You was logged in, and you have a folder!")
 
                 user_ = await UserApi.get_user_by_id(ctx.author.id)
                 fm =    FileManager(self.bot.loop)
 
-                await fm.create_user_folder(guild=ctx.guild)
+                if not guild:
+                    return await fm.create_user_folder(user_, guild)
+                await fm.create_user_folder(user=user_, guild=guild)
             except Exception as e:
                 logger.exception(e)
-                return
-
+                return await ctx.send("ERROR in creating folder and main.py script!")
+        await ctx.send("Succes created folder with ur name!")
 
     @commands.command()
     async def add(self, ctx: commands.Context, *, text):
@@ -40,7 +42,7 @@ class TextRedacotorCog(commands.Cog):
             await ctx.send(f"You must be a registrated as a user, type {dstr('PREFIX')}start")
             return
 
-        self.userapi.get_user_by_id()
+
 
     @commands.command()
     async def delete(self, ctx: commands.Context, **kwargs):

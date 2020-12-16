@@ -1,9 +1,8 @@
 from discord.ext import commands
-from discord.ext.commands import errors
 import discord
 from loguru import logger
 
-from data.config import dstr
+from src.utils.file_manager import FileManager
 
 class DiscordEvents(commands.Cog):
     def __init__(self, bot):
@@ -26,6 +25,11 @@ class DiscordEvents(commands.Cog):
         if not ctx.guild:
             logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}")
         logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}, guild: {ctx.guild.name}")
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: discord.Guild):
+        fm = FileManager(self.bot.loop)
+        await fm.create_guild_folder(guild)
 
 def setup(bot):
     bot.add_cog(DiscordEvents(bot))

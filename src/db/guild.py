@@ -56,4 +56,5 @@ class GuildAPI:
         if not guild_:
             await self.create_guild_folder(guild)
 
-        return f"{BASE_PATH}guild_{guild.id}"
+        return fr"{BASE_PATH}\\guild_{guild.id}"
+

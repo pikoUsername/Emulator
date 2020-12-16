@@ -32,7 +32,7 @@ class UserApi:
         return user
 
     @staticmethod
-    async def add_new_user(user: discord.User, guild: discord.Guild):
+    async def add_new_user(user: discord.User, guild: discord.Guild=None):
         old_user = await User.query.where(User.user_id == user.id).gino.first()
 
         if old_user:
@@ -41,11 +41,11 @@ class UserApi:
         new_user = User()
 
         if not guild:
-            new_user.user_path = fr"\{BASE_PATH}\{user.name}"
-            new_user.current_file = fr"\{BASE_PATH}\{user.name}"
+            new_user.user_path = fr"{BASE_PATH}\{user.name}"
+            new_user.current_file = fr"{BASE_PATH}\{user.name}"
         else:
-            new_user.user_path = fr"\{BASE_PATH}\guild_{guild.id}\{user.name}"
-            new_user.current_file = fr"\{BASE_PATH}\guild_{guild.id}\{user.name}\main.py"
+            new_user.user_path = fr"{BASE_PATH}\guild_{guild.id}\{user.name}"
+            new_user.current_file = fr"{BASE_PATH}\guild_{guild.id}\{user.name}\main.py"
 
         new_user.user_id = user.id
         new_user.username = user.name
