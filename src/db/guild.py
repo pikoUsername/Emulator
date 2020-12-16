@@ -47,7 +47,7 @@ class GuildAPI:
         # here creating folder
         loop = asyncio.get_event_loop()
 
-        await loop.run_in_executor(None, os.mkdir, f"{BASE_PATH}guild_{guild.id}")
+        await loop.run_in_executor(None, os.mkdir, fr"{BASE_PATH}\\guild_{guild.id}")
 
 
     async def get_guild_path(self, guild: discord.Guild):

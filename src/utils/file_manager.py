@@ -2,6 +2,7 @@ import asyncio
 import os
 
 from src.db.user import User
+from src.db.guild import Guild
 
 class FileManager:
     def __init__(self, loop=None):
@@ -50,7 +51,7 @@ class FileManager:
             return
 
         loop = self._loop
-        loop.run_in_executor(None, self._write_to_file, text)
+        await loop.run_in_executor(None, self._write_to_file, text)
 
     def list_files(self, user: User):
         file_path = user.user_path
@@ -59,3 +60,20 @@ class FileManager:
         if not files:
             return
         return files
+
+    @staticmethod
+    def _create_user_folder(guild: Guild):
+        guild_path = f"guild_{guild.guild_id}"
+
+        if not guild_path:
+            return
+        elif os.path.exists(guild_path):
+            return
+
+        os.mkdir(guild_path)
+
+    async def create_user_folder(self, guild: Guild):
+        if not guild:
+            return
+
+        await self._loop.run_in_executor(None, self._create_user_folder, guild)

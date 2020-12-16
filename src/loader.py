@@ -1,5 +1,4 @@
 import asyncio
-from io import BytesIO
 from typing import List
 import os
 
@@ -25,7 +24,7 @@ class Bot(commands.AutoShardedBot):
         self.token = dstr("BOT_TOKEN", None)
         self._drop_after_restart = dbool("DROP_AFTER_RESTART", True)
         self._connected = asyncio.Event()
-        self._error_channel = None
+        self.error_channel = None
         self._extensions = [
             "src.cogs.events",
             "src.cogs.redactor",
@@ -40,7 +39,7 @@ class Bot(commands.AutoShardedBot):
         if error_channel_id:
             channel = self.get_channel(error_channel_id)
             if isinstance(channel, discord.TextChannel):
-                self._error_channel = channel
+                self.error_channel = channel
 
         await self.wait_for_connected()
         logger.info("BOT READY")
@@ -92,18 +91,21 @@ class Bot(commands.AutoShardedBot):
             await ctx.send("You've reached max capacity of command usage at once, please finish the previous one...", delete_after=30)
 
         elif isinstance(err, errors.CommandOnCooldown):
-            await ctx.send(f"This command is on cooldown... try again in {err.retry_after:.2f} seconds.", delete_after=30)
+            await ctx.send(f"This command is on cool down... try again in {err.retry_after:.2f} seconds.", delete_after=30)
 
         elif isinstance(err, errors.CommandNotFound):
             pass
 
+        elif isinstance(err, errors.NoPrivateMessage):
+            pass
+
         else:
             file = self.get_last_log_file()
-            await self._error_channel.send(file=file)
+            await self.error_channel.send(file=file)
 
     async def get_last_log_file(self):
         """
-        gets logs from diroctory /logs/  and return it
+        gets logs from directory /logs/  and return it
         in file format
 
         :return:
@@ -121,7 +123,7 @@ class Bot(commands.AutoShardedBot):
             with open(last_log, "r") as file:
                 return file
         except Exception as e:
-            logger.error(f"Untrecked exception: {e}")
+            logger.error(f"Untracked exception: {e}")
 
     async def on_message(self, message: discord.Message):
         if message.author.bot:

@@ -1,27 +1,34 @@
 from discord.ext import commands
-import discord
 from loguru import logger
 
 from .utils.urlcheck import UrlCheck
 from src.db.user import UserApi
+from src.db.guild import GuildAPI
 from src.utils.file_manager import FileManager
 from data.config import dstr
 
 class TextRedacotorCog(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: 'Bot' = bot
+        self.userapi = UserApi()
 
     @commands.command()
+    @commands.guild_only()
     async def start(self, ctx: commands.Context):
         user = await UserApi.get_user_by_id(user_id=ctx.author.id)
+        guild = await GuildAPI.get_guild(ctx.guild.id)
 
         if not user:
             try:
                 await UserApi.add_new_user(user=ctx.author, guild=ctx.guild)
                 await ctx.send("You was loged in, and you have a folder!")
+
+                user_ = await UserApi.get_user_by_id(ctx.author.id)
+                fm =    FileManager(self.bot.loop)
+
+                await fm.create_user_folder(guild=ctx.guild)
             except Exception as e:
                 logger.exception(e)
-                await ctx.send(f"ERROR:{e}")
                 return
 
 
@@ -33,6 +40,7 @@ class TextRedacotorCog(commands.Cog):
             await ctx.send(f"You must be a registrated as a user, type {dstr('PREFIX')}start")
             return
 
+        self.userapi.get_user_by_id()
 
     @commands.command()
     async def delete(self, ctx: commands.Context, **kwargs):

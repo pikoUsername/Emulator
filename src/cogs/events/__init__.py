@@ -23,6 +23,8 @@ class DiscordEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
+        if not ctx.guild:
+            logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}")
         logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}, guild: {ctx.guild.name}")
 
 def setup(bot):

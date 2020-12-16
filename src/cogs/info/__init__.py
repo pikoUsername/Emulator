@@ -5,7 +5,6 @@ class DiscordInfo(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=["?"])
-    @commands.guild_only()
     async def info(self, ctx: commands.Context):
         return await ctx.send("Github - https://github.com/pikoUsername/Emulator")
 
