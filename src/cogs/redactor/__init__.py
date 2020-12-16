@@ -27,8 +27,8 @@ class TextRedacotorCog(commands.Cog):
                 fm =    FileManager(self.bot.loop)
 
                 if not guild:
-                    return await fm.create_user_folder(user_, guild)
-                await fm.create_user_folder(user=user_, guild=guild)
+                    return await fm.create_user_folder(user_)
+                await fm.create_user_folder(user=user_)
             except Exception as e:
                 logger.exception(e)
                 return await ctx.send("ERROR in creating folder and main.py script!")
