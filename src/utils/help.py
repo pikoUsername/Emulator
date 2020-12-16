@@ -1,46 +1,33 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 
-#
-class HelpCommand(commands.DefaultHelpCommand):
-    def __init__(self):
-        super().__init__(
-            width=90, sort_commands=True, dm_help=True, indent=4,
-        )
+class HelpFormat(commands.DefaultHelpCommand):
+    def get_destination(self, no_pm: bool = False):
+        if no_pm:
+            return self.context.channel
+        else:
+            return self.context.author
 
-    async def on_help_command_error(self, ctx, error):
-        async with ctx.bot.message_lock(ctx.message):
-            try:
-                await self.handle_error(ctx, error)
-            except discord.NotFound:
-                pass
+    async def send_error_message(self, error):
+        destination = self.get_destination(no_pm=True)
+        await destination.send(error)
 
-    async def handle_error(self, ctx, error):
-        reported = False
+    async def send_command_help(self, command):
+        self.add_command_formatting(command)
+        self.paginator.close_page()
+        await self.send_pages(no_pm=True)
 
-        if isinstance(error, commands.errors.CommandInvokeError):
-            error = error.__cause__
+    async def send_pages(self, no_pm: bool = False):
+        try:
+            if discord.Permissions.can_handle(self.context, "add_reactions"):
+                await self.context.message.add_reaction(chr(0x2709))
+        except discord.Forbidden:
+            pass
 
-            if isinstance(error, discord.Forbidden):
-                logger.debug(
-                    "Lacks permissions to send help to %s (%d)",
-                    ctx.author.id,
-                )
-
-                embed = discord.Embed(colour=discord.Colour.red())
-                embed.title = "Cannot send help command"
-                embed.description = (
-                    "You do not allow DMs from this server. "
-                    "Please enable them so help information can be sent."
-                )
-
-                reported = True
-                await ctx.send(embed=embed)
-
-        # Default error handling
-        if not reported:
-            logger.error("Unexpected error raised during help command", exc_info=error)
-            await ctx.bot.report_other_exception(
-                ctx, error, "Unexpected error occurred during help command!",
-            )
+        try:
+            destination = self.get_destination(no_pm=no_pm)
+            for page in self.paginator.pages:
+                await destination.send(page)
+        except discord.Forbidden:
+            destination = self.get_destination(no_pm=True)
+            await destination.send("Couldn't send help to you due to blocked DMs...")

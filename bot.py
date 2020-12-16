@@ -1,10 +1,8 @@
 import asyncio
-import os
 
 from loguru import logger
 
 from src.loader import Bot
-from src.db import db
 
 def main():
     run_bot()
@@ -20,8 +18,10 @@ def run_bot():
     except KeyboardInterrupt:
         logger.info("goodbye")
     finally:
-        loop.run_until_complete(db.drop_all())
-        loop.run_until_complete(bot.logout())
+        try:
+            loop.run_until_complete(bot.logout())
+        except asyncio.TimeoutError:
+            pass
 
 if __name__ == '__main__':
     logger.info("activating main()")

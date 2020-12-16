@@ -10,7 +10,7 @@ from loguru import logger
 from src.utils import log
 from data.config import dstr, dbool, dlist
 from data.config import LOGS_BASE_PATH
-from src.utils.help import HelpCommand
+from src.utils.help import HelpFormat
 from src.utils.file_manager import FileManager
 from src.db.user import UserApi
 from data.base_cfg import POSTGRES_URI
@@ -22,7 +22,7 @@ class Bot(commands.AutoShardedBot):
                          help_attrs=dict(hidden=True), pm_help=None,
                          owner_ids=dlist("OWNERS", 0))
 
-        self.help_command = HelpCommand()
+        self.help_command = HelpFormat()
         self.fm: FileManager = FileManager(self.loop) # Shortcut
         self.uapi = UserApi() # shortcut
         self.token = dstr("BOT_TOKEN", None)
@@ -46,6 +46,8 @@ class Bot(commands.AutoShardedBot):
 
     async def create_db(self):
         await db.set_bind(self.POSTGRES_URI)
+
+        await db.gino.drop_all()
         await db.gino.create_all()
 
     async def on_ready(self):
@@ -165,18 +167,8 @@ class Bot(commands.AutoShardedBot):
                 logger.exception(e)
                 return
 
-        try:
-            await self.create_db()
-            await self.start(self.token)
-        except KeyboardInterrupt:
-            logger.warning("Goodbye!")
-        except Exception as e:
-            logger.exception(f"ERROR: {e}")
-        finally:
-            try:
-                await self.logout()
-            except asyncio.TimeoutError:
-                pass
+        await self.create_db()
+        await self.start(self.token)
 
 
 
