@@ -45,6 +45,7 @@ class Bot(commands.AutoShardedBot):
         return f"<Bot name='{self.user.name}', id='{self.user.id}'>"
 
     async def create_db(self):
+        logger.info("creating database...")
         await db.set_bind(self.POSTGRES_URI)
 
         await db.gino.drop_all()
@@ -144,7 +145,7 @@ class Bot(commands.AutoShardedBot):
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
-        logger.info("msg here processing")
+
         await self.process_commands(message)
 
     async def wait_for_connected(self) -> None:
@@ -166,6 +167,8 @@ class Bot(commands.AutoShardedBot):
             except Exception as e:
                 logger.exception(e)
                 return
+
+        self.load_extension('jishaku')
 
         await self.create_db()
         await self.start(self.token)
