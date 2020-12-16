@@ -83,7 +83,7 @@ class FileManager:
         os.mkdir(user_path)
 
     @staticmethod
-    def _select_line(line: int, user: User):
+    def _get_line(line: int, user: User):
         """
         get user path and select this, and open it
 
@@ -198,8 +198,8 @@ class FileManager:
         except Exception as e:
             raise e
 
-    async def select_line(self, line: int, user: User):
+    async def get_line(self, line: int, user: User):
         try:
-            await self._loop.run_in_executor(None, self._select_line, line, user)
+            await self._loop.run_in_executor(None, self._get_line, line, user)
         except Exception as e:
             raise e

@@ -38,7 +38,6 @@ class Bot(commands.AutoShardedBot):
         ]
         self.connected_to_database = asyncio.Event()
         self.connected_to_database.set()
-        self.db = self.database = self.database_connection_pool = None
         self.POSTGRES_URI = POSTGRES_URI
 
     def __repr__(self):
@@ -151,11 +150,6 @@ class Bot(commands.AutoShardedBot):
     async def wait_for_connected(self) -> None:
         await self.wait_until_ready()
         await self._connected.wait()
-
-    async def on_message_edit(self, before, after):
-        """Handler for edited messages, re-executes commands"""
-        if before.content != after.content:
-            await self.on_message(after)
 
     async def run_itself(self):
         log.setup()

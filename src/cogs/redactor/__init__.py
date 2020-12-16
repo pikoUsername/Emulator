@@ -54,8 +54,8 @@ class TextRedacotorCog(commands.Cog):
         pass
 
 
-    @commands.command()
-    async def remove_line(self, ctx: commands.Context, *, line: str):
+    @commands.command(aliases=["remove_line"])
+    async def rm_line(self, ctx: commands.Context, *, line: str):
         """
 remove selected line, if you was wrong write ctrl-z
         """
@@ -73,14 +73,23 @@ remove selected line, if you was wrong write ctrl-z
         pass
 
     @commands.command()
-    async def rm_file(self, ctx: commands.Context, *, files: str):
-        for file in files:
-            pass # here deleting files!
-        pass
+    async def rm_file(self, ctx: commands.Context, *, file: str):
+        """
+remove selected file, be cary about it!
+        """
+        user = await self.userapi.get_user_by_id(ctx.author.id)
+
+        if not user:
+            return await ctx.send(f"Type {self.bot.command_prefix}start, and comehere there")
+        await self.fm.remove_file(file, user)
+
 
     @commands.command()
     @commands.is_owner()
     async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
+        """
+make dir in any directory! only owner
+        """
         pass # here creating folder(only for owner)
 
 def setup(bot):
