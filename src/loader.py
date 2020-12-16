@@ -22,7 +22,7 @@ class Bot(commands.AutoShardedBot):
                          owner_ids=dlist("OWNERS", 0))
 
         self.help_command = HelpCommand()
-        self.fm = FileManager(self.loop) # Shortcut
+        self.fm: FileManager = FileManager(self.loop) # Shortcut
         self.uapi = UserApi() # shortcut
         self.token = dstr("BOT_TOKEN", None)
         self._drop_after_restart = dbool("DROP_AFTER_RESTART", True)
@@ -72,12 +72,15 @@ class Bot(commands.AutoShardedBot):
         return os.listdir(LOGS_BASE_PATH)
 
     async def on_command_error(self, ctx: commands.Context, err):
+        file = self.get_last_log_file()
         if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
             helper = str(ctx.invoked_subcommand) if ctx.invoked_subcommand else str(ctx.command)
             await ctx.send_help(helper)
 
         elif isinstance(err, errors.CommandInvokeError):
             logger.exception(err)
+
+            await self.error_channel.send(file=file)
 
             if "2000 or fewer" in str(err) and len(ctx.message.clean_content) > 1900:
                 return await ctx.send(
@@ -103,7 +106,6 @@ class Bot(commands.AutoShardedBot):
             pass
 
         else:
-            file = self.get_last_log_file()
             await self.error_channel.send(file=file)
 
     async def get_last_log_file(self):

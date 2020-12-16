@@ -2,8 +2,10 @@ from discord.ext import commands
 from loguru import logger
 import discord
 
+from src.utils.http import post, get
 from .utils.urlcheck import UrlCheck
-from src.db.user import UserApi
+from src.db.user import UserApi, User
+from src.utils.file_manager import FileManager
 from src.db.guild import GuildAPI
 from data.config import dstr
 
@@ -11,7 +13,7 @@ class TextRedacotorCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.userapi = UserApi()
-        self.fm = self.bot.fm
+        self.fm: FileManager = self.bot.fm
 
     @commands.command()
     @commands.guild_only()
@@ -40,10 +42,8 @@ class TextRedacotorCog(commands.Cog):
         user = await UserApi.get_user_by_id(ctx.author.id)
 
         if not user:
-            await ctx.send(f"You must be a registrated as a user, type {dstr('PREFIX')}start")
+            await ctx.send(f"You must be a registered as a user, type {dstr('PREFIX')}start")
             return
-
-
 
     @commands.command()
     async def delete(self, ctx: commands.Context, **kwargs):
@@ -69,14 +69,6 @@ remove selected line, if you was wrong write ctrl-z
         # here removing line(run in executor)
 
     @commands.command()
-    async def load_file(self, ctx: commands.Context, *, file: str):
-        check_url = UrlCheck(ctx.message.content)
-        check = check_url.check()
-
-        if check is False:
-            return await ctx.send("Dont try load other file, we only load from cdn.discord.com")
-
-    @commands.command()
     async def upload_file(self, ctx: commands.Context, *, filename: str):
         pass
 
@@ -88,8 +80,8 @@ remove selected line, if you was wrong write ctrl-z
 
     @commands.command()
     @commands.is_owner()
-    async def mkdir(self, ctx: commands.Context, *, name: str):
-        pass # here creating folder(only owner)
+    async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
+        pass # here creating folder(only for owner)
 
 def setup(bot):
     bot.add_cog(TextRedacotorCog(bot))
