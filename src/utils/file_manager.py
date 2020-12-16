@@ -149,8 +149,15 @@ class FileManager:
 
         await self._loop.run_in_executor(None, self._create_guild_folder, guild)
 
-    async def _create_user_folder(self, user: User, guild):
+    async def _create_user_folder(self, user: User):
+        """
+        get user_path and
+
+        :param user:
+        :return:
+        """
+
         guild_path = f"guild_{guild.guild_id}"
 
-    async def create_user_folder(self, user: User, guild: Guild):
-        await self.loop.run_in_executor(None, )
+    async def create_user_folder(self, user: User):
+        await self.loop.run_in_executor(None, self._create_user_folder())

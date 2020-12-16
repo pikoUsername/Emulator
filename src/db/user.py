@@ -33,6 +33,14 @@ class UserApi:
 
     @staticmethod
     async def add_new_user(user: discord.User, guild: discord.Guild=None):
+        """
+        Here must be a check, and DM mode
+        create user folder for redacting
+
+        :param user:
+        :param guild:
+        :return:
+        """
         old_user = await User.query.where(User.user_id == user.id).gino.first()
 
         if old_user:
