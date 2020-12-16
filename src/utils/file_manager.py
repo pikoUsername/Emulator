@@ -9,9 +9,93 @@ from data.base_cfg import BASE_PATH
 
 class FileManager:
     def __init__(self, loop=None):
+        """
+        :param loop: need for execute blocking IO
+        """
         if loop is None:
-            self.loop = asyncio.get_event_loop()
-        self._loop = loop
+            self._loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+        self._loop: asyncio.AbstractEventLoop = loop
+
+    @staticmethod
+    def _create_file(name: str, user: User, type_: str = "py") -> None:
+        """
+        Private func
+
+        it uses for creating file, but its blocking io
+        and this func run in executor
+        calling for create file
+
+        :param name:
+        :param user:
+        :param type_:
+        :return:
+        """
+        if not name:
+            return
+        with open(f"{user.user_path}/{name}.{type_}", "w"):
+            pass
+
+    @staticmethod
+    def list_files(user: User) -> List:
+        """
+        Get user path based on user model
+        no checks
+
+        :param user:
+        :return:
+        """
+        file_path = user.user_path
+
+        files = os.listdir(file_path)
+        return files
+
+    @staticmethod
+    def _create_guild_folder(guild: Guild):
+        """
+        Private function
+        |staticmethod|
+
+        create guild folder, and when bot joins guild folder will create
+
+        :param guild:
+        :return:
+        """
+        guild_path = fr"{BASE_PATH}\guild_{guild.guild_id}"
+
+        if os.path.exists(guild_path):
+            return
+
+        try:
+            os.mkdir(guild_path)
+        except Exception as e:
+            raise e
+
+    @staticmethod
+    def _create_user_folder(user: User):
+        """
+        Private function
+        get user_path and create user folder in guild_{guild_id}/ path
+
+        :param user:
+        :return:
+        """
+        user_path = user.user_path
+        os.mkdir(user_path)
+
+    @staticmethod
+    def _select_line(line: int, user: User):
+        """
+        get user path and select this, and open it
+
+        :param line:
+        :param user:
+        :return:
+        """
+        user_file = user.current_file
+        with open(user_file, "r") as f:
+            data = f.readlines()
+
+        return data[line]
 
     async def create_file(self, file_name: str, user: User, type_: str="py"):
         """
@@ -30,24 +114,6 @@ class FileManager:
             await self._loop.run_in_executor(None, self._create_file, file_name, type_)
         else:
             return
-
-    def _create_file(self, name: str, user: User, type_: str="py") -> None:
-        """
-        Private func
-
-        it uses for creating file, but its blocking io
-        and this func run in executor
-        calling for create file
-
-        :param name:
-        :param user:
-        :param type_:
-        :return:
-        """
-        if not name:
-            return
-        with open(f"{user.user_path}/{name}.{type_}", "w"):
-            pass
 
     async def remove_file(self, filename: str, user: User):
         """
@@ -80,6 +146,8 @@ class FileManager:
 
     def _write_to_file(self, text: str, user: User):
         """
+        Private function
+
         checks for user current file if not current file
         function dissmiss it.
         in stock user.current_file is main.py, starter script
@@ -111,57 +179,27 @@ class FileManager:
         loop = self._loop
         await loop.run_in_executor(None, self._write_to_file, text, user)
 
-    def list_files(self, user: User) -> List:
-        """
-        Get user path based on user model
-        no checks
-
-        :param user:
-        :return:
-        """
-        file_path = user.user_path
-
-        files = os.listdir(file_path)
-        return files
-
-    @staticmethod
-    def _create_guild_folder(guild: Guild):
-        """
-        |staticmethod|
-
-        create guild folder, and when bot joins guild folder will create
-
-        :param guild:
-        :return:
-        """
-        guild_path = fr"\guild_{guild.guild_id}"
-
-        if not guild_path:
-            return
-        elif os.path.exists(guild_path):
-            return
-
-        os.mkdir(guild_path)
 
     async def create_guild_folder(self, guild: Guild):
-        if not guild:
-            return
+        try:
+            await self._loop.run_in_executor(None, self._create_guild_folder, guild)
+        except Exception as e:
+            raise e
 
-        await self._loop.run_in_executor(None, self._create_guild_folder, guild)
-
-    def _create_user_folder(self, user: User):
+    async def create_user_folder(self, user: User):
         """
-        get user_path and create user folder in guild_{guild_id}/ path
+        try to run _create_user_folder
 
         :param user:
         :return:
         """
+        try:
+            await self._loop.run_in_executor(None, self._create_user_folder, user)
+        except Exception as e:
+            raise e
 
-        user_path = user.user_path
-
-        if not user_path:
-            return
-        os.mkdir(user_path)
-
-    async def create_user_folder(self, user: User):
-        await self.loop.run_in_executor(None, self._create_user_folder, user)
+    async def select_line(self, line: int, user: User):
+        try:
+            await self._loop.run_in_executor(None, self._select_line, line, user)
+        except Exception as e:
+            raise e

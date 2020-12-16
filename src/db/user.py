@@ -50,7 +50,7 @@ class UserApi:
 
         if not guild:
             new_user.user_path = fr"{BASE_PATH}\{user.name}"
-            new_user.current_file = fr"{BASE_PATH}\{user.name}"
+            new_user.current_file = fr"{BASE_PATH}\{user.name}\main.py"
         else:
             new_user.user_path = fr"{BASE_PATH}\guild_{guild.id}\{user.name}"
             new_user.current_file = fr"{BASE_PATH}\guild_{guild.id}\{user.name}\main.py"
@@ -59,4 +59,5 @@ class UserApi:
         new_user.username = user.name
         
         await new_user.create()
+
         return new_user

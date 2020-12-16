@@ -12,27 +12,32 @@ from src.utils import log
 from data.config import dstr, dbool, dlist
 from data.config import LOGS_BASE_PATH
 from src.utils.help import HelpCommand
+from src.utils.file_manager import FileManager
+from src.db.user import UserApi
 
 class Bot(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(command_prefix=f"{dstr('PREFIX', 'text')} ",
                          help_attrs=dict(hidden=True), pm_help=None,
-                         owner_ids=dlist("OWNERS", 0),
-                         )
+                         owner_ids=dlist("OWNERS", 0))
 
         self.help_command = HelpCommand()
+        self.fm = FileManager(self.loop) # Shortcut
+        self.uapi = UserApi() # shortcut
         self.token = dstr("BOT_TOKEN", None)
         self._drop_after_restart = dbool("DROP_AFTER_RESTART", True)
         self._connected = asyncio.Event()
+        self.APPLY_EMOJI = ':white_check_mark:'
         self.error_channel = None
-        self._extensions = [
+        self._extensions = [ # all extension for load
             "src.cogs.events",
             "src.cogs.redactor",
             "src.cogs.info",
+            "src.cogs.owner",
         ]
 
     def __repr__(self):
-        return "<Bot>"
+        return f"<Bot name='{self.user.name}', id='{self.user.id}'>"
 
     async def on_ready(self):
         error_channel_id = dstr("ERROR_CHANNEL", None)
@@ -55,8 +60,6 @@ class Bot(commands.AutoShardedBot):
         full_list = [os.path.join(LOGS_BASE_PATH, i) for i in logs_list]
         time_sorted_list: List = sorted(full_list, key=os.path.getmtime)
 
-        if not time_sorted_list:
-            return
         return time_sorted_list[-1]
 
     @property

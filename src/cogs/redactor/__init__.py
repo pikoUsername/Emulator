@@ -1,16 +1,17 @@
 from discord.ext import commands
 from loguru import logger
+import discord
 
 from .utils.urlcheck import UrlCheck
 from src.db.user import UserApi
 from src.db.guild import GuildAPI
-from src.utils.file_manager import FileManager
 from data.config import dstr
 
 class TextRedacotorCog(commands.Cog):
     def __init__(self, bot):
-        self.bot: 'Bot' = bot
+        self.bot = bot
         self.userapi = UserApi()
+        self.fm = self.bot.fm
 
     @commands.command()
     @commands.guild_only()
@@ -24,7 +25,7 @@ class TextRedacotorCog(commands.Cog):
                 await ctx.send("You was logged in, and you have a folder!")
 
                 user_ = await UserApi.get_user_by_id(ctx.author.id)
-                fm =    FileManager(self.bot.loop)
+                fm = self.fm
 
                 if not guild:
                     return await fm.create_user_folder(user_)
@@ -32,10 +33,10 @@ class TextRedacotorCog(commands.Cog):
             except Exception as e:
                 logger.exception(e)
                 return await ctx.send("ERROR in creating folder and main.py script!")
-        await ctx.send("Succes created folder with ur name!")
+        await ctx.send(embed=discord.Embed(title=f"Succes {self.bot.APPLY_EMOJI}", description="Succes created folder with ur name!"))
 
     @commands.command()
-    async def add(self, ctx: commands.Context, *, text):
+    async def add(self, ctx: commands.Context, *, text: str):
         user = await UserApi.get_user_by_id(ctx.author.id)
 
         if not user:
@@ -55,10 +56,16 @@ class TextRedacotorCog(commands.Cog):
 
     @commands.command()
     async def remove_line(self, ctx: commands.Context, *, line: str):
+        """
+remove selected line, if you was wrong write ctrl-z
+        """
         if not line.isdigit():
             await ctx.send("Not correct line!")
             return
 
+        user = self.bot.uapi.get_user_by_id(ctx.author.id)
+
+        await self.bot.fm.remove_line(line, user)
         # here removing line(run in executor)
 
     @commands.command()
@@ -77,6 +84,7 @@ class TextRedacotorCog(commands.Cog):
     async def rm_file(self, ctx: commands.Context, *, files: str):
         for file in files:
             pass # here deleting files!
+        pass
 
     @commands.command()
     @commands.is_owner()
