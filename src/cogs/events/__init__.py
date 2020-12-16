@@ -2,12 +2,13 @@ from discord.ext import commands
 import discord
 from loguru import logger
 
-from src.utils.file_manager import FileManager
+from src.db import GuildAPI, db
 
 class DiscordEvents(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.error_channel = None
+        self.db = db
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -28,8 +29,13 @@ class DiscordEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
-        fm = FileManager(self.bot.loop)
-        await fm.create_guild_folder(guild)
+        guild = await GuildAPI.get_guild(guild.id)
+
+        if not guild:
+            gapi = GuildAPI()
+            await gapi.add_guild(guild)
+        # fm = FileManager(self.bot.loop)
+        # await fm.create_guild_folder(guild)
 
 def setup(bot):
     bot.add_cog(DiscordEvents(bot))

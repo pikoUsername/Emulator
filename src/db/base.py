@@ -6,7 +6,6 @@ import contextvars
 import sqlalchemy as sa
 from gino import Gino
 
-from data.base_cfg import POSTGRES_URI
 
 db = Gino()
 T = TypeVar('T')
@@ -45,10 +44,3 @@ class BaseModel(db.Model, ContextInstanceMixin):
         values_str = " ".join(f"{name}={value!r}" for name, value in values.items())
         return f"<{model} {values_str}>"
 
-
-async def create_db(drop: bool=True):
-    await db.set_bind(POSTGRES_URI)
-
-    if drop:
-        await db.gino.drop_all()
-    await db.gino.create_all()

@@ -38,6 +38,7 @@ class GuildAPI:
         new_guild.guild_id = guild.id
         new_guild.guild_name = guild.name
 
+        await self.create_guild_folder(guild)
         await new_guild.create()
         return new_guild
 

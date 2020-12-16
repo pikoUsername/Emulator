@@ -7,13 +7,14 @@ from discord.ext import commands
 from discord.ext.commands import errors
 from loguru import logger
 
-from src.db.base import create_db
 from src.utils import log
 from data.config import dstr, dbool, dlist
 from data.config import LOGS_BASE_PATH
 from src.utils.help import HelpCommand
 from src.utils.file_manager import FileManager
 from src.db.user import UserApi
+from data.base_cfg import POSTGRES_URI
+from src.db import db
 
 class Bot(commands.AutoShardedBot):
     def __init__(self):
@@ -35,9 +36,17 @@ class Bot(commands.AutoShardedBot):
             "src.cogs.info",
             "src.cogs.owner",
         ]
+        self.connected_to_database = asyncio.Event()
+        self.connected_to_database.set()
+        self.db = self.database = self.database_connection_pool = None
+        self.POSTGRES_URI = POSTGRES_URI
 
     def __repr__(self):
         return f"<Bot name='{self.user.name}', id='{self.user.id}'>"
+
+    async def create_db(self):
+        await db.set_bind(self.POSTGRES_URI)
+        await db.gino.create_all()
 
     async def on_ready(self):
         error_channel_id = dstr("ERROR_CHANNEL", None)
@@ -146,7 +155,6 @@ class Bot(commands.AutoShardedBot):
             await self.on_message(after)
 
     async def run_itself(self):
-        await create_db()
         log.setup()
 
         # setup stuff
@@ -158,7 +166,7 @@ class Bot(commands.AutoShardedBot):
                 return
 
         try:
-            await create_db(self._drop_after_restart)
+            await self.create_db()
             await self.start(self.token)
         except KeyboardInterrupt:
             logger.warning("Goodbye!")
