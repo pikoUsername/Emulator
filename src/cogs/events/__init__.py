@@ -2,13 +2,12 @@ from discord.ext import commands
 import discord
 from loguru import logger
 
-from src.db import GuildAPI, db
+from src.db import GuildAPI
 
 class DiscordEvents(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.error_channel = None
-        self.db = db
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -22,10 +21,17 @@ class DiscordEvents(commands.Cog):
         logger.info("<User name={0.author.name}, id={0.id}, content={0.content}>".format(msg))
 
     @commands.Cog.listener()
+    async def on_message_edit(self, after, before):
+        """ Handler for edited messages, re-executes commands """
+        if before.content != after.content:
+            await self.on_message(after)
+
+    @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
-        if not ctx.guild:
+        try:
+            logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}, guild: {ctx.guild.name}")
+        except Exception:
             logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}")
-        logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}, guild: {ctx.guild.name}")
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):

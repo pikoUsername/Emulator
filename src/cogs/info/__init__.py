@@ -8,6 +8,5 @@ class DiscordInfo(commands.Cog):
     async def info(self, ctx: commands.Context):
         return await ctx.send("Github - https://github.com/pikoUsername/Emulator")
 
-
 def setup(bot):
     bot.add_cog(DiscordInfo(bot))
