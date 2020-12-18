@@ -37,11 +37,16 @@ get Info about Bot
         ).set_footer(text=f"requested by {ctx.author.display_name}",icon_url=ctx.author.avatar_url))
 
     @commands.command()
-    async def avatar(self, ctx: commands.Context):
+    async def avatar(self, ctx: commands.Context, *, member: discord.Member):
         """ Gets Avatar of author """
+        if not member:
+            await ctx.send(embed=discord.Embed(
+                title=f"Avatar {ctx.author.display_name}",
+            ).set_image(url=ctx.author.avatar_url))
+
         await ctx.send(embed=discord.Embed(
             title=f"Avatar {ctx.author.display_name}",
-        ).set_image(url=ctx.author.avatar_url))
+        ).set_image(url=member.avatar_url))
 
 def setup(bot):
     bot.add_cog(DiscordInfo(bot))
