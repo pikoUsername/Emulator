@@ -39,6 +39,7 @@ class Bot(commands.AutoShardedBot):
         self.connected_to_database = asyncio.Event()
         self.connected_to_database.set()
         self.POSTGRES_URI = POSTGRES_URI
+        self.count_commands = 0
 
     def __repr__(self):
         return f"<Bot name='{self.user.name}', id='{self.user.id}'>"
@@ -53,7 +54,7 @@ class Bot(commands.AutoShardedBot):
     async def on_ready(self):
         error_channel_id = dstr("ERROR_CHANNEL", None)
         if error_channel_id:
-            channel = self.get_channel(error_channel_id)
+            channel = self.get_channel(778881398898688001)
             if isinstance(channel, discord.TextChannel):
                 self.error_channel = channel
 
@@ -119,7 +120,7 @@ class Bot(commands.AutoShardedBot):
         else:
             await self.error_channel.send(file=file)
 
-    async def get_last_log_file(self):
+    def get_last_log_file(self):
         """
         gets logs from directory /logs/  and return it
         in file format

@@ -19,12 +19,6 @@ class HelpFormat(commands.DefaultHelpCommand):
 
     async def send_pages(self, no_pm: bool = False):
         try:
-            if discord.Permissions.can_handle(self.context, "add_reactions"):
-                await self.context.message.add_reaction(chr(0x2709))
-        except discord.Forbidden:
-            pass
-
-        try:
             destination = self.get_destination(no_pm=no_pm)
             for page in self.paginator.pages:
                 await destination.send(page)

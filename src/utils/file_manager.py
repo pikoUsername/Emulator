@@ -80,6 +80,14 @@ class FileManager:
         :return:
         """
         user_path = user.user_path
+        user_path_len = len(user_path)
+
+        path_to_slice = len(user.username)
+        path_final = user_path_len - path_to_slice
+
+        if not os.path.exists(user_path):
+            os.mkdir(user_path[0:path_final])
+
         os.mkdir(user_path)
 
     @staticmethod

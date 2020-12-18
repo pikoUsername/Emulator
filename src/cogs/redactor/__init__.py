@@ -1,10 +1,13 @@
+import asyncio
+import os
+
 from discord.ext import commands
 from loguru import logger
 import discord
 
 from src.utils.http import post, get
 from .utils.urlcheck import UrlCheck
-from src.db.user import UserApi, User
+from src.db.user import UserApi
 from src.utils.file_manager import FileManager
 from src.db.guild import GuildAPI
 from data.config import dstr
@@ -20,6 +23,9 @@ class TextRedacotorCog(commands.Cog):
     async def start(self, ctx: commands.Context):
         user = await UserApi.get_user_by_id(user_id=ctx.author.id)
         guild = await GuildAPI.get_guild(ctx.guild.id)
+
+        if user:
+            return await ctx.send(f"You aleardy have folder for u, type {self.bot.command_prefix}ls")
 
         if not user:
             try:
@@ -46,10 +52,6 @@ class TextRedacotorCog(commands.Cog):
             return
 
     @commands.command()
-    async def delete(self, ctx: commands.Context, **kwargs):
-        pass
-
-    @commands.command()
     async def go_to_file(self, ctx: commands.Context, *, file: str):
         pass
 
@@ -63,10 +65,10 @@ remove selected line, if you was wrong write ctrl-z
             await ctx.send("Not correct line!")
             return
 
-        user = self.bot.uapi.get_user_by_id(ctx.author.id)
+        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
         await self.bot.fm.remove_line(line, user)
-        # here removing line(run in executor)
+
 
     @commands.command()
     async def upload_file(self, ctx: commands.Context, *, filename: str):
@@ -90,7 +92,16 @@ remove selected file, be cary about it!
         """
 make dir in any directory! only owner
         """
-        pass # here creating folder(only for owner)
+        loop = self.bot.loop
+
+        to_create = f"{path}/{name}"
+        try:
+            await loop.run_in_executor(None, os.mkdir, to_create)
+            await ctx.send("Success you created folder ")
+        except Exception as e:
+            await ctx.send("Failed to creating folder!")
+            await self.bot.error_channel.send(e)
+
 
 def setup(bot):
     bot.add_cog(TextRedacotorCog(bot))
