@@ -167,11 +167,14 @@ class Bot(commands.AutoShardedBot):
 
         self.load_extension('jishaku')
 
-        await self.create_db()
-        if self.DELETE_ALL_FILES:
-            logger.warning("Removing all files from files/ directory!")
-            await self.fm.delete_all_guild_files()
-        await self.start(self.token)
-
+        try:
+            await self.create_db()
+            if self.DELETE_ALL_FILES:
+                logger.warning("Removing all files from files/ directory!")
+                await self.fm.delete_all_guild_files()
+            await self.start(self.token)
+        except Exception as e:
+            logger.exception("CRITICAL ERROR")
+            raise e
 
 

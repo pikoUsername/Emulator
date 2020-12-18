@@ -20,10 +20,11 @@ class HelpFormat(commands.DefaultHelpCommand):
     async def send_pages(self, no_pm: bool = False):
         ctx = self.context
         try:
-            await ctx.send("Help was sended to DMs")
+            if ctx.guild:
+                await ctx.send("Help was sended to DMs")
             destination = self.get_destination(no_pm=no_pm)
             for page in self.paginator.pages:
-                await destination.send(page)
+                await destination.send(embed=discord.Embed(title="Help", description=f"{page}"))
         except discord.Forbidden:
             destination = self.get_destination(no_pm=True)
             await destination.send("Couldn't send help to you due to blocked DMs...")
