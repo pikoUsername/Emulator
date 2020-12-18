@@ -40,7 +40,7 @@ class Bot(commands.AutoShardedBot):
         self.connected_to_database.set()
         self.POSTGRES_URI = POSTGRES_URI
         self.count_commands = 0
-        self.DELETE_ALL_FILES = dbool("DELETE_AFTER", False)
+        self.DELETE_ALL_FILES = dbool("DELETE_AFTER", True)
 
     def __repr__(self):
         return f"<Bot name='{self.user.name}', id='{self.user.id}'>"

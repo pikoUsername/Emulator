@@ -25,6 +25,12 @@ class TextRedacotorCog(commands.Cog):
         user = await UserApi.get_user_by_id(user_id=ctx.author.id)
         guild = await GuildAPI.get_guild(ctx.guild.id)
 
+        if user:
+            return await ctx.send(embed=discord.Embed(
+                title="Access Error :x:",
+                description="You aleardy registered in DB!",
+            ))
+
         if not user:
             try:
                 await UserApi.add_new_user(user=ctx.author, guild=ctx.guild)

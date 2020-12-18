@@ -8,6 +8,7 @@
 # logs
 logs/
 files/
+files/*
 
 # pycahce
 */__pycache__/

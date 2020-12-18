@@ -1,7 +1,7 @@
 import asyncio
 import os
 from typing import List
-from glob import glob
+import shutil
 
 from src.db.user import User
 from src.db.guild import Guild
@@ -100,13 +100,10 @@ class FileManager:
         if DELETE_ALL_FILES is true that delete all files from file/ directory
         :return:
         """
-        to_remove = glob(f"{BASE_PATH}/*")
+        path = os.path.join(os.path.abspath(os.path.dirname(__file__)), BASE_PATH)
+        to_remove = os.listdir(path)
 
-        for files in to_remove:
-            try:
-                os.remove(files)
-            except PermissionError:
-                pass
+        shutil.rmtree(path)
 
 
     @staticmethod
