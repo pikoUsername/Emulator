@@ -45,7 +45,7 @@ get Info about Bot
             ).set_image(url=ctx.author.avatar_url))
 
         await ctx.send(embed=discord.Embed(
-            title=f"Avatar {ctx.author.display_name}",
+            title=f"Avatar {member.display_name}",
         ).set_image(url=member.avatar_url))
 
 def setup(bot):
