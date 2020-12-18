@@ -21,6 +21,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def start(self, ctx: commands.Context):
+        """ register author user, and create user folder in guild, work only in guild """
         user = await UserApi.get_user_by_id(user_id=ctx.author.id)
         guild = await GuildAPI.get_guild(ctx.guild.id)
 
@@ -45,6 +46,7 @@ class TextRedacotorCog(commands.Cog):
 
     @commands.command()
     async def add(self, ctx: commands.Context, *, text: str):
+        """ re-write choosed file! """
         user = await UserApi.get_user_by_id(ctx.author.id)
 
         if not user:
@@ -58,9 +60,7 @@ class TextRedacotorCog(commands.Cog):
 
     @commands.command(aliases=["remove_line"])
     async def rm_line(self, ctx: commands.Context, *, line: str):
-        """
-remove selected line, if you was wrong write ctrl-z
-        """
+        """ remove selected line, if you was wrong write ctrl-z """
         if not line.isdigit():
             await ctx.send("Not correct line!")
             return
@@ -74,24 +74,22 @@ remove selected line, if you was wrong write ctrl-z
     async def upload_file(self, ctx: commands.Context, *, filename: str):
         pass
 
+    """ not working yet, danger 
     @commands.command()
     async def rm_file(self, ctx: commands.Context, *, file: str):
-        """
-remove selected file, be cary about it!
-        """
+        remove selected file, be cary about it!
         user = await self.userapi.get_user_by_id(ctx.author.id)
 
         if not user:
             return await ctx.send(f"Type {self.bot.command_prefix}start, and comehere there")
         await self.fm.remove_file(file, user)
+    """
 
 
     @commands.command()
     @commands.is_owner()
     async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
-        """
-make dir in any directory! only owner
-        """
+        """ make dir in any directory! only owner """
         loop = self.bot.loop
 
         to_create = f"{path}/{name}"

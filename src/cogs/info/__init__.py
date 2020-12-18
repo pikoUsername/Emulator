@@ -9,6 +9,9 @@ class DiscordInfo(commands.Cog):
 
     @commands.command(aliases=["?"])
     async def info(self, ctx: commands.Context):
+        """
+get Info about Bot
+        """
 
         text = [
             "Hello, i m bot, and i must simulate text redactor",
@@ -35,6 +38,7 @@ class DiscordInfo(commands.Cog):
 
     @commands.command()
     async def avatar(self, ctx: commands.Context):
+        """ Gets Avatar of author """
         await ctx.send(embed=discord.Embed(
             title=f"Avatar {ctx.author.display_name}",
         ).set_image(url=ctx.author.avatar_url))

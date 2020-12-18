@@ -16,12 +16,7 @@ class OwnerCommands(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def reboot(self, ctx: commands.Context):
-        """
-        Reboot the bot
-
-        :param ctx:
-        :return:
-        """
+        """ Reboot the bot """
         await ctx.send("Rebooting...")
         await asyncio.sleep(1)
         sys.exit(0)
