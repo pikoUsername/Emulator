@@ -21,7 +21,7 @@ class HelpFormat(commands.DefaultHelpCommand):
         ctx = self.context
         try:
             if ctx.guild:
-                await ctx.send("Help was sended to DMs")
+                await ctx.send("Check Chat!")
             destination = self.get_destination(no_pm=no_pm)
             for page in self.paginator.pages:
                 await destination.send(embed=discord.Embed(title="Help", description=f"{page}"))

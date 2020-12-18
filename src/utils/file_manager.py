@@ -147,8 +147,8 @@ class FileManager:
         """
         if not file_name:
             return
-        if not os.path.exists(f"{user.current_path}/{file_name}"):
-            await self._loop.run_in_executor(None, self._create_file, file_name, type_)
+        if not os.path.exists(f"{user.user_path}/{file_name}"):
+            await self._loop.run_in_executor(None, self._create_file, file_name, user, type_)
         else:
             return
 

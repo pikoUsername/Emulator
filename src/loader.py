@@ -117,7 +117,9 @@ class Bot(commands.AutoShardedBot):
             pass
 
         elif isinstance(err, errors.NoPrivateMessage):
-            pass
+            await ctx.send(embed=discord.Embed(title="Private message Not work",
+                                               description="Bot work only in guild channels")
+                           )
 
         else:
             await self.error_channel.send(file=file)

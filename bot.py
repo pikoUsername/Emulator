@@ -5,9 +5,6 @@ from loguru import logger
 from src.loader import Bot
 
 def main():
-    run_bot()
-
-def run_bot():
     bot = Bot()
     loop = asyncio.get_event_loop()
 

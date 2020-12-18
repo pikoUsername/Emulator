@@ -47,6 +47,7 @@ class TextRedacotorCog(commands.Cog):
         await ctx.send(embed=discord.Embed(title=f"Succes {self.bot.APPLY_EMOJI}", description="Succes created folder with ur name!"))
 
     @commands.command()
+    @commands.guild_only()
     async def add(self, ctx: commands.Context, *, text: str):
         """ re-write choosed file! """
         user = await UserApi.get_user_by_id(ctx.author.id)
@@ -56,11 +57,13 @@ class TextRedacotorCog(commands.Cog):
             return
 
     @commands.command()
+    @commands.guild_only()
     async def go_to_file(self, ctx: commands.Context, *, file: str):
         pass
 
 
     @commands.command(aliases=["remove_line"])
+    @commands.guild_only()
     async def rm_line(self, ctx: commands.Context, *, line: str):
         """ remove selected line, if you was wrong write ctrl-z """
         if not line.isdigit():
@@ -73,6 +76,7 @@ class TextRedacotorCog(commands.Cog):
 
 
     @commands.command()
+    @commands.guild_only()
     async def upload_file(self, ctx: commands.Context, *, filename: str):
         pass
 
@@ -101,6 +105,36 @@ class TextRedacotorCog(commands.Cog):
         except Exception as e:
             await ctx.send("Failed to creating folder!")
             await self.bot.error_channel.send(e)
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.cooldown(3, 4000)
+    async def create_file(self, ctx: commands.Context, *, name: str, type: str="py"):
+        user = await self.userapi.get_user_by_id(ctx.author.id)
+
+        if not user:
+            return await ctx.send(embed=discord.Embed(title=f"User not authed {self.bot.X_EMOJI}",
+                                                              description=f"Type {self.bot.command_prefix}start for use this command")
+                                  )
+
+        if len(name) >= 300:
+            return await ctx.send(embed=discord.Embed(
+                title=f"{self.bot.X_EMOJI}",
+                description="Too long file name",
+            ))
+
+        await ctx.send("Creating File...")
+
+        try:
+            await self.fm.create_file(name, user, type)
+        except Exception as e:
+            logger.exception(e)
+            return await ctx.send(embed=discord.Embed(
+                title=f"ERROR, {self.bot.X_EMOJI}",
+                description=f"```{e}```",
+            ))
+        else:
+            await ctx.send(embed=discord.Embed(title=f"Succes! {self.bot.APPLY_EMOJI}",description=f"Created file {name}"))
 
 
 def setup(bot):
