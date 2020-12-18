@@ -24,7 +24,7 @@ class TextRedacotorCog(commands.Cog):
         user = await UserApi.get_user_by_id(user_id=ctx.author.id)
         guild = await GuildAPI.get_guild(ctx.guild.id)
 
-        if user:
+        if os.path.exists(user.user_path):
             return await ctx.send(f"You aleardy have folder for u, type {self.bot.command_prefix}ls")
 
         if not user:

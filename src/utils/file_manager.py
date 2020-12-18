@@ -1,6 +1,7 @@
 import asyncio
 import os
 from typing import List
+from glob import glob
 
 from src.db.user import User
 from src.db.guild import Guild
@@ -85,10 +86,26 @@ class FileManager:
         path_to_slice = len(user.username)
         path_final = user_path_len - path_to_slice
 
-        if not os.path.exists(user_path):
+        if not os.path.exists(user_path[0:path_final]):
             os.mkdir(user_path[0:path_final])
 
         os.mkdir(user_path)
+
+    @staticmethod
+    def delete_all_working_files():
+        """
+        Deleting all files from working directory!
+        if DELETE_ALL_FILES is true that delete all files from file/ directory
+        :return:
+        """
+        to_remove = glob(f"{BASE_PATH}/*")
+
+        for files in to_remove:
+            try:
+                os.remove(files)
+            except PermissionError:
+                pass
+
 
     @staticmethod
     def _get_line(line: int, user: User):

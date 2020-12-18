@@ -1,4 +1,4 @@
-import time
+from datetime import datetime
 
 from discord.ext import commands
 import discord
@@ -22,15 +22,15 @@ class DiscordInfo(commands.Cog):
             description="\n".join(text)
         ).add_field(name="Python version", value="3.8.3").add_field(name="Author", value="piko#0381")
         .add_field(name="Github", value="https://github.com/pikoUsername/Emulator")
-        .set_footer(text=f"requested by {ctx.author.display_name} || {time.strftime('%H:%M:%S')}",
-                    icon_url=ctx.author.icon_url)
+        .set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}",
+                    icon_url=ctx.author.avatar_url)
         )
 
     @commands.command()
     async def time(self, ctx: commands.Context):
         await ctx.send(embed=discord.Embed(
             title="Time",
-            description=f"Time: {time.strftime('%m/%d/%Y, %H:%M:%S')} :timer:",
+            description=f"Time: {datetime.utcnow()} :timer:",
         ).set_footer(text=f"requested by {ctx.author.display_name}",icon_url=ctx.author.avatar_url))
 
     @commands.command()

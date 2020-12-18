@@ -40,6 +40,7 @@ class Bot(commands.AutoShardedBot):
         self.connected_to_database.set()
         self.POSTGRES_URI = POSTGRES_URI
         self.count_commands = 0
+        self.DELETE_ALL_FILES = dbool("DELETE_AFTER", False)
 
     def __repr__(self):
         return f"<Bot name='{self.user.name}', id='{self.user.id}'>"
@@ -54,7 +55,7 @@ class Bot(commands.AutoShardedBot):
     async def on_ready(self):
         error_channel_id = dstr("ERROR_CHANNEL", None)
         if error_channel_id:
-            channel = self.get_channel(778881398898688001)
+            channel = self.get_channel(error_channel_id)
             if isinstance(channel, discord.TextChannel):
                 self.error_channel = channel
 
@@ -166,6 +167,8 @@ class Bot(commands.AutoShardedBot):
         self.load_extension('jishaku')
 
         await self.create_db()
+        if self.DELETE_ALL_FILES:
+            self.fm.delete_all_working_files()
         await self.start(self.token)
 
 

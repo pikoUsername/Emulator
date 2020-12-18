@@ -18,7 +18,9 @@ class HelpFormat(commands.DefaultHelpCommand):
         await self.send_pages(no_pm=True)
 
     async def send_pages(self, no_pm: bool = False):
+        ctx = self.context
         try:
+            await ctx.send("Help was sended to DMs")
             destination = self.get_destination(no_pm=no_pm)
             for page in self.paginator.pages:
                 await destination.send(page)
