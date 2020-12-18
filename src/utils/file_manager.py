@@ -88,6 +88,8 @@ class FileManager:
 
         if not os.path.exists(user_path[0:path_final]):
             os.mkdir(user_path[0:path_final])
+        if os.path.exists(user_path):
+            return
 
         os.mkdir(user_path)
 
