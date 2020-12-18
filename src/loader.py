@@ -40,7 +40,8 @@ class Bot(commands.AutoShardedBot):
         self.connected_to_database.set()
         self.POSTGRES_URI = POSTGRES_URI
         self.count_commands = 0
-        self.DELETE_ALL_FILES = dbool("DELETE_AFTER", True)
+        self.DELETE_ALL_FILES = dbool("DELETE_ALL_FILES_AFTER_RESTART")
+        self.X_EMOJI = ":x:"
 
     def __repr__(self):
         return f"<Bot name='{self.user.name}', id='{self.user.id}'>"
@@ -168,7 +169,8 @@ class Bot(commands.AutoShardedBot):
 
         await self.create_db()
         if self.DELETE_ALL_FILES:
-            self.fm.delete_all_working_files()
+            logger.warning("Removing all files from files/ directory!")
+            await self.fm.delete_all_guild_files()
         await self.start(self.token)
 
 

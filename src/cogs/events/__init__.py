@@ -3,14 +3,20 @@ import discord
 from loguru import logger
 
 from src.db import GuildAPI
+from data.base_cfg import dint
 
 class DiscordEvents(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.start_channel: discord.TextChannel = dint("START_CHANNEL", None)
         self.error_channel = None
 
     @commands.Cog.listener()
     async def on_ready(self):
+        try:
+            await self.start_channel.send("BOT STARTED")
+        except Exception:
+            pass
         logger.info("BOT READY!")
 
     @commands.Cog.listener()
@@ -41,8 +47,7 @@ class DiscordEvents(commands.Cog):
         if not guild:
             gapi = GuildAPI()
             await gapi.add_guild(guild)
-        # fm = FileManager(self.bot.loop)
-        # await fm.create_guild_folder(guild)
+
 
 def setup(bot):
     bot.add_cog(DiscordEvents(bot))

@@ -27,7 +27,7 @@ class TextRedacotorCog(commands.Cog):
 
         if user:
             return await ctx.send(embed=discord.Embed(
-                title="Access Error :x:",
+                title=f"Access Error {self.bot.X_EMOJI}",
                 description="You aleardy registered in DB!",
             ))
 

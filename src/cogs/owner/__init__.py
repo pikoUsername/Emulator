@@ -36,6 +36,32 @@ class OwnerCommands(commands.Cog):
             await ctx.send("This user might be having DMs blocked or it's a bot account...")
 
     @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def remove_guild_folder(self, ctx: commands.Context):
+
+        if not self.bot.DELETE_ALL_FILES:
+            await ctx.send(embed=discord.Embed(
+                title=f"Error, {self.bot.X_EMOJI}",
+                description="Deleting guild files is turned OFF, so you cant delete them!"
+            ))
+            return
+
+        try:
+            await self.bot.fm.delete_all_guild_files()
+        except Exception as e:
+            return await ctx.send("Error for removing guild folder!")
+        else:
+            await ctx.send(embed=discord.Embed(
+                title="Success :white_check_mark:",
+                description="Now your discord servers folder was removed, now your members leave!",
+            ).set_footer(text=f"Removed By {ctx.author.mention}", icon_url=ctx.author.avatar_url)
+            )
+        try:
+            await ctx.send("@everyone All yours files was removed! Now leave from here")
+        except PermissionError:
+            pass
+
+    @commands.command()
     @commands.is_owner()
     async def change_username(self, ctx, *, name: str):
         """ Change username. """

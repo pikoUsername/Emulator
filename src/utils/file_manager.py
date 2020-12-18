@@ -2,6 +2,7 @@ import asyncio
 import os
 from typing import List
 import shutil
+import glob
 
 from src.db.user import User
 from src.db.guild import Guild
@@ -93,17 +94,29 @@ class FileManager:
 
         os.mkdir(user_path)
 
+    async def delete_all_guild_files(self, guild_id: int=None):
+        try:
+            await self._loop.run_in_executor(None, self._delete_all_guild_files, guild_id)
+        except Exception as e:
+            raise e
+
     @staticmethod
-    def delete_all_working_files():
+    def _delete_all_guild_files(guild_id: int=None):
         """
         Deleting all files from working directory!
         if DELETE_ALL_FILES is true that delete all files from file/ directory
         :return:
         """
-        path = os.path.join(os.path.abspath(os.path.dirname(__file__)), BASE_PATH)
-        to_remove = os.listdir(path)
+        if not guild_id:
+            list_dirs = glob.glob(r"C:\Vim-Emulator\files\*")
+        else:
+            list_dirs = glob.glob(fr"C:\Vim-Emulator\files\guild_{guild_id}")
 
-        shutil.rmtree(path)
+        for dirs in list_dirs:
+            try:
+                shutil.rmtree(dirs)
+            except PermissionError:
+                pass
 
 
     @staticmethod
