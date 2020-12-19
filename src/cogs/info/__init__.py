@@ -1,4 +1,5 @@
 from datetime import datetime
+import sys
 
 from discord.ext import commands
 import discord
@@ -20,12 +21,19 @@ class DiscordInfo(commands.Cog):
 
         await ctx.send(embed=discord.Embed(
             title="Information",
-            description="\n".join(text)
-        ).add_field(name="Python version", value="3.8.3").add_field(name="Author", value="piko#0381")
+            description="\n".join(text))
+        .add_field(name="Python version", value=f"{sys.version_info.major}.{sys.version_info.minor}")
+        .add_field(name="Author", value="piko#0381")
         .add_field(name="Github", value="https://github.com/pikoUsername/Emulator")
         .set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}",
                     icon_url=ctx.author.avatar_url)
         )
+
+    @commands.command()
+    async def ping(self, ctx: commands.Context):
+        """ Pong """
+        ping = str(self.bot.latency * 1000)
+        return await ctx.send(f"Ping - {ping[0:10]}")
 
     @commands.command()
     async def time(self, ctx: commands.Context):
@@ -46,6 +54,12 @@ class DiscordInfo(commands.Cog):
         await ctx.send(embed=discord.Embed(
             title=f"Avatar {member.display_name}",
         ).set_image(url=member.avatar_url))
+
+    @commands.command()
+    async def invite(self, ctx: commands.Context):
+        """ Invite bot """
+        await ctx.send(embed=discord.Embed(title="Invite",
+                                           description=f"[Click here to invite](https://discord.com/api/oauth2/authorize?client_id=751682699160191109&permissions=149504&scope=bot)"))
 
 def setup(bot):
     bot.add_cog(DiscordInfo(bot))

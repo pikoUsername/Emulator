@@ -18,7 +18,7 @@ from src.db import db
 
 class Bot(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=f"{dstr('PREFIX', 'text')} ",
+        super().__init__(command_prefix=f"{dstr('PREFIX', 'text')}",
                          help_attrs=dict(hidden=True), pm_help=None,
                          owner_ids=dlist("OWNERS", 0))
 

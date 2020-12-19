@@ -1,15 +1,12 @@
-import asyncio
 import os
 
 from discord.ext import commands
 from loguru import logger
 import discord
 
-from src.utils.http import post, get
 from .utils.urlcheck import UrlCheck
-from src.db.user import UserApi
 from src.utils.file_manager import FileManager
-from src.db.guild import GuildAPI
+from src.db import GuildAPI, UserApi
 from data.config import dstr
 
 class TextRedacotorCog(commands.Cog):
@@ -21,7 +18,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def start(self, ctx: commands.Context):
-        """ register author user, and create user folder in guild, work only in guild """
+        """ register user, and create user folder in guild, work only in guild """
         user = await UserApi.get_user_by_id(user_id=ctx.author.id)
         guild = await GuildAPI.get_guild(ctx.guild.id)
 
@@ -41,10 +38,11 @@ class TextRedacotorCog(commands.Cog):
                 if not guild:
                     return await fm.create_user_folder(user_)
                 await fm.create_user_folder(user=user_)
+                await fm.create_file(file_name="main", user=user_)
             except Exception as e:
                 logger.exception(e)
                 return await ctx.send("ERROR in creating folder and main.py script!")
-        await ctx.send(embed=discord.Embed(title=f"Succes {self.bot.APPLY_EMOJI}", description="Succes created folder with ur name!"))
+        await ctx.send(embed=discord.Embed(title=f"Success {self.bot.APPLY_EMOJI}", description="Succes created folder with ur name!"))
 
     @commands.command()
     @commands.guild_only()
@@ -59,13 +57,21 @@ class TextRedacotorCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def go_to_file(self, ctx: commands.Context, *, file: str):
-        pass
+        """ Set current file """
+        user = await self.userapi.get_user_by_id(ctx.author.id)
 
+        if not user:
+            return await ctx.send(f"/shrug Type {self.bot.command_prefix}start for start")
+        if not os.path.exists(f"{user.user_path}/{file}"):
+            return await ctx.send("File not exists")
+
+        await user.update(current_file=f"{user.user_path}/{file}")
+        await ctx.send(embed=discord.Embed(title="Go to File", description=f"Now your current file {file}"))
 
     @commands.command(aliases=["remove_line"])
     @commands.guild_only()
     async def rm_line(self, ctx: commands.Context, *, line: str):
-        """ remove selected line, if you was wrong write ctrl-z """
+        """ remove selected line in currect file"""
         if not line.isdigit():
             await ctx.send("Not correct line!")
             return
@@ -74,6 +80,15 @@ class TextRedacotorCog(commands.Cog):
 
         await self.bot.fm.remove_line(line, user)
 
+    @commands.command()
+    @commands.guild_only()
+    async def current_file(self, ctx: commands.Context):
+        """ get current user file """
+        user = await self.userapi.get_user_by_id(ctx.author.id)
+
+        if not user:
+            return await ctx.send(f"Type {self.bot.command_prefix}start to start")
+        return await ctx.send(f"Your current file ```{user.current_file}```")
 
     @commands.command()
     @commands.guild_only()
@@ -101,15 +116,16 @@ class TextRedacotorCog(commands.Cog):
         to_create = f"{path}/{name}"
         try:
             await loop.run_in_executor(None, os.mkdir, to_create)
-            await ctx.send("Success you created folder ")
+            await ctx.send("Success you created folder")
         except Exception as e:
-            await ctx.send("Failed to creating folder!")
+            await ctx.send("Failed creating folder!")
             await self.bot.error_channel.send(e)
 
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(3, 4000)
-    async def create_file(self, ctx: commands.Context, *, name: str, type: str="py"):
+    async def create_file(self, ctx: commands.Context, name: str, *, type_: str="py"):
+        """ create file in your folder """
         user = await self.userapi.get_user_by_id(ctx.author.id)
 
         if not user:
@@ -125,7 +141,7 @@ class TextRedacotorCog(commands.Cog):
         await ctx.send("Creating File...")
 
         try:
-            await self.fm.create_file(name, user, type)
+            await self.fm.create_file(name, user, type_)
         except Exception as e:
             logger.exception(e)
             return await ctx.send(embed=discord.Embed(
@@ -135,6 +151,20 @@ class TextRedacotorCog(commands.Cog):
         else:
             await ctx.send(embed=discord.Embed(title=f"Succes! {self.bot.APPLY_EMOJI}",description=f"Created file {name}"))
 
+    @commands.command(aliases=["list", "list_files"])
+    @commands.guild_only()
+    async def ls(self, ctx: commands.Context):
+        """ List files """
+        user = await self.userapi.get_user_by_id(ctx.author.id)
+
+        if not user:
+            return await ctx.send(f"Type {self.bot.command_prefix}start to start")
+        all_files = await self.bot.loop.run_in_executor(None, os.listdir, user.user_path)
+
+        await ctx.send(embed=discord.Embed(
+            title=f"All files in your directory",
+            description="\n".join(all_files),
+        ))
 
 def setup(bot):
     bot.add_cog(TextRedacotorCog(bot))
