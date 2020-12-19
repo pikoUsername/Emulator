@@ -8,7 +8,7 @@ from discord.ext.commands import errors
 from loguru import logger
 
 from src.utils import log
-from data.config import dstr, dbool, dlist
+from data.config import dstr, dbool, dlist, dint
 from data.config import LOGS_BASE_PATH
 from src.utils.help import HelpFormat
 from src.utils.file_manager import FileManager
@@ -37,8 +37,6 @@ class Bot(commands.AutoShardedBot):
             "src.cogs.owner",
         ]
         self.connected_to_database = asyncio.Event()
-        self.connected_to_database.set()
-        self.POSTGRES_URI = POSTGRES_URI
         self.count_commands = 0
         self.DELETE_ALL_FILES = dbool("DELETE_ALL_FILES_AFTER_RESTART")
         self.X_EMOJI = ":x:"
@@ -48,13 +46,13 @@ class Bot(commands.AutoShardedBot):
 
     async def create_db(self):
         logger.info("creating database...")
-        await db.set_bind(self.POSTGRES_URI)
+        await db.set_bind(POSTGRES_URI)
 
         await db.gino.drop_all()
         await db.gino.create_all()
 
     async def on_ready(self):
-        error_channel_id = dstr("ERROR_CHANNEL", None)
+        error_channel_id = dint("ERROR_CHANNEL", None)
         if error_channel_id:
             channel = self.get_channel(error_channel_id)
             if isinstance(channel, discord.TextChannel):
@@ -131,7 +129,6 @@ class Bot(commands.AutoShardedBot):
 
         :return:
         """
-
         try:
             last_log = str(self.last_log)
         except Exception as e:

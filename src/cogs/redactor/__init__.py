@@ -114,8 +114,7 @@ class TextRedacotorCog(commands.Cog):
 
         if not user:
             return await ctx.send(embed=discord.Embed(title=f"User not authed {self.bot.X_EMOJI}",
-                                                              description=f"Type {self.bot.command_prefix}start for use this command")
-                                  )
+                                                              description=f"Type {self.bot.command_prefix}start for use this command"))
 
         if len(name) >= 300:
             return await ctx.send(embed=discord.Embed(

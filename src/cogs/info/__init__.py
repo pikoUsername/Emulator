@@ -9,9 +9,7 @@ class DiscordInfo(commands.Cog):
 
     @commands.command(aliases=["?"])
     async def info(self, ctx: commands.Context):
-        """
-get Info about Bot
-        """
+        """ get Info about Bot """
 
         text = [
             "Hello, i m bot, and i must simulate text redactor",
@@ -31,6 +29,7 @@ get Info about Bot
 
     @commands.command()
     async def time(self, ctx: commands.Context):
+        """ Get time """
         await ctx.send(embed=discord.Embed(
             title="Time",
             description=f"Time: {datetime.utcnow()} :timer:",
