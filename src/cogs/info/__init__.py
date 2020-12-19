@@ -8,6 +8,21 @@ class DiscordInfo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command()
+    async def admin_help(self, ctx: commands.Context):
+        text = [
+            '```',
+            f'{self.bot.command_prefix}remove_guild_folder - removes guild folder',
+            f'{self.bot.command_prefix}get_logs - get all logs only for owner',
+            f'{self.bot.command_prefix}change_username - changes username of bot',
+            f"{self.bot.command_prefix}reboot - reboot the bot only for owner",
+            '```'
+        ]
+        emb = discord.Embed(title="Help")
+        emb.description = "\n".join(text)
+
+        await ctx.send(embed=emb)
+
     @commands.command(aliases=["?"])
     async def info(self, ctx: commands.Context):
         """ get Info about Bot """

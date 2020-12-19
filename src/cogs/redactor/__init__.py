@@ -8,6 +8,7 @@ from .utils.urlcheck import UrlCheck
 from src.utils.file_manager import FileManager
 from src.db import GuildAPI, UserApi
 from data.config import dstr
+from data.base_cfg import BASE_PATH
 
 class TextRedacotorCog(commands.Cog):
     def __init__(self, bot):
@@ -18,7 +19,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def start(self, ctx: commands.Context):
-        """ register user, and create user folder in guild, work only in guild """
+        """ register user, and create user folder in guild"""
         user = await UserApi.get_user_by_id(user_id=ctx.author.id)
         guild = await GuildAPI.get_guild(ctx.guild.id)
 
@@ -137,6 +138,8 @@ class TextRedacotorCog(commands.Cog):
                 title=f"{self.bot.X_EMOJI}",
                 description="Too long file name",
             ))
+        elif os.path.exists(f"{BASE_PATH}/{name}.{type_}"):
+            await ctx.send("this File aleardy exists")
 
         await ctx.send("Creating File...")
 

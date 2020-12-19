@@ -18,10 +18,10 @@ from src.db import db
 
 class Bot(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=f"{dstr('PREFIX', 'text')}",
-                         help_attrs=dict(hidden=True), pm_help=None,
-                         owner_ids=dlist("OWNERS", 0))
+        super().__init__(command_prefix=f"{dstr('PREFIX')}",
+                         help_attrs=dict(hidden=True), pm_help=None)
 
+        self.owner_id = 426028608906330115
         self.help_command = HelpFormat()
         self.fm: FileManager = FileManager(self.loop) # Shortcut
         self.uapi = UserApi() # shortcut
@@ -52,7 +52,7 @@ class Bot(commands.AutoShardedBot):
         await db.gino.create_all()
 
     async def on_ready(self):
-        error_channel_id = dint("ERROR_CHANNEL", None)
+        error_channel_id = dint("ERROR_CHANNEL", 775641526499147806)
         if error_channel_id:
             channel = self.get_channel(error_channel_id)
             if isinstance(channel, discord.TextChannel):
@@ -103,7 +103,10 @@ class Bot(commands.AutoShardedBot):
             await ctx.send(f"There was an error processing the command ;-;\n{err}", delete_after=30)
 
         elif isinstance(err, errors.CheckFailure):
-            pass
+            await ctx.send(embed=discord.Embed(
+                title=f"Fail {self.X_EMOJI}",
+                description="You cant made this",
+            ))
 
         elif isinstance(err, errors.MaxConcurrencyReached):
             await ctx.send("You've reached max capacity of command usage at once, please finish the previous one...", delete_after=30)

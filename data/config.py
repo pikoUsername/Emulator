@@ -17,5 +17,5 @@ def dint(key: str, default: Optional[int] = 0):
 def dbool(key: str, default: Optional[bool]=True):
     return os.getenv(key, default)
 
-def dlist(key: str, default: Union[str, int]):
+def dlist(key: str, default: Union[str, int]=None):
     return [os.getenv(key, default)]

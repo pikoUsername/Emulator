@@ -72,7 +72,7 @@ class OwnerCommands(commands.Cog):
             await ctx.send(err)
 
     @property
-    def last_log(self):
+    def last_log(self) -> List:
         """
         Get last log from /logs/ folder
         :return:
@@ -92,20 +92,25 @@ class OwnerCommands(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def get_logs(self, ctx: commands.Context):
-        file_ = self.last_log()
-        name_file = ''.join(file_)
+        file_ = self.last_log
+        file_name = ''.join(file_)
 
-        with open(name_file, "r") as file:
-            lines = file.read()
+        try:
+            with open(f"{file_name}", "r") as file:
+                text = file.read()
+        except Exception:
+            return await ctx.send("Failed to load file!")
 
-            if len(lines) <= 4027:
-                return await ctx.author.send(lines)
+        if len(text) <= 4027:
+            return await ctx.author.send(embed=discord.Embed(title="Whole Log", description=f"```{text}```"))
 
-            whole_log = await self.bot.loop.run_in_executor(None, self.parting, lines, 5)
+        try:
+            whole_log = await self.bot.loop.run_in_executor(None, self.parting, text, 5)
             for peace in whole_log:
                 await ctx.author.send(peace)
                 await asyncio.sleep(0.2)
-
+        except Exception:
+            return await ctx.author.send(text)
 
 def setup(bot):
     bot.add_cog(OwnerCommands(bot))
