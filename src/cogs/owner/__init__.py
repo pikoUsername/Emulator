@@ -7,12 +7,12 @@ from math import ceil
 import discord
 from discord.ext import commands
 
-from data.config import LOGS_BASE_PATH
+from data.base_cfg import LOGS_BASE_PATH
 
 class OwnerCommands(commands.Cog):
     """ Only for owners """
     def __int__(self, bot):
-        self.bot = bot
+        self.bot: 'Bot' = bot
 
     @commands.command()
     @commands.is_owner()
@@ -40,7 +40,7 @@ class OwnerCommands(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def remove_guild_folder(self, ctx: commands.Context):
 
-        if not self.bot.DELETE_ALL_FILES:
+        if not self.bot.drop_after_restart:
             await ctx.send(embed=discord.Embed(
                 title=f"Error, {self.bot.X_EMOJI}",
                 description="Deleting guild files is turned OFF, so you cant delete them!"
@@ -49,7 +49,7 @@ class OwnerCommands(commands.Cog):
 
         try:
             await self.bot.fm.delete_all_guild_files()
-        except Exception as e:
+        except Exception:
             return await ctx.send("Error for removing guild folder!")
         else:
             await ctx.send(embed=discord.Embed(
@@ -58,7 +58,7 @@ class OwnerCommands(commands.Cog):
             ).set_footer(text=f"Removed By {ctx.author.mention}", icon_url=ctx.author.avatar_url)
             )
         try:
-            await ctx.send("@everyone All yours files was removed! Now leave from here")
+            await ctx.send("@everyone All yours files was removed! Now leave from guild")
         except PermissionError:
             pass
 

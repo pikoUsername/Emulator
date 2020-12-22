@@ -7,7 +7,7 @@ import discord
 from .utils.urlcheck import UrlCheck
 from src.utils.file_manager import FileManager
 from src.db import GuildAPI, UserApi
-from data.config import dstr
+from data.base_cfg import dstr
 from data.base_cfg import BASE_PATH
 
 class TextRedacotorCog(commands.Cog):
@@ -126,6 +126,9 @@ class TextRedacotorCog(commands.Cog):
         except FileNotFoundError:
             embed.title = f"ERROR, {self.bot.X_EMOJI}"
             embed.description = "Error, file not exists"
+        except UnicodeEncodeError:
+            embed.title = f"ERROR {self.bot.X_EMOJI}"
+            embed.description = "You try write to file, emoji or something like this, its unacceptable"
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=["current_file"])

@@ -66,10 +66,13 @@ class DiscordInfo(commands.Cog):
             return await ctx.send(embed=embed)
 
         file_to_read = f"{user.user_path}/{file}"
+
+        if not os.path.exists(file_to_read):
+            return await ctx.send("File not Exists!")
         try:
             with open(file_to_read, "r") as file:
                 lines = file.read()
-                if len(lines) >= 3000:
+                if len(lines) >= 2048:
                     return await ctx.send("File too long")
             embed.title = f"Succes, {self.bot.APPLY_EMOJI}"
             embed.description = lines

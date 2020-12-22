@@ -1,7 +1,6 @@
 import asyncio
 from typing import List
 import os
-import datetime
 import sys
 
 import discord
@@ -10,8 +9,7 @@ from discord.ext.commands import errors
 from loguru import logger
 
 from src.utils import log
-from data.config import dstr, dbool, dint
-from data.config import LOGS_BASE_PATH
+from data.base_cfg import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX
 from src.utils.help import HelpFormat
 from src.utils import context
 from src.utils.file_manager import FileManager
@@ -21,15 +19,15 @@ from src.db import db
 
 class Bot(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=f"{dstr('PREFIX')}",
+        super().__init__(command_prefix=PREFIX,
                          help_attrs=dict(hidden=True), pm_help=None)
 
         self.owner_id = 426028608906330115
         self.help_command = HelpFormat()
         self.fm: FileManager = FileManager(self.loop) # Shortcut
         self.uapi = UserApi() # shortcut
-        self.token = dstr("BOT_TOKEN", None)
-        self._drop_after_restart = dbool("DROP_AFTER_RESTART", False)
+        self.token = TOKEN
+        self.drop_after_restart = False
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = ':white_check_mark:'
         self.error_channel = None
@@ -41,7 +39,6 @@ class Bot(commands.AutoShardedBot):
         ]
         self.connected_to_database = asyncio.Event()
         self.count_commands = 0
-        self.DELETE_ALL_FILES = dbool("DELETE_ALL_FILES_AFTER_RESTART")
         self.X_EMOJI = ":x:"
 
     def __repr__(self):
@@ -51,12 +48,12 @@ class Bot(commands.AutoShardedBot):
         logger.info("creating database...")
         await db.set_bind(POSTGRES_URI)
 
-        if self._drop_after_restart:
+        if self.drop_after_restart:
             await db.gino.drop_all()
         await db.gino.create_all()
 
     async def on_ready(self):
-        error_channel_id = dint("ERROR_CHANNL", 775641526499147806)
+        error_channel_id = ERROR_CHANNEL
         if error_channel_id:
             channel = self.get_channel(error_channel_id)
             if isinstance(channel, discord.TextChannel):
@@ -180,7 +177,7 @@ class Bot(commands.AutoShardedBot):
 
         try:
             await self.create_db()
-            if self.DELETE_ALL_FILES:
+            if self.drop_after_restart:
                 logger.warning("Removing all files from files/ directory!")
                 await self.fm.delete_all_guild_files()
             await self.start(self.token)

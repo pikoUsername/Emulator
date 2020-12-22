@@ -3,7 +3,7 @@ import sys
 
 from loguru import logger
 
-from data import config
+from data import base_cfg
 
 
 class InterceptHandler(logging.Handler):
@@ -26,6 +26,6 @@ class InterceptHandler(logging.Handler):
 # noinspection PyArgumentList
 def setup():
     logger.add(sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO")
-    logger.add(config.LOGS_BASE_PATH + "/file_{time}.log")
+    logger.add(base_cfg.LOGS_BASE_PATH + "/file_{time}.log")
     logger.disable("sqlalchemy.engine.base")
     logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
