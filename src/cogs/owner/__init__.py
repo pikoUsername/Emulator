@@ -10,6 +10,7 @@ from discord.ext import commands
 from data.config import LOGS_BASE_PATH
 
 class OwnerCommands(commands.Cog):
+    """ Only for owners """
     def __int__(self, bot):
         self.bot = bot
 
@@ -101,7 +102,7 @@ class OwnerCommands(commands.Cog):
         except Exception:
             return await ctx.send("Failed to load file!")
 
-        if len(text) <= 4027:
+        if len(text) <= 2048:
             return await ctx.author.send(embed=discord.Embed(title="Whole Log", description=f"```{text}```"))
 
         try:

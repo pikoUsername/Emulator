@@ -11,6 +11,7 @@ from data.config import dstr
 from data.base_cfg import BASE_PATH
 
 class TextRedacotorCog(commands.Cog):
+    """ typical file redactor """
     def __init__(self, bot):
         self.bot = bot
         self.userapi = UserApi()
@@ -48,7 +49,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def add(self, ctx: commands.Context, *, text: str):
-        """ re-write choosed file! """
+        """ add current file text which you add in command """
         user = await UserApi.get_user_by_id(ctx.author.id)
 
         if not user:
@@ -58,44 +59,90 @@ class TextRedacotorCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def go_to_file(self, ctx: commands.Context, *, file: str):
-        """ Set current file """
+        """
+        Set current file, and checks you out
+        If you exists, your talbe current_file changes
+        """
         user = await self.userapi.get_user_by_id(ctx.author.id)
 
         if not user:
-            return await ctx.send(f"/shrug Type {self.bot.command_prefix}start for start")
+            return await ctx.send(f"Type {self.bot.command_prefix}start for start")
         if not os.path.exists(f"{user.user_path}/{file}"):
             return await ctx.send("File not exists")
 
-        await user.update(current_file=f"{user.user_path}/{file}")
-        await ctx.send(embed=discord.Embed(title="Go to File", description=f"Now your current file {file}"))
+        await user.update(current_file=f"{user.user_path}/{file}").apply()
+        await ctx.send(embed=discord.Embed(title=f"Succes, {self.bot.APPLY_EMOJI}", description=f"Now your current file is ``{file}``"))
 
     @commands.command(aliases=["remove_line"])
     @commands.guild_only()
     async def rm_line(self, ctx: commands.Context, *, line: str):
-        """ remove selected line in currect file"""
+        """ remove selected line in currect file, make sure you know what there"""
         if not line.isdigit():
-            await ctx.send("Not correct line!")
+            await ctx.send("perametr not a digit!")
             return
-
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
-        await self.bot.fm.remove_line(line, user)
+        if not user:
+            embed = discord.Embed()
+
+            embed.title = "You dont authorizated"
+            embed.description = f"Type {self.bot.command_prefix}start,\n for start if you didnt started"
+
+            return await ctx.send(embed=embed)
+
+        embed = discord.Embed()
+        try:
+            embed.title = f"Succes deleted line, {self.bot.APPLY_EMOJI}"
+            embed.description = f"Deleted line {line}"
+
+            await self.bot.fm.change_line(user, line)
+        except Exception:
+            embed.title = f"Error to remove line {self.bot.X_EMOJI}"
+            embed.description = "Error to remove line,\n failed, we track automacly error,\n but if error left then write bug report"
+        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
-    async def current_file(self, ctx: commands.Context):
+    async def write(self, ctx: commands.Context, file_: str,  *, text: str):
+        """ Check choosed file, you can type anything """
+        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+
+        if not user:
+            embed = discord.Embed()
+
+            embed.title = "You dont authorizated"
+            embed.description = f"Type {self.bot.command_prefix}start,\n for start if you didnt started"
+
+            return await ctx.send(embed=embed)
+
+        user_file = f"{user.user_path}\{file_}"
+        embed = discord.Embed()
+
+        try:
+            with open(user_file, "w") as file:
+                await self.bot.loop.run_in_executor(None, file.write, text)
+            embed.title = f"Succes, {self.bot.APPLY_EMOJI}"
+            embed.description = f"Writed to {file_}."
+        except FileNotFoundError:
+            embed.title = f"ERROR, {self.bot.X_EMOJI}"
+            embed.description = "Error, file not exists"
+        return await ctx.send(embed=embed)
+
+    @commands.command(aliases=["current_file"])
+    @commands.guild_only()
+    async def cf(self, ctx: commands.Context):
         """ get current user file """
         user = await self.userapi.get_user_by_id(ctx.author.id)
 
         if not user:
-            return await ctx.send(f"Type {self.bot.command_prefix}start to start")
+            embed = discord.Embed()
+
+            embed.title = "You dont authorizated"
+            embed.description = f"Type {self.bot.command_prefix}start,\n for start if you didnt started"
+
+            return await ctx.send(embed=embed)
+
         return await ctx.send(f"Your current file ```{user.current_file}```")
-
-    @commands.command()
-    @commands.guild_only()
-    async def upload_file(self, ctx: commands.Context, *, filename: str):
-        pass
-
     """ not working yet, danger 
     @commands.command()
     async def rm_file(self, ctx: commands.Context, *, file: str):
@@ -122,16 +169,20 @@ class TextRedacotorCog(commands.Cog):
             await ctx.send("Failed creating folder!")
             await self.bot.error_channel.send(e)
 
-    @commands.command()
+    @commands.command(aliases=["create_file"])
     @commands.guild_only()
-    @commands.cooldown(3, 4000)
-    async def create_file(self, ctx: commands.Context, name: str, *, type_: str="py"):
+    async def touch(self, ctx: commands.Context, name: str, *, type_: str="py"):
         """ create file in your folder """
-        user = await self.userapi.get_user_by_id(ctx.author.id)
+        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
         if not user:
-            return await ctx.send(embed=discord.Embed(title=f"User not authed {self.bot.X_EMOJI}",
-                                                              description=f"Type {self.bot.command_prefix}start for use this command"))
+            embed = discord.Embed()
+
+            embed.title = "You dont authorizated"
+            embed.description = f"Type {self.bot.command_prefix}start,\n for start if you didnt started"
+
+            return await ctx.send(embed=embed)
+
 
         if len(name) >= 300:
             return await ctx.send(embed=discord.Embed(
@@ -161,7 +212,12 @@ class TextRedacotorCog(commands.Cog):
         user = await self.userapi.get_user_by_id(ctx.author.id)
 
         if not user:
-            return await ctx.send(f"Type {self.bot.command_prefix}start to start")
+            embed = discord.Embed()
+
+            embed.title = "You dont authorizated"
+            embed.description = f"Type {self.bot.command_prefix}start,\n for start if you didnt started"
+
+            return await ctx.send(embed=embed)
         all_files = await self.bot.loop.run_in_executor(None, os.listdir, user.user_path)
 
         await ctx.send(embed=discord.Embed(

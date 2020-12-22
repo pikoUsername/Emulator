@@ -4,6 +4,8 @@ from typing import List
 import shutil
 import glob
 
+from discord.ext import commands
+
 from src.db.user import User
 from src.db.guild import Guild
 
@@ -108,16 +110,15 @@ class FileManager:
         :return:
         """
         if not guild_id:
-            list_dirs = glob.glob(r"C:\Vim-Emulator\files\*")
+            list_dirs = glob.glob(fr"{BASE_PATH}\*")
         else:
-            list_dirs = glob.glob(fr"C:\Vim-Emulator\files\guild_{guild_id}")
+            list_dirs = glob.glob(fr"{BASE_PATH}\guild_{guild_id}")
 
         for dirs in list_dirs:
             try:
                 shutil.rmtree(dirs)
-            except PermissionError:
+            except Exception:
                 pass
-
 
     @staticmethod
     def _get_line(line: int, user: User):
@@ -133,6 +134,13 @@ class FileManager:
             data = f.readlines()
 
         return data[line]
+
+    @staticmethod
+    def _change_line(user: User, line: int, to_change: str):
+        with open(user.current_file, "w") as file:
+            file.seek(line)
+            file.write(to_change)
+
 
     async def create_file(self, file_name: str, user: User, type_: str="py"):
         """
@@ -240,3 +248,9 @@ class FileManager:
             await self._loop.run_in_executor(None, self._get_line, line, user)
         except Exception as e:
             raise e
+
+    async def change_line(self, user: User, line: int, to_change: str="\n"):
+        try:
+            await self._loop.run_in_executor(None, self._change_line, user, line, to_change)
+        except Exception:
+            raise commands.CommandInvokeError("Fail to change line")

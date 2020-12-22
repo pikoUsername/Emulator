@@ -1,15 +1,19 @@
 from datetime import datetime
 import sys
+import os
+
 
 from discord.ext import commands
 import discord
 
 class DiscordInfo(commands.Cog):
+    """ Info about bot and etc. """
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command()
     async def admin_help(self, ctx: commands.Context):
+        """ get admin commands """
         text = [
             '```',
             f'{self.bot.command_prefix}remove_guild_folder - removes guild folder',
@@ -51,6 +55,31 @@ class DiscordInfo(commands.Cog):
         return await ctx.send(f"Ping - {ping[0:10]}")
 
     @commands.command()
+    @commands.guild_only()
+    async def about_file(self, ctx: commands.Context, *, file: str):
+        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        embed = discord.Embed()
+
+        if not user:
+            embed.title = f"You not authorizated {self.bot.X_EMOJI}"
+            embed.description = "No access for files"
+            return await ctx.send(embed=embed)
+
+        file_to_read = f"{user.user_path}/{file}"
+        try:
+            with open(file_to_read, "r") as file:
+                lines = file.read()
+                if len(lines) >= 3000:
+                    return await ctx.send("File too long")
+            embed.title = f"Succes, {self.bot.APPLY_EMOJI}"
+            embed.description = lines
+        except Exception as e:
+            embed.title = f"ERROR, {self.bot.X_EMOJI}"
+            embed.description = e
+        await ctx.send(embed=embed)
+
+
+    @commands.command()
     async def time(self, ctx: commands.Context):
         """ Get time """
         await ctx.send(embed=discord.Embed(
@@ -59,7 +88,7 @@ class DiscordInfo(commands.Cog):
         ).set_footer(text=f"requested by {ctx.author.display_name}",icon_url=ctx.author.avatar_url))
 
     @commands.command()
-    async def avatar(self, ctx: commands.Context, *, member: discord.Member):
+    async def avatar(self, ctx: commands.Context, member: discord.Member=None):
         """ Gets Avatar of author """
         if not member:
             await ctx.send(embed=discord.Embed(

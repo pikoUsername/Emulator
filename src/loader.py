@@ -1,6 +1,8 @@
 import asyncio
 from typing import List
 import os
+import datetime
+import sys
 
 import discord
 from discord.ext import commands
@@ -8,9 +10,10 @@ from discord.ext.commands import errors
 from loguru import logger
 
 from src.utils import log
-from data.config import dstr, dbool, dlist, dint
+from data.config import dstr, dbool, dint
 from data.config import LOGS_BASE_PATH
 from src.utils.help import HelpFormat
+from src.utils import context
 from src.utils.file_manager import FileManager
 from src.db.user import UserApi
 from data.base_cfg import POSTGRES_URI
@@ -26,7 +29,7 @@ class Bot(commands.AutoShardedBot):
         self.fm: FileManager = FileManager(self.loop) # Shortcut
         self.uapi = UserApi() # shortcut
         self.token = dstr("BOT_TOKEN", None)
-        self._drop_after_restart = dbool("DROP_AFTER_RESTART", True)
+        self._drop_after_restart = dbool("DROP_AFTER_RESTART", False)
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = ':white_check_mark:'
         self.error_channel = None
@@ -48,11 +51,12 @@ class Bot(commands.AutoShardedBot):
         logger.info("creating database...")
         await db.set_bind(POSTGRES_URI)
 
-        await db.gino.drop_all()
+        if self._drop_after_restart:
+            await db.gino.drop_all()
         await db.gino.create_all()
 
     async def on_ready(self):
-        error_channel_id = dint("ERROR_CHANNEL", 775641526499147806)
+        error_channel_id = dint("ERROR_CHANNL", 775641526499147806)
         if error_channel_id:
             channel = self.get_channel(error_channel_id)
             if isinstance(channel, discord.TextChannel):
@@ -83,6 +87,13 @@ class Bot(commands.AutoShardedBot):
         """
         return os.listdir(LOGS_BASE_PATH)
 
+    async def process_command(self, message):
+        if message.author.bot:
+            return
+
+        ctx = await self.get_context(message, cls=context.Context)
+        await self.invoke(ctx)
+
     async def on_command_error(self, ctx: commands.Context, err):
         file = self.get_last_log_file()
         if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
@@ -90,7 +101,7 @@ class Bot(commands.AutoShardedBot):
             await ctx.send_help(helper)
 
         elif isinstance(err, errors.CommandInvokeError):
-            logger.exception(err)
+            logger.exception(f"{err}, {sys.exc_info()}")
 
             await self.error_channel.send(file=file)
 
@@ -166,8 +177,6 @@ class Bot(commands.AutoShardedBot):
             except Exception as e:
                 logger.exception(e)
                 return
-
-        self.load_extension('jishaku')
 
         try:
             await self.create_db()
