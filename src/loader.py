@@ -37,6 +37,7 @@ class Bot(commands.AutoShardedBot):
             "src.cogs.info",
             "src.cogs.owner",
             "src.cogs.meta",
+            "src.cogs.admin",
         ]
         self.connected_to_database = asyncio.Event()
         self.count_commands = 0
@@ -93,7 +94,7 @@ class Bot(commands.AutoShardedBot):
         await self.invoke(ctx)
 
     async def on_command_error(self, ctx: commands.Context, err):
-        file = self.get_last_log_file()
+        # file = self.get_last_log_file()
         if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
             helper = str(ctx.invoked_subcommand) if ctx.invoked_subcommand else str(ctx.command)
             await ctx.send_help(helper)
@@ -101,7 +102,7 @@ class Bot(commands.AutoShardedBot):
         elif isinstance(err, errors.CommandInvokeError):
             logger.exception(f"{err}, {sys.exc_info()}")
 
-            await self.error_channel.send(file=file)
+            # await self.error_channel.send(file=file)
 
             if "2000 or fewer" in str(err) and len(ctx.message.clean_content) > 1900:
                 return await ctx.send(
@@ -132,7 +133,8 @@ class Bot(commands.AutoShardedBot):
                            )
 
         else:
-            await self.error_channel.send(file=file)
+            logger.exception(err)
+            # await self.error_channel.send(file=file)
 
     def get_last_log_file(self):
         """

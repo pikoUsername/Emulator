@@ -121,6 +121,27 @@ class FileManager:
                 pass
 
     @staticmethod
+    def _remove_user_folder(user: User):
+        """
+        Removes user folder, with all files directory
+
+        :param user:
+        :return:
+        """
+        user_path = user.user_path
+
+        if not user_path:
+            return
+
+        list_files = os.listdir(user_path)
+        try:
+            for file in list_files:
+                os.remove(f"{user_path}/{file}")
+            shutil.rmtree(user_path)
+        except Exception:
+            commands.CommandInvokeError("Failed to remove user dir")
+
+    @staticmethod
     def _get_line(line: int, user: User):
         """
         get user path and select this, and open it
@@ -254,3 +275,9 @@ class FileManager:
             await self._loop.run_in_executor(None, self._change_line, user, line, to_change)
         except Exception:
             raise commands.CommandInvokeError("Fail to change line")
+
+    async def remove_user_folder(self, user: User):
+        try:
+            await self._loop.run_in_executor(None, self._remove_user_folder, user)
+        except Exception as e:
+            commands.CommandInvokeError(e)

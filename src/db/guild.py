@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from sqlalchemy import sql
+from sqlalchemy import sql, ForeignKey
 import discord
 
 from .base import BaseModel, db
