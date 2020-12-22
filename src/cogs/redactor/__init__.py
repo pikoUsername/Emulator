@@ -189,7 +189,7 @@ class TextRedacotorCog(commands.Cog):
 
         if len(name) >= 300:
             return await ctx.send(embed=discord.Embed(
-                title=f"{self.bot.X_EMOJI}",
+                title=f"Not have enough access {self.bot.X_EMOJI}",
                 description="Too long file name",
             ))
         elif os.path.exists(f"{BASE_PATH}/{name}.{type_}"):
@@ -210,14 +210,17 @@ class TextRedacotorCog(commands.Cog):
 
     @commands.command(aliases=["list", "list_files"])
     @commands.guild_only()
-    async def ls(self, ctx: commands.Context):
+    async def ls(self, ctx: commands.Context, *, member: discord.Member=None):
         """ List files """
-        user = await self.userapi.get_user_by_id(ctx.author.id)
+        if not member:
+            user = await self.userapi.get_user_by_id(ctx.author.id)
+        else:
+            user = await self.userapi.get_user_by_id(member.id)
 
         if not user:
             embed = discord.Embed()
 
-            embed.title = "You dont authorizated"
+            embed.title = "User didnt authorizated"
             embed.description = f"Type {self.bot.command_prefix}start,\n for start if you didnt started"
 
             return await ctx.send(embed=embed)

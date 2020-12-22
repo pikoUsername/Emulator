@@ -11,22 +11,6 @@ class DiscordInfo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
-    async def admin_help(self, ctx: commands.Context):
-        """ get admin commands """
-        text = [
-            '```',
-            f'{self.bot.command_prefix}remove_guild_folder - removes guild folder',
-            f'{self.bot.command_prefix}get_logs - get all logs only for owner',
-            f'{self.bot.command_prefix}change_username - changes username of bot',
-            f"{self.bot.command_prefix}reboot - reboot the bot only for owner",
-            '```'
-        ]
-        emb = discord.Embed(title="Help")
-        emb.description = "\n".join(text)
-
-        await ctx.send(embed=emb)
-
     @commands.command(aliases=["?"])
     async def info(self, ctx: commands.Context):
         """ get Info about Bot """
@@ -46,7 +30,7 @@ class DiscordInfo(commands.Cog):
         .add_field(name="Github", value="(Here)[https://github.com/pikoUsername/Emulator]")
         .add_field(name="Library", value="(discord.py)[https://github.com/Rapptz/discord.py]")
         .set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}",
-                    icon_url=ctx.author.avatar_url)
+                    icon_url=ctx.author.avatar_url),
         )
 
     @commands.command()
@@ -70,13 +54,18 @@ class DiscordInfo(commands.Cog):
 
         if not os.path.exists(file_to_read):
             return await ctx.send("File not Exists!")
+
         try:
             with open(file_to_read, "r") as file:
                 lines = file.read()
                 if len(lines) >= 2048:
                     return await ctx.send("File too long")
+
             embed.title = f"Succes, {self.bot.APPLY_EMOJI}"
-            embed.description = lines
+            text = [
+                f"{lines}",
+            ]
+            embed.description = "\n".join(text)
         except Exception as e:
             embed.title = f"ERROR, {self.bot.X_EMOJI}"
             embed.description = e
@@ -98,6 +87,7 @@ class DiscordInfo(commands.Cog):
             await ctx.send(embed=discord.Embed(
                 title=f"Avatar {ctx.author.display_name}",
             ).set_image(url=ctx.author.avatar_url))
+            return
 
         await ctx.send(embed=discord.Embed(
             title=f"Avatar {member.display_name}",
