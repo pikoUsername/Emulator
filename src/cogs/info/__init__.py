@@ -43,7 +43,8 @@ class DiscordInfo(commands.Cog):
             description="\n".join(text))
         .add_field(name="Python version", value=f"{sys.version_info.major}.{sys.version_info.minor}")
         .add_field(name="Author", value="piko#0381")
-        .add_field(name="Github", value="https://github.com/pikoUsername/Emulator")
+        .add_field(name="Github", value="(Here)[https://github.com/pikoUsername/Emulator]")
+        .add_field(name="Library", value="(discord.py)[https://github.com/Rapptz/discord.py]")
         .set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}",
                     icon_url=ctx.author.avatar_url)
         )

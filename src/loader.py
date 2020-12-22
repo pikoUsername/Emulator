@@ -36,6 +36,7 @@ class Bot(commands.AutoShardedBot):
             "src.cogs.redactor",
             "src.cogs.info",
             "src.cogs.owner",
+            "src.cogs.meta",
         ]
         self.connected_to_database = asyncio.Event()
         self.count_commands = 0
@@ -179,6 +180,7 @@ class Bot(commands.AutoShardedBot):
             await self.create_db()
             if self.drop_after_restart:
                 logger.warning("Removing all files from files/ directory!")
+                await asyncio.wait(4)
                 await self.fm.delete_all_guild_files()
             await self.start(self.token)
         except Exception as e:

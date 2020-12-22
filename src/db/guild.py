@@ -1,12 +1,17 @@
 import asyncio
 import os
 
-from sqlalchemy import ForeignKey, sql
+from sqlalchemy import sql
 import discord
 
 from .base import BaseModel, db
 from data.base_cfg import BASE_PATH
+from src.utils.i18n import LanguageData
 
+AVALIABLE_LANGUAGES = {
+    "en": LanguageData("🇺🇸", "English"),
+    "ru": LanguageData("🇷🇺", "Русский"),
+}
 
 class Guild(BaseModel):
     __tablename__ = 'guilds'
@@ -16,6 +21,7 @@ class Guild(BaseModel):
     id = db.Column(db.Integer, db.Sequence("user_id_seq"), primary_key=True)
     guild_id = db.Column(db.BigInteger)
     guild_name = db.Column(db.String(200))
+    language = db.Column(db.String(6), default="en_US")
 
 class GuildAPI:
     @staticmethod
@@ -53,4 +59,8 @@ class GuildAPI:
             await self.create_guild_folder(guild)
 
         return fr"{BASE_PATH}\\guild_{guild.id}"
+
+    async def change_lang(self, guild: Guild):
+        pass
+
 
