@@ -1,4 +1,4 @@
-[![Python versions](https://img.shields.io/pypi/pyversions/pillow)](https://pypi.python.org/pypi/jishaku)
+[![Python versions](https://img.shields.io/pypi/pyversions/pillow)](https://www.python.org/downloads/release/python-380/)
 
 ***
 
