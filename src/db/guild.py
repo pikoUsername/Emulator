@@ -17,10 +17,6 @@ class Guild(BaseModel):
     guild_id = db.Column(db.BigInteger)
     guild_name = db.Column(db.String(200))
 
-    def __repr__(self):
-        return "<Guild(id='{0.id}', guild_id='{0.guild_id}', guild_name='{0.guild_name}'".format(self)
-
-
 class GuildAPI:
     @staticmethod
     async def get_guild(guild_id: int):

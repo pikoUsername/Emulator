@@ -22,8 +22,6 @@ class User(BaseModel):
     current_file = db.Column(db.String(100))
     user_path = db.Column(db.String(200))
 
-    def __repr__(self):
-        return "<Users id='{0.id}', user_id='{0.user_id}', name='{0.name}', user_path='{0.user_path}'>".format(self)
 
 class UserApi:
     @staticmethod
