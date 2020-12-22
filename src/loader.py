@@ -182,7 +182,6 @@ class Bot(commands.AutoShardedBot):
             await self.create_db()
             if self.drop_after_restart:
                 logger.warning("Removing all files from files/ directory!")
-                await asyncio.wait(4)
                 await self.fm.delete_all_guild_files()
             await self.start(self.token)
         except Exception as e:

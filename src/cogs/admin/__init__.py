@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 
-from src.db.guild import AVALIABLE_LANGUAGES, GuildAPI
+from src.db.guild import GuildAPI
 
 class AdminCommands(commands.Cog):
     def __init__(self, bot):
@@ -11,6 +11,7 @@ class AdminCommands(commands.Cog):
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def change_lang(self, ctx: commands.Context, language: str):
+        AVALIABLE_LANGUAGES = {"Lol": "No"}
         for keys in AVALIABLE_LANGUAGES.keys():
             if not keys in language:
                 return await ctx.send("Not available language")
@@ -47,7 +48,7 @@ class AdminCommands(commands.Cog):
                 description="User folder was removed, and table too",
             ))
             await member.send(f"You now in {ctx.guild.guild_name}, was removed forever, reason: {reason}")
-        except Exception as e:
+        except Exception:
             await ctx.send(embed=discord.Embed(
                 title=f"failed {self.bot.X_EMOJI}",
                 description="Failed to remove user model, and folder! maybe permission error"

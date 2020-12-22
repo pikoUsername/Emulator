@@ -174,6 +174,7 @@ class TextRedacotorCog(commands.Cog):
 
     @commands.command(aliases=["create_file"])
     @commands.guild_only()
+    @commands.cooldown(20, 2000, commands.BucketType.guild)
     async def touch(self, ctx: commands.Context, name: str, *, type_: str="py"):
         """ create file in your folder """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
@@ -210,6 +211,7 @@ class TextRedacotorCog(commands.Cog):
 
     @commands.command(aliases=["list", "list_files"])
     @commands.guild_only()
+    @commands.cooldown(30, 200, commands.BucketType.guild)
     async def ls(self, ctx: commands.Context, *, member: discord.Member=None):
         """ List files """
         if not member:
