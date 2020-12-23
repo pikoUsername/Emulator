@@ -29,8 +29,14 @@ class AdminCommands(commands.Cog):
     @commands.command(aliases=["rm-ufull"])
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
-    async def remove_user(self, ctx: commands.Context, member: discord.Member, *, reason: str):
-        """ Listen "detach" group, i love this music """
+    async def remove_user(self, ctx: commands.Context, member: discord.Member, *, reason: str=None):
+        """ Deletes user from bot, not a discord Guild """
+        if ctx.author.id == memeber.id: 
+        	await ctx.send(embed=discord.Embed(
+        		title=f"ERROR {self.bot.X_EMOJI}",
+        		description="You cant remove yourself!"
+        	))
+
         user = await self.bot.uapi.get_user_by_id(member.id)
 
         if not user:

@@ -4,6 +4,7 @@ from discord.ext import commands
 from loguru import logger
 import discord
 
+
 from .utils.urlcheck import UrlCheck
 from src.utils.file_manager import FileManager
 from src.db import GuildAPI, UserApi
@@ -187,7 +188,6 @@ class TextRedacotorCog(commands.Cog):
 
             return await ctx.send(embed=embed)
 
-
         if len(name) >= 300:
             return await ctx.send(embed=discord.Embed(
                 title=f"Not have enough access {self.bot.X_EMOJI}",
@@ -195,8 +195,6 @@ class TextRedacotorCog(commands.Cog):
             ))
         elif os.path.exists(f"{BASE_PATH}/{name}.{type_}"):
             await ctx.send("this File aleardy exists")
-
-        await ctx.send("Creating File...")
 
         try:
             await self.fm.create_file(name, user, type_)
@@ -207,7 +205,7 @@ class TextRedacotorCog(commands.Cog):
                 description=f"```{e}```",
             ))
         else:
-            await ctx.send(embed=discord.Embed(title=f"Succes! {self.bot.APPLY_EMOJI}",description=f"Created file {name}"))
+            await ctx.message.add_reaction("✅")
 
     @commands.command(aliases=["list", "list_files"])
     @commands.guild_only()

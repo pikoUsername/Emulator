@@ -6,7 +6,7 @@ from sqlalchemy import sql
 import discord
 
 from .base import BaseModel, db
-from data.base_cfg import BASE_PATH
+from data.base_cfg import BASE_PATH, PREFIX
 
 
 class Guild(BaseModel):
@@ -21,7 +21,7 @@ class Guild(BaseModel):
 class GuildAPI:
     @staticmethod
     async def get_guild(guild_id: int):
-        guild = Guild.query.where(Guild.guild_id == guild_id).gino.first()
+        guild = await Guild.query.where(Guild.guild_id == guild_id).gino.first()
         return guild
 
     async def add_guild(self, guild: discord.Guild): # guild examplar
@@ -54,4 +54,5 @@ class GuildAPI:
             await self.create_guild_folder(guild)
 
         return fr"{BASE_PATH}\\guild_{guild.id}"
+
 

@@ -6,3 +6,4 @@ class UrlCheck:
         if not self.url.startswith("https://cdn.discordapp.com/"):
             return False
         return True
+

@@ -33,14 +33,6 @@ class DiscordEvents(commands.Cog):
             await self.on_message(after)
 
     @commands.Cog.listener()
-    async def on_command(self, ctx: commands.Context):
-        self.bot.count_commands =+ 1
-        try:
-            logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}, guild: {ctx.guild.name}")
-        except Exception:
-            logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}")
-
-    @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         guild = await GuildAPI.get_guild(guild.id)
 

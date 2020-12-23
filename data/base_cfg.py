@@ -30,6 +30,7 @@ POSTGRES_PASS = dstr("DB_PASS")
 
 TOKEN = dstr("BOT_TOKEN")
 PREFIX = os.getenv("PREFIX")
+description = dstr("description", None)
 
 ERROR_CHANNEL = os.getenv("ERROR_CHANNEL")
 

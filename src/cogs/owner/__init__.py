@@ -12,7 +12,7 @@ from data.base_cfg import LOGS_BASE_PATH
 class OwnerCommands(commands.Cog):
     """ Only for owners """
     def __int__(self, bot):
-        self.bot: 'Bot' = bot
+        self.bot = bot
 
     @commands.command()
     @commands.is_owner()

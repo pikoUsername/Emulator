@@ -1,5 +1,6 @@
 import asyncio
 
+import discord
 from loguru import logger
 
 from src.loader import Bot
@@ -7,16 +8,19 @@ from src.loader import Bot
 def main():
     bot = Bot()
     loop = asyncio.get_event_loop()
+    run = loop.run_until_complete
+
+    loop.create_task(bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Netflix")))
 
     try:
-        loop.run_until_complete(bot.run_itself())
+        run((bot.run_itself()))
     except Exception as e:
         logger.exception(f"ERROR: {e}")
     except KeyboardInterrupt:
         logger.info("goodbye")
     finally:
         try:
-            loop.run_until_complete(bot.logout())
+            run((bot.logout()))
         except asyncio.TimeoutError:
             pass
 

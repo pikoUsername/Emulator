@@ -155,14 +155,16 @@ class HelpFormat(commands.DefaultHelpCommand):
         menu = HelpMenu(GroupHelpPageSource(cog, entries, prefix=self.clean_prefix))
         await menu.start(self.context)
 
-    def common_command_formatting(self, embed_like, command):
+    def common_command_formatting(self, embed_like, command: commands.Command):
         embed_like.title = self.get_command_signature(command)
         if command.description:
-            embed_like.description = f'{command.description}\n\n{command.help}'
+            embed_like.description = f'{command.description}\n\n{command.help}\nalises:\n{command.aliases}'
         else:
-            embed_like.description = command.help or 'No help found...'
+            embed_like.description = command.help
+            embed_like.add_field(name="alises",value=f"\n{command.aliases if command.aliases else 'No aliases'} " or 'No help found...')
 
-    async def send_command_help(self, command):
+
+    async def send_command_help(self, command: commands.Command):
         # No pagination necessary for a single command.
         embed = discord.Embed(colour=discord.Colour.blurple())
         self.common_command_formatting(embed, command)

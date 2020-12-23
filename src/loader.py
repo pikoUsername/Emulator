@@ -9,17 +9,18 @@ from discord.ext.commands import errors
 from loguru import logger
 
 from src.utils import log
-from data.base_cfg import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX
+from data.base_cfg import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX, description
 from src.utils.help import HelpFormat
 from src.utils import context
 from src.utils.file_manager import FileManager
-from src.db.user import UserApi
+from src.db import UserApi
 from data.base_cfg import POSTGRES_URI
 from src.db import db
 
+
 class Bot(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=PREFIX,
+        super().__init__(command_prefix=PREFIX, description=description,
                          help_attrs=dict(hidden=True), pm_help=None)
 
         self.owner_id = 426028608906330115
@@ -42,6 +43,9 @@ class Bot(commands.AutoShardedBot):
         self.connected_to_database = asyncio.Event()
         self.count_commands = 0
         self.X_EMOJI = ":x:"
+
+    async def get_prefix(self, message):
+        return [f"{PREFIX} ", f"<@{self.user.id}> ", f"<@!{self.user.id}> "]
 
     def __repr__(self):
         return f"<Bot name='{self.user.name}', id='{self.user.id}'>"
@@ -92,6 +96,13 @@ class Bot(commands.AutoShardedBot):
 
         ctx = await self.get_context(message, cls=context.Context)
         await self.invoke(ctx)
+
+    async def on_command(self, ctx: commands.Context):
+        self.count_commands =+ 1
+        try:
+            logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}, guild: {ctx.guild.name}")
+        except Exception:
+            logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}")
 
     async def on_command_error(self, ctx: commands.Context, err):
         # file = self.get_last_log_file()
