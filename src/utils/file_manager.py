@@ -196,7 +196,7 @@ class FileManager:
             return
         if not filename:
             return
-        await self._loop.run_in_executor(None, os.remove, filename)
+        await self._loop.run_in_executor(None, os.remove, f"{user_path}/{filename}")
 
 
     async def open_file(self, filename: str, user: User):

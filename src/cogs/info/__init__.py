@@ -27,8 +27,8 @@ class DiscordInfo(commands.Cog):
             description="\n".join(text))
         .add_field(name="Python version", value=f"{sys.version_info.major}.{sys.version_info.minor}")
         .add_field(name="Author", value="piko#0381")
-        .add_field(name="Github", value="(Here)[https://github.com/pikoUsername/Emulator]")
-        .add_field(name="Library", value="(discord.py)[https://github.com/Rapptz/discord.py]")
+        .add_field(name="Github", value="[here](https://github.com/pikoUsername/Emulator)")
+        .add_field(name="Library", value="[discord.py](https://github.com/Rapptz/discord.py)")
         .set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}",
                     icon_url=ctx.author.avatar_url),
         )
@@ -41,7 +41,8 @@ class DiscordInfo(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    async def about_file(self, ctx: commands.Context, *, file: str):
+    async def file(self, ctx: commands.Context, *, file_: str=None):
+        """ Show current file, if you set file, then show file text """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
         embed = discord.Embed()
 
@@ -49,8 +50,10 @@ class DiscordInfo(commands.Cog):
             embed.title = f"You not authorizated {self.bot.X_EMOJI}"
             embed.description = "No access for files"
             return await ctx.send(embed=embed)
-
-        file_to_read = f"{user.user_path}/{file}"
+        if not file_:
+            file_to_read = f"{user.current_file}"
+        else:
+            file_to_read = f"{user.user_path}/{file_}"
 
         if not os.path.exists(file_to_read):
             return await ctx.send("File not Exists!")
@@ -61,14 +64,15 @@ class DiscordInfo(commands.Cog):
                 if len(lines) >= 2048:
                     return await ctx.send("File too long")
 
-            embed.title = f"Succes, {self.bot.APPLY_EMOJI}"
+            embed.title = f"Text of file: {file_}"
             text = [
-                f"{lines}",
+                f"```{lines}```",
             ]
             embed.description = "\n".join(text)
         except Exception as e:
             embed.title = f"ERROR, {self.bot.X_EMOJI}"
             embed.description = e
+        embed.set_footer(text=f"Current file: {user.current_file}")
         await ctx.send(embed=embed)
 
 

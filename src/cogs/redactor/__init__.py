@@ -102,10 +102,10 @@ class TextRedacotorCog(commands.Cog):
             embed.description = "Error to remove line,\n failed, we track automacly error,\n but if error left then write bug report"
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(alises=["w"])
     @commands.guild_only()
-    async def write(self, ctx: commands.Context, file_: str,  *, text: str):
-        """ Check choosed file, you can type anything """
+    async def write(self, ctx: commands.Context, *, text: str):
+        """ Write to current file, you can type anything """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
         if not user:
@@ -116,14 +116,14 @@ class TextRedacotorCog(commands.Cog):
 
             return await ctx.send(embed=embed)
 
-        user_file = f"{user.user_path}\{file_}"
+        user_file = user.current_file
         embed = discord.Embed()
 
         try:
             with open(user_file, "w") as file:
                 await self.bot.loop.run_in_executor(None, file.write, text)
-            embed.title = f"Succes, {self.bot.APPLY_EMOJI}"
-            embed.description = f"Writed to {file_}."
+            embed.title = f"Succes {self.bot.APPLY_EMOJI}"
+            embed.description = f"Writed to current file, check it with command, {self.bot.command_prefix}cf."
         except FileNotFoundError:
             embed.title = f"ERROR, {self.bot.X_EMOJI}"
             embed.description = "Error, file not exists"
@@ -132,9 +132,9 @@ class TextRedacotorCog(commands.Cog):
             embed.description = "You try write to file, emoji or something like this, its unacceptable"
         return await ctx.send(embed=embed)
 
-    @commands.command(aliases=["current_file"])
+    @commands.command(aliases=["cf"])
     @commands.guild_only()
-    async def cf(self, ctx: commands.Context):
+    async def current_file(self, ctx: commands.Context):
         """ get current user file """
         user = await self.userapi.get_user_by_id(ctx.author.id)
 
@@ -147,17 +147,19 @@ class TextRedacotorCog(commands.Cog):
             return await ctx.send(embed=embed)
 
         return await ctx.send(f"Your current file ```{user.current_file}```")
-    """ not working yet, danger 
-    @commands.command()
+
+    @commands.command(aliases=["rm"])
+    @commands.guild_only()
     async def rm_file(self, ctx: commands.Context, *, file: str):
-        remove selected file, be cary about it!
+        """remove selected file, be cary about it!"""
         user = await self.userapi.get_user_by_id(ctx.author.id)
 
         if not user:
-            return await ctx.send(f"Type {self.bot.command_prefix}start, and comehere there")
+            return await ctx.send(f"Type {self.bot.command_prefix}start, and comehere again")
+        if not os.path.exists(f"{user.user_path}/{file}"):
+            return await ctx.message.add_reaction("❌")
         await self.fm.remove_file(file, user)
-    """
-
+        await ctx.message.add_reaction("✅")
 
     @commands.command()
     @commands.is_owner()
@@ -168,7 +170,7 @@ class TextRedacotorCog(commands.Cog):
         to_create = f"{path}/{name}"
         try:
             await loop.run_in_executor(None, os.mkdir, to_create)
-            await ctx.send("Success you created folder")
+            await ctx.message.add_reaction("✅")
         except Exception as e:
             await ctx.send("Failed creating folder!")
             await self.bot.error_channel.send(e)
