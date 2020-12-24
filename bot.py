@@ -1,6 +1,6 @@
 import asyncio
+import os
 
-import discord
 from loguru import logger
 
 from src.loader import Bot
@@ -9,8 +9,6 @@ def main():
     bot = Bot()
     loop = asyncio.get_event_loop()
     run = loop.run_until_complete
-
-    loop.create_task(bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Netflix")))
 
     try:
         run((bot.run_itself()))

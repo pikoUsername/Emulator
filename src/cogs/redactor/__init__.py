@@ -1,15 +1,15 @@
 import os
+from os.path import join
+import time
 
 from discord.ext import commands
 from loguru import logger
 import discord
 
-
 from .utils.urlcheck import UrlCheck
 from src.utils.file_manager import FileManager
 from src.db import GuildAPI, UserApi
-from data.base_cfg import dstr
-from data.base_cfg import BASE_PATH
+from data.base_cfg import dstr, PREFIX, BASE_PATH
 
 class TextRedacotorCog(commands.Cog):
     """ typical file redactor """
@@ -33,6 +33,7 @@ class TextRedacotorCog(commands.Cog):
             return await ctx.send(embed=discord.Embed(
                 title=f"Access Error {self.bot.X_EMOJI}",
                 description="You aleardy registered in DB!",
+                colour=discord.Colour.red(),
             ))
 
         if not user:
@@ -49,7 +50,7 @@ class TextRedacotorCog(commands.Cog):
             except Exception as e:
                 logger.exception(e)
                 return await ctx.send("ERROR in creating folder and main.py script!")
-        await ctx.send(embed=discord.Embed(title=f"Success {self.bot.APPLY_EMOJI}", description="Succes created folder with ur name!"))
+        await ctx.send(embed=discord.Embed(title=f"Success {self.bot.APPLY_EMOJI}", description="Succes created folder with ur name!", colour=discord.Colour.blue()))
 
     @commands.command()
     async def add(self, ctx: commands.Context, *, text: str):
@@ -116,7 +117,7 @@ class TextRedacotorCog(commands.Cog):
             return await ctx.send(embed=embed)
 
         user_file = user.current_file
-        embed = discord.Embed()
+        embed = discord.Embed(colour=discord.Colour.blue())
 
         try:
             with open(user_file, "w") as file:
@@ -137,7 +138,7 @@ class TextRedacotorCog(commands.Cog):
         user = await self.userapi.get_user_by_id(ctx.author.id)
 
         if not user:
-            embed = discord.Embed()
+            embed = discord.Embed(colour=discord.Colour.blue())
 
             embed.title = "You dont authorizated"
             embed.description = f"Type {self.bot.command_prefix}start,\n for start if you didnt started"
@@ -146,17 +147,32 @@ class TextRedacotorCog(commands.Cog):
 
         return await ctx.send(f"Your current file ```{user.current_file}```")
 
-    @commands.command(aliases=["rm"])
-    async def rm_file(self, ctx: commands.Context, *, file: str):
-        """remove selected file, be cary about it!"""
+    @commands.command(aliases=["rm", "remove_file", "remove"])
+    async def rm_file(self, ctx: commands.Context, *, files: str):
+        """
+        remove selected file, be cary about it!
+
+        You can select more 1 file, example:
+        ```
+        >> rm_file lol.py file.py kak.py hello.py
+        ```
+        but cary about it, because it can be deleted forever
+        """
         user = await self.userapi.get_user_by_id(ctx.author.id)
 
         if not user:
-            return await ctx.send(f"Type {self.bot.command_prefix}start, and comehere again")
-        if not os.path.exists(f"{user.user_path}/{file}"):
-            return await ctx.message.add_reaction("❌")
-        await self.fm.remove_file(file, user)
-        await ctx.message.add_reaction("✅")
+            return await ctx.send(f"Type {self.bot.command_prefix}start, and come here again")
+
+        try:
+            for file in files:
+                if not os.path.exists(f"{user.user_path}/{file}"):
+                    await ctx.send("**FNE**(**F**ile **N**ot **E**xists)")
+                    return await ctx.message.add_reaction("❌")
+                await self.fm.remove_file(file, user)
+            await ctx.message.add_reaction("✅")
+        except Exception as e:
+            await ctx.message.add_reaction("❌")
+
 
     @commands.command()
     @commands.is_owner()
@@ -179,17 +195,18 @@ class TextRedacotorCog(commands.Cog):
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
         if not user:
-            embed = discord.Embed()
+            embed = discord.Embed(colour=discord.Colour.blue())
 
             embed.title = "You dont authorizated"
             embed.description = f"Type {self.bot.command_prefix}start,\n for start if you didnt started"
 
             return await ctx.send(embed=embed)
 
-        if len(name) >= 300:
+        if len(name) >= 78:
             return await ctx.send(embed=discord.Embed(
                 title=f"Not have enough access {self.bot.X_EMOJI}",
                 description="Too long file name",
+                colour=discord.Colour.blue(),
             ))
         elif os.path.exists(f"{BASE_PATH}/{name}.{type_}"):
             await ctx.send("this File aleardy exists")
@@ -201,32 +218,93 @@ class TextRedacotorCog(commands.Cog):
             return await ctx.send(embed=discord.Embed(
                 title=f"ERROR, {self.bot.X_EMOJI}",
                 description=f"```{e}```",
+                colour=discord.Colour.blue(),
             ))
         else:
             await ctx.message.add_reaction("✅")
 
     @commands.command(aliases=["list", "list_files"])
     @commands.cooldown(30, 200, commands.BucketType.guild)
-    async def ls(self, ctx: commands.Context, *, member: discord.Member=None):
-        """ List files """
+    async def ls(self, ctx: commands.Context, flags: str=None, *, member: discord.Member=None):
+        """
+        List files, with flags
+
+        -A: get all files with info,
+        command get sorted files,
+        example:
+        ```
+        Files:    size:   updated_at:
+        justd.py   23KB   1923.12.30 12:23:30
+        dod.py    12KB    1923.12.23 23:43:23
+        kik.js    90KB    1923.12.29 16:22:32
+        ```
+        """
         if not member:
             user = await self.userapi.get_user_by_id(ctx.author.id)
         else:
             user = await self.userapi.get_user_by_id(member.id)
 
         if not user:
-            embed = discord.Embed()
+            embed = discord.Embed(colour=discord.Colour.blue())
 
             embed.title = "User didnt authorizated"
-            embed.description = f"Type {self.bot.command_prefix}start,\n for start if you didnt started"
+            embed.description = f"Type {PREFIX}start,\n for start if you didnt started"
 
             return await ctx.send(embed=embed)
         all_files = await self.bot.loop.run_in_executor(None, os.listdir, user.user_path)
 
-        await ctx.send(embed=discord.Embed(
-            title=f"All files in your directory",
-            description="\n".join(all_files),
-        ))
+        if not flags:
+            await ctx.send(embed=discord.Embed(
+                title=f"All files in your directory",
+                description="\n".join(all_files),
+                colour=discord.Colour.blue(),
+            ))
+            return
+
+        if not flags in ["-A", "-a"]:
+            return await ctx.send_help(ctx.command)
+
+        embed = discord.Embed(title="All files", colour=discord.Colour.blue())
+        files_sorted_by_size = sorted(self.get_files_info(f"{user.user_path}/"), reverse=True, key=lambda x: x[1].st_size)
+        sizes = []
+        updated_at = []
+        name_files = []
+
+        for file_name, file_stat in files_sorted_by_size:
+            sizes.append(self.sizeof_fmt(file_stat.st_size))
+            updated_at.append(self.get_date_as_string(file_stat.st_mtime))
+
+
+        for file in all_files:
+            name_files.append(file)
+
+        embed.add_field(name="file name", value="\n\n".join(name_files))
+        embed.add_field(name="Size", value="\n\n".join(sizes))
+        embed.add_field(name="updated at", value="\n\n".join(updated_at))
+
+        await ctx.send(embed=embed)
+
+    @staticmethod
+    def get_files_info(dir_name):
+        for root, dirs, files in os.walk(dir_name):
+            for file_name in files:
+                abs_file_name = join(root, file_name)
+
+                yield abs_file_name, os.stat(abs_file_name)
+
+    @staticmethod
+    def sizeof_fmt(num):
+        for x in ['bytes', 'KB', 'MB', 'GB']:
+            if num < 1024.0:
+                return "%3.1f %s" % (num, x)
+
+            num /= 1024.0
+
+        return "%3.1f %s" % (num, 'TB')
+
+    @staticmethod
+    def get_date_as_string(dt):
+        return time.strftime('%H:%M:%S %m.%d.%y', time.gmtime(dt))
 
 def setup(bot):
     bot.add_cog(TextRedacotorCog(bot))

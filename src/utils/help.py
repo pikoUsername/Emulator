@@ -109,7 +109,7 @@ class BotHelpPageSource(menus.ListPageSource):
             f"use {prefix}help category for more info about category",
         ]
 
-        embed = discord.Embed(title="Categoryes", description="\n".join(text))
+        embed = discord.Embed(title="Categoryes", description="\n".join(text), colour=discord.Colour.blue())
 
         for cog in page:
             commands = self.commands.get(cog)

@@ -2,9 +2,10 @@ from datetime import datetime
 import sys
 import os
 
-
 from discord.ext import commands
 import discord
+
+from data.base_cfg import PREFIX
 
 class DiscordInfo(commands.Cog):
     """ Info about bot and etc. """
@@ -24,7 +25,7 @@ class DiscordInfo(commands.Cog):
             "Hello, i m bot, and i must simulate text redactor",
             "I can make basic operations with files, delete, open, rewrite",
             " ",
-            f"You can start using me with command {self.bot.command_prefix}start",
+            f"You can start using me with command {PREFIX}start",
         ]
 
         await ctx.send(embed=discord.Embed(
@@ -78,7 +79,6 @@ class DiscordInfo(commands.Cog):
             embed.description = e
         embed.set_footer(text=f"Current file: {user.current_file}")
         await ctx.send(embed=embed)
-
 
     @commands.command()
     async def time(self, ctx: commands.Context):

@@ -1,38 +1,19 @@
 from discord.ext import commands
 import discord
 
-from src.db.guild import GuildAPI
-
 class AdminCommands(commands.Cog):
+    """ Here Admin commands, and mod commands """
     def __init__(self, bot):
         self.bot = bot
-
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def change_lang(self, ctx: commands.Context, language: str):
-        AVALIABLE_LANGUAGES = {"Lol": "No"}
-        for keys in AVALIABLE_LANGUAGES.keys():
-            if not keys in language:
-                return await ctx.send("Not available language")
-            continue
-
-        gapi = GuildAPI()
-        guild = await gapi.get_guild(ctx.guild.id)
-
-        try:
-            await guild.update(language=language).apply()
-            await ctx.send(f"Command Not work, YET")
-        except Exception as e:
-            return await ctx.send("Fail to change guild language, try again")
 
     @commands.command(aliases=["rm-ufull"])
     @commands.has_permissions(administrator=True)
     async def remove_user(self, ctx: commands.Context, member: discord.Member, *, reason: str=None):
         """ Deletes user from bot, not a discord Guild """
         if ctx.author.id == member.id:
-        	await ctx.send(embed=discord.Embed(
+            return await ctx.send(embed=discord.Embed(
         		title=f"ERROR {self.bot.X_EMOJI}",
-        		description="You cant remove yourself!"
+        		description="You cant remove yourself!",
         	))
 
         user = await self.bot.uapi.get_user_by_id(member.id)

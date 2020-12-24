@@ -1,6 +1,6 @@
 from discord.ext import commands
 
-class Context(commands.Context):
+class CustomContext(commands.Context):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

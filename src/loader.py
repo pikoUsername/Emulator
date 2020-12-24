@@ -12,16 +12,16 @@ from loguru import logger
 from src.utils import log
 from data.base_cfg import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX, description
 from src.utils.help import HelpFormat
-from src.utils import context
+from src.utils.context import CustomContext
 from src.utils.file_manager import FileManager
-from src.db import UserApi
+from src.db import UserApi, GuildAPI
 from data.base_cfg import POSTGRES_URI
 from src.db import db
 
 
 class Bot(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=PREFIX, description=description,
+        super().__init__(command_prefix=self.get_prefix, description=description,
                          help_attrs=dict(hidden=True), pm_help=None)
 
         self.owner_id = 426028608906330115
@@ -29,7 +29,7 @@ class Bot(commands.AutoShardedBot):
         self.fm: FileManager = FileManager(self.loop) # Shortcut
         self.uapi = UserApi() # shortcut
         self.token = TOKEN
-        self.session = aiohttp.ClientSession()
+        self.session = aiohttp.ClientSession(loop=self.loop)
         self.drop_after_restart = False
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = ':white_check_mark:'
@@ -74,17 +74,25 @@ class Bot(commands.AutoShardedBot):
         await error_log_channel.send(embed=embed)
 
     async def get_prefix(self, message):
-        return [f"{PREFIX} ", f"<@{self.user.id}> ", f"<@!{self.user.id}> "]
+        return [f"{PREFIX} ", f"<@{self.user.id}> ", f"<@!{self.user.id}> ", PREFIX]
 
-    def __repr__(self):
-        return f"<Bot name='{self.user.name}', id='{self.user.id}'>"
+    async def close_db(self):
+        bind = db.pop_bind()
+        if bind:
+            logger.info("Closing DB")
+            if self.drop_after_restart:
+                await db.drop_all()
+            await bind.close()
+
+    async def close_all(self):
+        await self.session.close()
+        await self.close()
+        await self.close_db()
 
     async def create_db(self):
         logger.info("creating database...")
         await db.set_bind(POSTGRES_URI)
 
-        if self.drop_after_restart:
-            await db.gino.drop_all()
         await db.gino.create_all()
 
     async def on_ready(self):
@@ -96,6 +104,21 @@ class Bot(commands.AutoShardedBot):
 
         await self.wait_for_connected()
         logger.info("BOT READY")
+
+    async def on_guild_remove(self, guild: discord.Guild):
+        guild_ = await GuildAPI.get_guild(guild.id)
+        if guild:
+            try:
+                await guild_.delete()
+                await self.fm.delete_all_guild_files(guild_.id)
+                logger.info(f"leaved from {guild_.guild_name}, and deleted thats guild folder")
+            except Exception as e:
+                bot_author = self.get_user(self.owner_id)
+                if isinstance(bot_author, discord.DMChannel):
+                    await bot_author.send(f"BOT REMOVED ALL GUILD's FILES {guild_.guild_name}")
+
+                logger.exception(f"SHUTING DOWN:{e}")
+                await self.close_all()
 
     @property
     def last_log(self) -> List:
@@ -120,10 +143,13 @@ class Bot(commands.AutoShardedBot):
         return os.listdir(LOGS_BASE_PATH)
 
     async def process_command(self, message):
+        ctx = await self.get_context(message, cls=CustomContext)
+        if not ctx.command:
+            return
+
         if message.author.bot:
             return
 
-        ctx = await self.get_context(message, cls=context.Context)
         await self.invoke(ctx)
 
     async def on_command(self, ctx: commands.Context):
@@ -232,5 +258,7 @@ class Bot(commands.AutoShardedBot):
         except Exception as e:
             logger.exception("CRITICAL ERROR")
             raise e
+        finally:
+            await self.close_all()
 
 
