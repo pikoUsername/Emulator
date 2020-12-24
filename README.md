@@ -9,6 +9,7 @@
 &nbsp;
 Text-Emulator
 </h1>
+<h2>Half code of this bot copied from ROBODANNY, and etc.</h2>
 <h3>What can this bot</h3>
 <p>1. Save files in hdd(Completed)</p>
 <p>2. Edit this files(Completed)</p>

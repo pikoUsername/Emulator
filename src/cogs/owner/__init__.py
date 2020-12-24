@@ -11,7 +11,7 @@ from data.base_cfg import LOGS_BASE_PATH
 
 class OwnerCommands(commands.Cog):
     """ Only for owners """
-    def __int__(self, bot):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.command()
@@ -35,6 +35,44 @@ class OwnerCommands(commands.Cog):
             await ctx.send(f"✉️ Sent a DM to **{user_id}**")
         except discord.Forbidden:
             await ctx.send("This user might be having DMs blocked or it's a bot account...")
+
+    @commands.command()
+    @commands.is_owner()
+    async def load_extension(self, ctx: commands.Context, *, cogs: str):
+        try:
+            for cog in cogs:
+                self.bot.load_extension(cog)
+        except Exception as e:
+            await ctx.send(f"**`ERROR:`** {type(e).__name__} - {e}")
+        else:
+            await ctx.send("**`SUCCESS`**")
+
+    @commands.command()
+    @commands.is_owner()
+    async def load_custom_extension(self, ctx: commands.Context, *, file: str):
+        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+
+        file_path = f"{user.user_path}/{file}"
+
+        if not os.path.exists(file_path):
+            return await ctx.send("File NOT EXISTS")
+        to_load_extension = file_path.replace("/", ".")
+
+        try:
+            self.bot.load_extension(to_load_extension)
+        except Exception as e:
+            return await ctx.send(f"Failed to load. **ERROR: **\n```{e}```")
+
+    @commands.command()
+    @commands.is_owner()
+    async def unload_cogs(self, ctx: commands.Context, cog: str):
+        failed = []
+        try:
+            self.bot.unload_extension(cog)
+        except Exception as e:
+            return await ctx.send(e)
+
+        return await ctx.message.add_reaction("✅")
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -86,7 +124,8 @@ class OwnerCommands(commands.Cog):
             return
         return time_sorted_list[-1]
 
-    def parting(self, xs, parts):
+    @staticmethod
+    def parting(xs, parts):
         part_len = ceil(len(xs) / parts)
         return [xs[part_len * k:part_len * (k + 1)] for k in range(parts)]
 
@@ -112,6 +151,33 @@ class OwnerCommands(commands.Cog):
                 await asyncio.sleep(0.2)
         except Exception:
             return await ctx.author.send(text)
+
+    @commands.command()
+    @commands.is_owner()
+    async def reload_cogs(self, ctx: commands.Context):
+        """ Reload all Cogs """
+
+        successful = []
+        unsuccessful = {}
+        exts = [x for x in self.bot.extensions.keys()]
+        current_cogs = [[exts[index], cog] for index, cog in enumerate(self.bot.cogs.values())]
+        for cog_name, cog in current_cogs:
+            try:
+                self.bot.reload_extension(cog_name)
+                if hasattr(cog, "show_name"):
+                    successful.append(f"`{cog_name[5:]}`")
+            except Exception as e:
+                unsuccessful[cog_name] = f"{type(e).__name__} - {e}"
+
+        if unsuccessful:
+            fmt = ["I caught some errors:"]
+            for key, value in unsuccessful.items():
+                error = f"{key} - {value}"
+                fmt.append(error)
+
+            await ctx.send("\n".join(fmt))
+
+        await ctx.send(f"Successfully reloaded:\n{', '.join(successful)}")
 
 def setup(bot):
     bot.add_cog(OwnerCommands(bot))

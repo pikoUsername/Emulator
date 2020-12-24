@@ -8,7 +8,6 @@ class AdminCommands(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def change_lang(self, ctx: commands.Context, language: str):
         AVALIABLE_LANGUAGES = {"Lol": "No"}
@@ -27,11 +26,10 @@ class AdminCommands(commands.Cog):
             return await ctx.send("Fail to change guild language, try again")
 
     @commands.command(aliases=["rm-ufull"])
-    @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def remove_user(self, ctx: commands.Context, member: discord.Member, *, reason: str=None):
         """ Deletes user from bot, not a discord Guild """
-        if ctx.author.id == memeber.id: 
+        if ctx.author.id == member.id:
         	await ctx.send(embed=discord.Embed(
         		title=f"ERROR {self.bot.X_EMOJI}",
         		description="You cant remove yourself!"

@@ -24,8 +24,6 @@ class DiscordEvents(commands.Cog):
         if msg.author.bot:
             return
 
-        logger.info("name:{0.author.name}, id:{0.id}, content:{0.content}".format(msg))
-
     @commands.Cog.listener()
     async def on_message_edit(self, after, before):
         """ Handler for edited messages, re-executes commands """

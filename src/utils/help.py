@@ -3,6 +3,64 @@ import asyncio
 import discord
 from discord.ext import commands, menus
 
+class Pages(menus.MenuPages):
+    def __init__(self, source):
+        super().__init__(source=source, check_embeds=True)
+
+    async def finalize(self, timed_out):
+        try:
+            if timed_out:
+                await self.message.clear_reactions()
+            else:
+                await self.message.delete()
+        except discord.HTTPException:
+            pass
+
+    @menus.button('\N{INFORMATION SOURCE}\ufe0f', position=menus.Last(3))
+    async def show_help(self, payload):
+        """shows this message"""
+        embed = discord.Embed(title='Paginator help', description='Hello! Welcome to the help page.')
+        messages = []
+        for (emoji, button) in self.buttons.items():
+            messages.append(f'{emoji}: {button.action.__doc__}')
+
+        embed.add_field(name='What are these reactions for?', value='\n'.join(messages), inline=False)
+        embed.set_footer(text=f'We were on page {self.current_page + 1} before this message.')
+        await self.message.edit(content=None, embed=embed)
+
+        async def go_back_to_current_page():
+            await asyncio.sleep(30.0)
+            await self.show_page(self.current_page)
+
+        self.bot.loop.create_task(go_back_to_current_page())
+
+    @menus.button('\N{INPUT SYMBOL FOR NUMBERS}', position=menus.Last(1.5))
+    async def numbered_page(self, payload):
+        """lets you type a page number to go to"""
+        channel = self.message.channel
+        author_id = payload.user_id
+        to_delete = []
+        to_delete.append(await channel.send('What page do you want to go to?'))
+
+        def message_check(m):
+            return m.author.id == author_id and \
+                   channel == m.channel and \
+                   m.content.isdigit()
+
+        try:
+            msg = await self.bot.wait_for('message', check=message_check, timeout=30.0)
+        except asyncio.TimeoutError:
+            to_delete.append(await channel.send('Took too long.'))
+            await asyncio.sleep(5)
+        else:
+            page = int(msg.content)
+            to_delete.append(msg)
+            await self.show_checked_page(page - 1)
+
+        try:
+            await channel.delete_messages(to_delete)
+        except Exception:
+            pass
 
 class BotHelpPageSource(menus.ListPageSource):
     def __init__(self, help_command, commands):
@@ -57,14 +115,14 @@ class BotHelpPageSource(menus.ListPageSource):
             commands = self.commands.get(cog)
             if commands:
                 value = self.format_commands(cog, commands)
-                embed.add_field(name=cog.qualified_name, value=value, inline=True)
+                embed.add_field(name=cog.qualified_name, value=value, inline=False)
 
         mex = self.get_max_pages()
         embed.set_footer(text=f'Page {menu.current_page + 1}/{mex}')
         return embed
 
 
-class HelpMenu(menus.MenuPages):
+class HelpMenu(Pages):
     def __init__(self, source):
         super().__init__(source)
 
@@ -122,6 +180,77 @@ class GroupHelpPageSource(menus.ListPageSource):
         embed.set_footer(text=f'Use "{self.prefix}help command" for more info on a command.')
         return embed
 
+class PaginatedHelpCommand(commands.HelpCommand):
+    def __init__(self):
+        super().__init__(command_attrs={
+            'cooldown': commands.Cooldown(1, 3.0, commands.BucketType.member),
+            'help': 'Shows help about the bot, a command, or a category'
+        })
+
+    async def on_help_command_error(self, ctx, error):
+        if isinstance(error, commands.CommandInvokeError):
+            await ctx.send(str(error.original))
+
+    def get_command_signature(self, command):
+        parent = command.full_parent_name
+        if len(command.aliases) > 0:
+            aliases = '|'.join(command.aliases)
+            fmt = f'[{command.name}|{aliases}]'
+            if parent:
+                fmt = f'{parent} {fmt}'
+            alias = fmt
+        else:
+            alias = command.name if not parent else f'{parent} {command.name}'
+        return f'{alias} {command.signature}'
+
+    async def send_bot_help(self, mapping):
+        bot = self.context.bot
+        entries = await self.filter_commands(bot.commands, sort=True)
+
+        all_commands = {}
+        for command in entries:
+            if command.cog is None:
+                continue
+            try:
+                all_commands[command.cog].append(command)
+            except KeyError:
+                all_commands[command.cog] = [command]
+
+
+        menu = HelpMenu(BotHelpPageSource(self, all_commands))
+        await menu.start(self.context)
+
+    async def send_cog_help(self, cog):
+        entries = await self.filter_commands(cog.get_commands(), sort=True)
+        menu = HelpMenu(GroupHelpPageSource(cog, entries, prefix=self.clean_prefix))
+        await menu.start(self.context)
+
+    def common_command_formatting(self, embed_like, command):
+        embed_like.title = self.get_command_signature(command)
+        if command.description:
+            embed_like.description = f'{command.description}\n\n{command.help}'
+        else:
+            embed_like.description = command.help or 'No help found...'
+
+    async def send_command_help(self, command):
+        # No pagination necessary for a single command.
+        embed = discord.Embed(colour=discord.Colour.blurple())
+        self.common_command_formatting(embed, command)
+        await self.context.send(embed=embed)
+
+    async def send_group_help(self, group):
+        subcommands = group.commands
+        if len(subcommands) == 0:
+            return await self.send_command_help(group)
+
+        entries = await self.filter_commands(subcommands, sort=True)
+        if len(entries) == 0:
+            return await self.send_command_help(group)
+
+        source = GroupHelpPageSource(group, entries, prefix=self.clean_prefix)
+        self.common_command_formatting(source, group)
+        menu = HelpMenu(source)
+        await menu.start(self.context)
 
 class HelpFormat(commands.DefaultHelpCommand):
     def __init__(self):

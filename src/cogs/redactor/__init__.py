@@ -18,8 +18,12 @@ class TextRedacotorCog(commands.Cog):
         self.userapi = UserApi()
         self.fm: FileManager = self.bot.fm
 
+    async def cog_check(self, ctx):
+        if not ctx.guild:
+            raise commands.NoPrivateMessage('This command cannot be used in private messages.')
+        return True
+
     @commands.command()
-    @commands.guild_only()
     async def start(self, ctx: commands.Context):
         """ register user, and create user folder in guild"""
         user = await UserApi.get_user_by_id(user_id=ctx.author.id)
@@ -48,7 +52,6 @@ class TextRedacotorCog(commands.Cog):
         await ctx.send(embed=discord.Embed(title=f"Success {self.bot.APPLY_EMOJI}", description="Succes created folder with ur name!"))
 
     @commands.command()
-    @commands.guild_only()
     async def add(self, ctx: commands.Context, *, text: str):
         """ add current file text which you add in command """
         user = await UserApi.get_user_by_id(ctx.author.id)
@@ -58,7 +61,6 @@ class TextRedacotorCog(commands.Cog):
             return
 
     @commands.command()
-    @commands.guild_only()
     async def go_to_file(self, ctx: commands.Context, *, file: str):
         """
         Set current file, and checks you out
@@ -75,14 +77,12 @@ class TextRedacotorCog(commands.Cog):
         await ctx.send(embed=discord.Embed(title=f"Succes, {self.bot.APPLY_EMOJI}", description=f"Now your current file is ``{file}``"))
 
     @commands.command(aliases=["remove_line"])
-    @commands.guild_only()
     async def rm_line(self, ctx: commands.Context, *, line: str):
         """ remove selected line in currect file, make sure you know what there"""
         if not line.isdigit():
             await ctx.send("perametr not a digit!")
             return
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
-
         if not user:
             embed = discord.Embed()
 
@@ -103,7 +103,6 @@ class TextRedacotorCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(alises=["w"])
-    @commands.guild_only()
     async def write(self, ctx: commands.Context, *, text: str):
         """ Write to current file, you can type anything """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
@@ -133,7 +132,6 @@ class TextRedacotorCog(commands.Cog):
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=["cf"])
-    @commands.guild_only()
     async def current_file(self, ctx: commands.Context):
         """ get current user file """
         user = await self.userapi.get_user_by_id(ctx.author.id)
@@ -149,7 +147,6 @@ class TextRedacotorCog(commands.Cog):
         return await ctx.send(f"Your current file ```{user.current_file}```")
 
     @commands.command(aliases=["rm"])
-    @commands.guild_only()
     async def rm_file(self, ctx: commands.Context, *, file: str):
         """remove selected file, be cary about it!"""
         user = await self.userapi.get_user_by_id(ctx.author.id)
@@ -176,7 +173,6 @@ class TextRedacotorCog(commands.Cog):
             await self.bot.error_channel.send(e)
 
     @commands.command(aliases=["create_file"])
-    @commands.guild_only()
     @commands.cooldown(20, 2000, commands.BucketType.guild)
     async def touch(self, ctx: commands.Context, name: str, *, type_: str="py"):
         """ create file in your folder """
@@ -210,7 +206,6 @@ class TextRedacotorCog(commands.Cog):
             await ctx.message.add_reaction("✅")
 
     @commands.command(aliases=["list", "list_files"])
-    @commands.guild_only()
     @commands.cooldown(30, 200, commands.BucketType.guild)
     async def ls(self, ctx: commands.Context, *, member: discord.Member=None):
         """ List files """

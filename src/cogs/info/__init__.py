@@ -11,6 +11,11 @@ class DiscordInfo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def cog_check(self, ctx):
+        if not ctx.guild:
+            raise commands.NoPrivateMessage
+        return True
+
     @commands.command(aliases=["?"])
     async def info(self, ctx: commands.Context):
         """ get Info about Bot """
@@ -40,7 +45,6 @@ class DiscordInfo(commands.Cog):
         return await ctx.send(f"Ping - {ping[0:10]}")
 
     @commands.command()
-    @commands.guild_only()
     async def file(self, ctx: commands.Context, *, file_: str=None):
         """ Show current file, if you set file, then show file text """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
@@ -100,8 +104,16 @@ class DiscordInfo(commands.Cog):
     @commands.command()
     async def invite(self, ctx: commands.Context):
         """ Invite bot """
+        perms = discord.Intents()
+        perms.messages = True
+        perms.read_messages = True
+        perms.embed_links = True
+        perms.read_message_history = True
+        perms.add_reactions = True
+        perms.attach_files = True
+
         await ctx.send(embed=discord.Embed(title="Invite",
-                                           description=f"[Click here to invite](https://discord.com/api/oauth2/authorize?client_id=751682699160191109&permissions=149504&scope=bot)"))
+                                           description=f"[Click here to invite]({discord.utils.oauth_url(self.bot.client_id, perms)})"))
 
 def setup(bot):
     bot.add_cog(DiscordInfo(bot))

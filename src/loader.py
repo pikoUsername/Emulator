@@ -3,6 +3,7 @@ from typing import List
 import os
 import sys
 
+import aiohttp
 import discord
 from discord.ext import commands
 from discord.ext.commands import errors
@@ -28,6 +29,7 @@ class Bot(commands.AutoShardedBot):
         self.fm: FileManager = FileManager(self.loop) # Shortcut
         self.uapi = UserApi() # shortcut
         self.token = TOKEN
+        self.session = aiohttp.ClientSession()
         self.drop_after_restart = False
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = ':white_check_mark:'
@@ -43,6 +45,33 @@ class Bot(commands.AutoShardedBot):
         self.connected_to_database = asyncio.Event()
         self.count_commands = 0
         self.X_EMOJI = ":x:"
+
+    async def send_error(self, ctx: commands.Context, err):
+        error_log_channel = self.get_channel(778881398898688001)
+
+        embed = discord.Embed(
+            title="Something went wrong...",
+            description=f"```py\nAn Error Occurred:\n{err}\n```",
+        )
+        embed.set_author(
+            name=f"{ctx.author} | {ctx.author.id}", icon_url=ctx.author.avatar_url
+        )
+        if ctx.guild:
+            cmd = (
+                "None"
+                if isinstance(ctx.command, type(None))
+                else ctx.command.qualified_name
+            )
+            embed.set_thumbnail(url=ctx.guild.icon_url_as(size=512))
+            embed.add_field(
+                name="Key Information:\n",
+                value=f"Channel: {ctx.channel} {ctx.channel.id}\n"
+                f"Guild: {ctx.guild} {ctx.guild.id}\n"
+                f"Command: {cmd}\n"
+                f"Message Content: {ctx.message.content}",
+            )
+
+        await error_log_channel.send(embed=embed)
 
     async def get_prefix(self, message):
         return [f"{PREFIX} ", f"<@{self.user.id}> ", f"<@!{self.user.id}> "]
@@ -105,7 +134,6 @@ class Bot(commands.AutoShardedBot):
             logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}")
 
     async def on_command_error(self, ctx: commands.Context, err):
-        # file = self.get_last_log_file()
         if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
             helper = str(ctx.invoked_subcommand) if ctx.invoked_subcommand else str(ctx.command)
             await ctx.send_help(helper)
@@ -122,6 +150,12 @@ class Bot(commands.AutoShardedBot):
                 )
 
             await ctx.send(f"There was an error processing the command ;-;\n{err}", delete_after=30)
+
+        elif isinstance(err, errors.MissingPermissions):
+            await ctx.send(embed=discord.Embed(
+                title=f"Fail {self.X_EMOJI}",
+                description="Permission ERROR",
+            ))
 
         elif isinstance(err, errors.CheckFailure):
             await ctx.send(embed=discord.Embed(
@@ -145,7 +179,7 @@ class Bot(commands.AutoShardedBot):
 
         else:
             logger.exception(err)
-            # await self.error_channel.send(file=file)
+            await self.send_error(ctx, err)
 
     def get_last_log_file(self):
         """
