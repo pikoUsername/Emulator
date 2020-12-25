@@ -60,6 +60,12 @@ class TextRedacotorCog(commands.Cog):
         if not user:
             await ctx.send(f"You must be a registered as a user, type {dstr('PREFIX')}start")
             return
+        try:
+            await self.fm.write_to_file(text, user)
+            await ctx.message.add_reaction("✅")
+        except Exception:
+            await ctx.message.add_reaction("❌")
+
 
     @commands.command()
     async def go_to_file(self, ctx: commands.Context, *, file: str):
@@ -175,9 +181,16 @@ class TextRedacotorCog(commands.Cog):
 
 
     @commands.command()
-    @commands.is_owner()
     async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
         """ make dir in any directory! only owner """
+        user = await UserApi.get_user_by_id(ctx.author.id)
+
+        if not user:
+            return await ctx.send("You Not Authed")
+
+        elif not user.is_owner:
+            raise commands.MissingPermissions("Missing Owner permissions")
+
         loop = self.bot.loop
 
         to_create = f"{path}/{name}"

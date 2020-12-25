@@ -39,5 +39,33 @@ class AdminCommands(commands.Cog):
                 description="Failed to remove user model, and folder! maybe permission error"
             ))
 
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def remove_guild_folder(self, ctx: commands.Context):
+
+        if not self.bot.drop_after_restart:
+            await ctx.send(embed=discord.Embed(
+                title=f"Error, {self.bot.X_EMOJI}",
+                description="Deleting guild files is turned OFF, so you cant delete them!"
+            ))
+            return
+
+        try:
+            await self.bot.fm.delete_all_guild_files()
+        except Exception:
+            return await ctx.send("Error for removing guild folder!")
+        else:
+            await ctx.send(embed=discord.Embed(
+                title="Success :white_check_mark:",
+                description="Now your discord servers folder was removed, now your members leave!",
+            ).set_footer(text=f"Removed By {ctx.author.mention}", icon_url=ctx.author.avatar_url)
+            )
+        try:
+            await ctx.send("@everyone All yours files was removed! Now leave from guild")
+        except PermissionError:
+            pass
+
+
 def setup(bot):
     bot.add_cog(AdminCommands(bot))

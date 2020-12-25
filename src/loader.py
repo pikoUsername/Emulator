@@ -76,9 +76,9 @@ class Bot(commands.AutoShardedBot):
         return [f"{PREFIX} ", f"<@{self.user.id}> ", f"<@!{self.user.id}> ", PREFIX]
 
     async def close_db(self):
+        logger.info("Closing DB...")
         bind = db.pop_bind()
         if bind:
-            logger.info("Closing DB...")
             if self.drop_after_restart:
                 await db.drop_all()
             await bind.close()

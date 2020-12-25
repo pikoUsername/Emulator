@@ -5,12 +5,7 @@ from .base import BaseModel, db
 from data.base_cfg import BASE_PATH
 
 class User(BaseModel):
-    """
-    id: int
-    user_id: int
-    user_name: str
-    current_file: str
-    """
+    """No help"""
     __tablename__ = "user2"
 
     query: sql.Select
@@ -20,7 +15,7 @@ class User(BaseModel):
     username = db.Column(db.String(200))
     current_file = db.Column(db.String(100))
     user_path = db.Column(db.String(200))
-    is_owner = db.Column(db.Boolean)
+    is_owner = db.Column(db.Boolean, default=True)
 
 
 class UserApi:

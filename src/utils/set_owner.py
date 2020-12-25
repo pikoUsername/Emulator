@@ -12,7 +12,7 @@ async def create_owner_user(user_id: int, remove: bool) -> bool :
         "Loaded user {user}.",
         user=user.user_id,
     )
-    await user.update(is_owner_=not remove).apply()
+    await user.update(is_owner=not remove).apply()
     if remove:
         logger.warning("User {user} now IS NOT superuser", user=user_id)
     else:
