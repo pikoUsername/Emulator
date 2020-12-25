@@ -14,7 +14,7 @@ from data.base_cfg import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX, descript
 from src.utils.help import HelpFormat
 from src.utils.context import CustomContext
 from src.utils.file_manager import FileManager
-from src.models import GuildAPI
+from src.models import GuildAPI, UserApi
 from src.models.base import db
 from data.base_cfg import POSTGRES_URI
 
@@ -33,6 +33,7 @@ class Bot(commands.AutoShardedBot):
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = ':white_check_mark:'
         self.error_channel = None
+        self.uapi = UserApi()
         self._extensions = [ # all extension for load
             "src.cogs.events",
             "src.cogs.redactor",

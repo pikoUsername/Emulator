@@ -11,7 +11,7 @@ class User(BaseModel):
     user_name: str
     current_file: str
     """
-    __tablename__ = 'users'
+    __tablename__ = "user2"
 
     query: sql.Select
 
@@ -20,7 +20,7 @@ class User(BaseModel):
     username = db.Column(db.String(200))
     current_file = db.Column(db.String(100))
     user_path = db.Column(db.String(200))
-    is_owner = db.Column(db.Boolean, default=False)
+    is_owner = db.Column(db.Boolean)
 
 
 class UserApi:

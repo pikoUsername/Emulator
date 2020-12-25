@@ -8,7 +8,6 @@ import discord
 
 from .utils.urlcheck import UrlCheck
 from src.utils.file_manager import FileManager
-from src.utils import is_owner
 from src.models import GuildAPI, UserApi
 from data.base_cfg import dstr, PREFIX, BASE_PATH
 
@@ -176,7 +175,7 @@ class TextRedacotorCog(commands.Cog):
 
 
     @commands.command()
-    @is_owner()
+    @commands.is_owner()
     async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
         """ make dir in any directory! only owner """
         loop = self.bot.loop

@@ -10,7 +10,6 @@ from loguru import logger
 
 from data.base_cfg import LOGS_BASE_PATH
 from src.utils.set_owner import create_owner_user
-from src.utils import is_owner
 
 class OwnerCommands(commands.Cog):
     """ Only for owners """
@@ -18,15 +17,16 @@ class OwnerCommands(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    @is_owner()
+    @commands.is_owner()
     async def reboot(self, ctx: commands.Context):
         """ Reboot the bot """
         await ctx.send("Rebooting...")
         await asyncio.sleep(1)
         sys.exit(0)
 
+
     @commands.command()
-    @is_owner()
+    @commands.is_owner()
     async def dm_send(self, ctx: commands.Context, user_id: int, *, message: str):
         """ DM the user of your choice """
         user = self.bot.get_user(user_id)
@@ -40,7 +40,7 @@ class OwnerCommands(commands.Cog):
             await ctx.send("This user might be having DMs blocked or it's a bot account...")
 
     @commands.command()
-    @is_owner()
+    @commands.is_owner()
     async def load_extension(self, ctx: commands.Context, *, cogs: str):
         try:
             for cog in cogs:
@@ -51,7 +51,7 @@ class OwnerCommands(commands.Cog):
             await ctx.send("**`SUCCESS`**")
 
     @commands.command()
-    @is_owner()
+    @commands.is_owner()
     async def load_custom_extension(self, ctx: commands.Context, *, file: str):
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
@@ -67,7 +67,7 @@ class OwnerCommands(commands.Cog):
             return await ctx.send(f"Failed to load. **ERROR: **\n```{e}```")
 
     @commands.command()
-    @is_owner()
+    @commands.is_owner()
     async def unload_cogs(self, ctx: commands.Context, cog: str):
         try:
             self.bot.unload_extension(cog)
@@ -103,7 +103,7 @@ class OwnerCommands(commands.Cog):
             pass
 
     @commands.command()
-    @is_owner()
+    @commands.is_owner()
     async def change_username(self, ctx, *, name: str):
         """ Change username. """
         try:
@@ -132,7 +132,7 @@ class OwnerCommands(commands.Cog):
         return [xs[part_len * k:part_len * (k + 1)] for k in range(parts)]
 
     @commands.command()
-    @is_owner()
+    @commands.is_owner()
     async def get_logs(self, ctx: commands.Context):
         file_ = self.last_log
         file_name = ''.join(file_)
@@ -155,7 +155,7 @@ class OwnerCommands(commands.Cog):
             return await ctx.author.send(text)
 
     @commands.command()
-    @is_owner()
+    @commands.is_owner()
     async def set_owner(self, ctx: commands.Context, user_id: int, remove: str):
         try:
             if remove == "-rm":
@@ -170,7 +170,7 @@ class OwnerCommands(commands.Cog):
 
 
     @commands.command()
-    @is_owner()
+    @commands.is_owner()
     async def reload_cogs(self, ctx: commands.Context):
         """ Reload all Cogs """
 

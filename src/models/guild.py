@@ -10,7 +10,7 @@ from data.base_cfg import BASE_PATH
 
 
 class Guild(BaseModel):
-    __tablename__ = 'guilds'
+    __tablename__ = 'guilds2'
 
     query: sql.Select
 
