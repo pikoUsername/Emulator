@@ -115,5 +115,19 @@ class DiscordInfo(commands.Cog):
         await ctx.send(embed=discord.Embed(title="Invite",
                                            description=f"[Click here to invite]({discord.utils.oauth_url(self.bot.client_id, perms)})"))
 
+    @commands.command()
+    async def bug_report(self, ctx: commands.Context, command: str=None, *, text: str):
+        """Bug report"""
+        if not text:
+            return await ctx.send("Describe a BUG or something like this")
+
+        error_channel = self.bot.error_channel
+
+        embed = discord.Embed(title="Report Bug")
+
+        embed.add_field(name=f"Command, {command}", value=f"Report: \n{text}")
+
+        await error_channel.send(embed=embed)
+
 def setup(bot):
     bot.add_cog(DiscordInfo(bot))

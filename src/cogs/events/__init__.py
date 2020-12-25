@@ -2,7 +2,7 @@ from discord.ext import commands
 import discord
 from loguru import logger
 
-from src.db import GuildAPI
+from src.models import GuildAPI
 from data.base_cfg import dint
 
 class DiscordEvents(commands.Cog):

@@ -6,8 +6,8 @@ import glob
 
 from discord.ext import commands
 
-from src.db.user import User
-from src.db.guild import Guild
+from src.models.user import User
+from src.models.guild import Guild
 
 from data.base_cfg import BASE_PATH
 

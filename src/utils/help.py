@@ -116,7 +116,6 @@ class BotHelpPageSource(menus.ListPageSource):
             if commands:
                 value = self.format_commands(cog, commands)
                 embed.add_field(name=cog.qualified_name, value=value, inline=False)
-
         mex = self.get_max_pages()
         embed.set_footer(text=f'Page {menu.current_page + 1}/{mex}')
         return embed

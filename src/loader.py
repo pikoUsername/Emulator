@@ -14,9 +14,9 @@ from data.base_cfg import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX, descript
 from src.utils.help import HelpFormat
 from src.utils.context import CustomContext
 from src.utils.file_manager import FileManager
-from src.db import UserApi, GuildAPI
+from src.models import GuildAPI
+from src.models.base import db
 from data.base_cfg import POSTGRES_URI
-from src.db import db
 
 
 class Bot(commands.AutoShardedBot):
@@ -27,7 +27,6 @@ class Bot(commands.AutoShardedBot):
         self.owner_id = 426028608906330115
         self.help_command = HelpFormat()
         self.fm: FileManager = FileManager(self.loop) # Shortcut
-        self.uapi = UserApi() # shortcut
         self.token = TOKEN
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.drop_after_restart = False
@@ -42,7 +41,6 @@ class Bot(commands.AutoShardedBot):
             "src.cogs.meta",
             "src.cogs.admin",
         ]
-        self.connected_to_database = asyncio.Event()
         self.count_commands = 0
         self.X_EMOJI = ":x:"
 
@@ -79,14 +77,13 @@ class Bot(commands.AutoShardedBot):
     async def close_db(self):
         bind = db.pop_bind()
         if bind:
-            logger.info("Closing DB")
+            logger.info("Closing DB...")
             if self.drop_after_restart:
                 await db.drop_all()
             await bind.close()
 
     async def close_all(self):
         await self.session.close()
-        await self.close()
         await self.close_db()
 
     async def create_db(self):
@@ -130,7 +127,6 @@ class Bot(commands.AutoShardedBot):
         logs_list: List = os.listdir(LOGS_BASE_PATH)
         full_list = [os.path.join(LOGS_BASE_PATH, i) for i in logs_list]
         time_sorted_list: List = sorted(full_list, key=os.path.getmtime)
-
         return time_sorted_list[-1]
 
     @property

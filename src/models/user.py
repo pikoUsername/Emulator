@@ -9,18 +9,18 @@ class User(BaseModel):
     id: int
     user_id: int
     user_name: str
-    current_state=None
     current_file: str
     """
     __tablename__ = 'users'
 
     query: sql.Select
 
-    id = db.Column(db.Integer(), db.Sequence("user_id_seq"), primary_key=True)
+    id = db.Column(db.Integer(), db.Sequence("users_id_seq"), primary_key=True)
     user_id = db.Column(db.BigInteger())
     username = db.Column(db.String(200))
     current_file = db.Column(db.String(100))
     user_path = db.Column(db.String(200))
+    is_owner = db.Column(db.Boolean, default=False)
 
 
 class UserApi:

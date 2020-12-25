@@ -1,8 +1,5 @@
 from typing import List
 
-from typing import TypeVar, Type
-
-import contextvars
 import sqlalchemy as sa
 from gino import Gino
 
