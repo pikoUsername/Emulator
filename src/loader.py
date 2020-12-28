@@ -28,12 +28,12 @@ class Bot(commands.AutoShardedBot):
         self.help_command = HelpFormat()
         self.fm: FileManager = FileManager(self.loop) # Shortcut
         self.token = TOKEN
+        self.uapi: UserApi = UserApi()
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.drop_after_restart = False
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = ':white_check_mark:'
         self.error_channel = None
-        self.uapi = UserApi()
         self._extensions = [ # all extension for load
             "src.cogs.events",
             "src.cogs.redactor",
@@ -76,11 +76,9 @@ class Bot(commands.AutoShardedBot):
         return [f"{PREFIX} ", f"<@{self.user.id}> ", f"<@!{self.user.id}> ", PREFIX]
 
     async def close_db(self):
-        logger.info("Closing DB...")
         bind = db.pop_bind()
         if bind:
-            if self.drop_after_restart:
-                await db.drop_all()
+            logger.info("Closing Postgres Connection")
             await bind.close()
 
     async def close_all(self):
@@ -251,6 +249,7 @@ class Bot(commands.AutoShardedBot):
             if self.drop_after_restart:
                 logger.warning("Removing all files from files/ directory!")
                 await self.fm.delete_all_guild_files()
+            await asyncio.sleep(2)
             await self.start(self.token)
         except Exception as e:
             logger.exception("CRITICAL ERROR")

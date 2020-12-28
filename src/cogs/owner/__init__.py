@@ -5,7 +5,7 @@ import os
 from math import ceil
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, flags
 from loguru import logger
 
 from data.base_cfg import LOGS_BASE_PATH
@@ -16,6 +16,7 @@ class OwnerCommands(commands.Cog):
     """ Only for owners """
     def __init__(self, bot):
         self.bot = bot
+        self.notes = []
 
     async def cog_check(self, ctx: commands.Context):
         user = await UserApi.get_user_by_id(ctx.author.id)
@@ -201,6 +202,43 @@ class OwnerCommands(commands.Cog):
             await ctx.send("\n".join(fmt))
 
         await ctx.send(f"Successfully reloaded:\n{', '.join(successful)}")
+
+    @flags.add_flag("-uid", type=int)
+    @flags.command()
+    async def select(self, ctx: commands.Context, **options):
+        return await ctx.send(options.get("uid", None))
+
+    def change_error_channel(self, channel_id: int):
+        err_channel = getattr(self.bot, 'error_channel', None)
+        if not err_channel:
+            logger.error("Error channel not exists")
+            raise ValueError("Error channel not exists")
+
+        new_err_channel = self.bot.get_channel(channel_id)
+        setattr(self.bot, 'error_channel', new_err_channel)
+
+    @commands.command()
+    async def change_err_channel(self, ctx: commands.Context, channel_id: int):
+        try:
+            result = self.change_error_channel(channel_id)
+        except ValueError:
+            result = None
+
+        if not result:
+            return await ctx.send("Cant change channel_id")
+        await ctx.message.add_reaction("✅")
+
+    @commands.command()
+    async def notes(self, ctx: commands.Context):
+        notes = getattr(self, 'notes', None)
+
+        return await ctx.send(notes)
+
+    @commands.command()
+    async def add_note(self, ctx: commands.Context, *, text: str):
+        for n in text:
+            self.notes.append(n)
+        await ctx.message.add_reaction("✅")
 
 def setup(bot):
     bot.add_cog(OwnerCommands(bot))

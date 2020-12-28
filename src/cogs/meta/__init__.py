@@ -15,11 +15,11 @@ class MetaCommands(commands.Cog):
     async def hello(self, ctx: commands.Context):
         return await ctx.send(f"Hello, Здравствуйте, Здрастуйте, Hallo, 여보세요, dzień dobry, Bonjour, こんにちは, Сәлеметсіз бе")
 
-    @commands.command(hidden=True)
+    @commands.command()
     async def no(self, ctx: commands.Context):
         return await ctx.send(">> yes")
 
-    @commands.command(hidden=True)
+    @commands.command()
     async def yes(self, ctx: commands.Context):
         return await ctx.send(">> no")
 

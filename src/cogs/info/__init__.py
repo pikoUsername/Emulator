@@ -27,17 +27,14 @@ class DiscordInfo(commands.Cog):
             " ",
             f"You can start using me with command {PREFIX}start",
         ]
-
-        await ctx.send(embed=discord.Embed(
-            title="Information",
-            description="\n".join(text))
-        .add_field(name="Python version", value=f"{sys.version_info.major}.{sys.version_info.minor}")
-        .add_field(name="Author", value="piko#0381")
-        .add_field(name="Github", value="[here](https://github.com/pikoUsername/Emulator)")
-        .add_field(name="Library", value="[discord.py](https://github.com/Rapptz/discord.py)")
-        .set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}",
+        e = discord.Embed(title="Information", description="\n".join(text))
+        e.add_field(name="Python version", value=f"{sys.version_info.major}.{sys.version_info.minor}")
+        e.add_field(name="Author", value="piko#0381")
+        e.add_field(name="Github", value="[here](https://github.com/pikoUsername/Emulator)")
+        e.add_field(name="Library", value="[discord.py](https://github.com/Rapptz/discord.py)")
+        e.set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}",
                     icon_url=ctx.author.avatar_url),
-        )
+        await ctx.send(embed=e)
 
     @commands.command()
     async def ping(self, ctx: commands.Context):
@@ -121,13 +118,15 @@ class DiscordInfo(commands.Cog):
         if not text:
             return await ctx.send("Describe a BUG or something like this")
 
-        error_channel = self.bot.error_channel
+        error_channel = getattr(self.bot, 'error_channel')
 
         embed = discord.Embed(title="Report Bug")
-
         embed.add_field(name=f"Command, {command}", value=f"Report: \n{text}")
 
-        await error_channel.send(embed=embed)
+        try:
+            await error_channel.send(embed=embed)
+        except TypeError:
+            pass
 
 def setup(bot):
     bot.add_cog(DiscordInfo(bot))

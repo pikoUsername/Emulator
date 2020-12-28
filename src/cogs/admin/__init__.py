@@ -44,7 +44,7 @@ class AdminCommands(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def remove_guild_folder(self, ctx: commands.Context):
 
-        if not self.bot.drop_after_restart:
+        if getattr(self.bot, 'drop_after_restart') is False:
             await ctx.send(embed=discord.Embed(
                 title=f"Error, {self.bot.X_EMOJI}",
                 description="Deleting guild files is turned OFF, so you cant delete them!"
