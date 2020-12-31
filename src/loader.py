@@ -151,7 +151,7 @@ class Bot(commands.AutoShardedBot):
         self.count_commands =+ 1
         try:
             logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}, guild: {ctx.guild.name}")
-        except Exception:
+        except AttributeError:
             logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}")
 
     async def on_command_error(self, ctx: commands.Context, err):
@@ -242,14 +242,13 @@ class Bot(commands.AutoShardedBot):
                 self.load_extension(extension)
             except Exception as e:
                 logger.exception(e)
-                return
+                raise e
 
         try:
             await self.create_db()
             if self.drop_after_restart:
                 logger.warning("Removing all files from files/ directory!")
                 await self.fm.delete_all_guild_files()
-            await asyncio.sleep(2)
             await self.start(self.token)
         except Exception as e:
             logger.exception("CRITICAL ERROR")

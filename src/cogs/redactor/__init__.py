@@ -27,8 +27,6 @@ class TextRedacotorCog(commands.Cog):
     async def start(self, ctx: commands.Context):
         """ register user, and create user folder in guild"""
         user = await UserApi.get_user_by_id(user_id=ctx.author.id)
-        guild = await GuildAPI.get_guild(ctx.guild.id)
-
         if user:
             return await ctx.send(embed=discord.Embed(
                 title=f"Access Error {self.bot.X_EMOJI}",
@@ -36,21 +34,21 @@ class TextRedacotorCog(commands.Cog):
                 colour=discord.Colour.red(),
             ))
 
+        guild = await GuildAPI.get_guild(ctx.guild.id)
         if not user:
             try:
                 await UserApi.add_new_user(user=ctx.author, guild=ctx.guild)
 
                 user_ = await UserApi.get_user_by_id(ctx.author.id)
-                fm = self.fm
 
                 if not guild:
-                    return await fm.create_user_folder(user_)
-                await fm.create_user_folder(user=user_)
-                await fm.create_file(file_name="main", user=user_)
+                    return await self.fm.create_user_folder(user_)
+                await self.fm.create_user_folder(user=user_)
+                await self.fm.create_file(file_name="main", user=user_)
             except Exception as e:
                 logger.exception(e)
                 return await ctx.send("ERROR in creating folder and main.py script!")
-        await ctx.send(embed=discord.Embed(title=f"Success {self.bot.APPLY_EMOJI}", description="Succes created folder with ur name!", colour=discord.Colour.blue()))
+        await ctx.send(embed=discord.Embed(title=f"Success {self.bot.APPLY_EMOJI}", description="Success created folder with ur name!", colour=discord.Colour.blue()))
 
     @commands.command()
     async def add(self, ctx: commands.Context, *, text: str):
@@ -65,7 +63,6 @@ class TextRedacotorCog(commands.Cog):
             await ctx.message.add_reaction("✅")
         except Exception:
             await ctx.message.add_reaction("❌")
-
 
     @commands.command()
     async def go_to_file(self, ctx: commands.Context, *, file: str):
@@ -104,12 +101,24 @@ class TextRedacotorCog(commands.Cog):
             embed.description = f"Deleted line {line}"
 
             await self.bot.fm.change_line(user, line)
-        except Exception:
+        except commands.CommandInvokeError:
             embed.title = f"Error to remove line {self.bot.X_EMOJI}"
             embed.description = "Error to remove line,\n failed, we track automacly error,\n but if error left then write bug report"
         await ctx.send(embed=embed)
 
-    @commands.command(alises=["w"])
+    @commands.command(aliases=("mv",))
+    async def move(self, ctx: commands.Context, file: str, *, to_change: str):
+        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        try:
+            result = await self.fm.change_file_name(user, file, to_change)
+        except (FileNotFoundError, PermissionError):
+            result = None
+
+        if not result:
+            return await ctx.send("Failed To Change Name File")
+        return await ctx.message.add_reaction("✅")
+
+    @commands.command(alises=("w",))
     async def write(self, ctx: commands.Context, *, text: str):
         """ Write to current file, you can type anything """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
@@ -138,7 +147,7 @@ class TextRedacotorCog(commands.Cog):
             embed.description = "You try write to file, emoji or something like this, its unacceptable"
         return await ctx.send(embed=embed)
 
-    @commands.command(aliases=["cf"])
+    @commands.command(aliases=("cf",))
     async def current_file(self, ctx: commands.Context):
         """ get current user file """
         user = await self.userapi.get_user_by_id(ctx.author.id)
@@ -153,7 +162,7 @@ class TextRedacotorCog(commands.Cog):
 
         return await ctx.send(f"Your current file ```{user.current_file}```")
 
-    @commands.command(aliases=["rm", "remove_file", "remove"])
+    @commands.command(aliases=("rm", "remove_file", "remove"))
     async def rm_file(self, ctx: commands.Context, *, files: str):
         """
         remove selected file, be cary about it!

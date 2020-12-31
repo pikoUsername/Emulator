@@ -18,32 +18,15 @@ class OwnerCommands(commands.Cog):
         self.bot = bot
         self.notes = []
 
-    async def cog_check(self, ctx: commands.Context):
+    async def cog_check(self, ctx: commands.Context) -> bool:
         user = await UserApi.get_user_by_id(ctx.author.id)
 
         if not user:
-            return await ctx.send("You Not Authed")
+            return await ctx.send("You not Authed")
 
         elif not user.is_owner:
             raise commands.MissingPermissions("Missing Owner permissions")
         return True
-
-    @commands.command()
-    @commands.is_owner()
-    async def get_owner(self, ctx: commands.Context, member: Union[discord.Member, discord.User]=None):
-        if not member:
-            user = await UserApi.get_user_by_id(ctx.author.id)
-        else:
-            user = await UserApi.get_user_by_id(member.id)
-
-        try:
-            result = await create_owner_user(user.user_id, remove=False)
-        except ValueError:
-            result = None
-
-        if not result:
-            return await ctx.send("Failed To Create Admin User, User not exists")
-        return await ctx.message.add_reaction("✅")
 
     @commands.command()
     async def reboot(self, ctx: commands.Context):

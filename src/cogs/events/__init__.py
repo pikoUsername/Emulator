@@ -13,7 +13,7 @@ class DiscordEvents(commands.Cog):
         try:
             start_channel = getattr(self.bot, 'start_channel', None)
             await start_channel.send("BOT STARTED")
-        except TypeError:
+        except AttributeError:
             pass
         logger.info("BOT READY!")
 

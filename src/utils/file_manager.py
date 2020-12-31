@@ -5,7 +5,7 @@ import shutil
 import glob
 
 from discord.ext import commands
-
+from loguru import logger
 
 from src.models import Guild, User
 
@@ -161,6 +161,15 @@ class FileManager:
         with open(user.current_file, "w") as file:
             file.seek(line)
             file.write(to_change)
+
+    async def change_file_name(self, user: User, file: str, to_change: str):
+        try:
+            await self._loop.run_in_executor(None, os.rename, fr"{user.user_path}\{file}", fr"{user.user_path}\{to_change}")
+        except FileNotFoundError as e:
+            logger.error(str(e))
+            raise FileNotFoundError("File not Found")
+        except PermissionError:
+            raise PermissionError("Permission Error")
 
 
     async def create_file(self, file_name: str, user: User, type_: str="py"):

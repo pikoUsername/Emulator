@@ -1,6 +1,10 @@
+from typing import Union
+
 from discord.ext import commands
 import discord
 
+from src.models import UserApi
+from src.utils.set_owner import create_owner_user
 from src.utils.help import PaginatedHelpCommand
 
 class MetaCommands(commands.Cog):
@@ -22,6 +26,24 @@ class MetaCommands(commands.Cog):
     @commands.command()
     async def yes(self, ctx: commands.Context):
         return await ctx.send(">> no")
+
+    @commands.command()
+    @commands.is_owner()
+    async def get_owner(self, ctx: commands.Context, member: Union[discord.Member, discord.User]=None):
+        if not member:
+            user = await UserApi.get_user_by_id(ctx.author.id)
+        else:
+            user = await UserApi.get_user_by_id(member.id)
+
+        try:
+            result = await create_owner_user(user.user_id, remove=False)
+        except ValueError:
+            result = None
+
+        if not result:
+            return await ctx.send("Failed To Create Admin User, User not exists")
+        return await ctx.message.add_reaction("✅")
+
 
 def setup(bot):
     bot.add_cog(MetaCommands(bot))
