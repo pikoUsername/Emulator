@@ -4,6 +4,7 @@ from sqlalchemy import sql
 from .base import BaseModel, db
 from data.base_cfg import BASE_PATH
 
+
 class User(BaseModel):
     """No help"""
     __tablename__ = "user2"

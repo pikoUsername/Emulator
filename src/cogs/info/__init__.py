@@ -1,10 +1,12 @@
 from datetime import datetime
+import time
 import sys
 import os
 
 from discord.ext import commands
 import discord
 
+from ...utils.cache import async_cache
 from data.base_cfg import PREFIX
 
 class DiscordInfo(commands.Cog):
@@ -39,8 +41,21 @@ class DiscordInfo(commands.Cog):
     @commands.command()
     async def ping(self, ctx: commands.Context):
         """ Pong """
-        ping = str(self.bot.latency * 1000)
-        return await ctx.send(f"Ping - {ping[0:10]}")
+        first_time = time.monotonic()
+
+        message = await ctx.send("...")
+        ping = int(self.bot.latency * 1000)
+
+        second_time = first_time - time.monotonic()
+        text = (
+            f"Message Ping: {int(second_time + ping)}",
+            f"Bot Latency: {ping}",
+        )
+        embed = discord.Embed(
+            title="Ping",
+            description="\n".join(text)
+        )
+        await message.edit(embed=embed)
 
     @commands.command()
     async def file(self, ctx: commands.Context, *, file_: str=None):
@@ -86,17 +101,15 @@ class DiscordInfo(commands.Cog):
         ).set_footer(text=f"requested by {ctx.author.display_name}",icon_url=ctx.author.avatar_url))
 
     @commands.command()
-    async def avatar(self, ctx: commands.Context, member: discord.Member=None):
+    @async_cache()
+    async def avatar(self, ctx: commands.Context, user: discord.Member=None):
         """ Gets Avatar of author """
-        if not member:
-            await ctx.send(embed=discord.Embed(
-                title=f"Avatar {ctx.author.display_name}",
-            ).set_image(url=ctx.author.avatar_url))
-            return
-
-        await ctx.send(embed=discord.Embed(
-            title=f"Avatar {member.display_name}",
-        ).set_image(url=member.avatar_url))
+        embed = discord.Embed()
+        user = user or ctx.author
+        avatar = user.avatar_url_as(static_format='png')
+        embed.set_author(name=str(user), url=avatar)
+        embed.set_image(url=avatar)
+        return await ctx.send(embed=embed)
 
     @commands.command()
     async def invite(self, ctx: commands.Context):
@@ -113,20 +126,14 @@ class DiscordInfo(commands.Cog):
                                            description=f"[Click here to invite]({discord.utils.oauth_url(self.bot.client_id, perms)})"))
 
     @commands.command()
-    async def bug_report(self, ctx: commands.Context, command: str=None, *, text: str):
+    async def bug_report(self, ctx: commands.Context, *, text: str):
         """Bug report"""
         if not text:
             return await ctx.send("Describe a BUG or something like this")
-
-        error_channel = getattr(self.bot, 'error_channel')
-
-        embed = discord.Embed(title="Report Bug")
-        embed.add_field(name=f"Command, {command}", value=f"Report: \n{text}")
-
         try:
-            await error_channel.send(embed=embed)
-        except TypeError:
-            pass
+            await self.bot.send_error(ctx, text)
+        except AttributeError:
+            return await ctx.send("Error Channel Not allowed")
 
 def setup(bot):
     bot.add_cog(DiscordInfo(bot))

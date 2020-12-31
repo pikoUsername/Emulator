@@ -12,10 +12,10 @@ from loguru import logger
 from src.utils import log
 from data.base_cfg import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX, description
 from src.utils.help import HelpFormat
-from src.utils.context import CustomContext
 from src.utils.file_manager import FileManager
 from src.models import GuildAPI, UserApi
 from src.models.base import db
+from src.utils.cache import async_cache
 from data.base_cfg import POSTGRES_URI
 
 
@@ -44,9 +44,11 @@ class Bot(commands.AutoShardedBot):
         ]
         self.count_commands = 0
         self.X_EMOJI = ":x:"
+        self.pool = None
 
+    @async_cache()
     async def send_error(self, ctx: commands.Context, err):
-        error_log_channel = self.get_channel(778881398898688001)
+        error_log_channel = self.get_guild(775955280625926144).get_channel(794125321389342790)
 
         embed = discord.Embed(
             title="Something went wrong...",
@@ -71,6 +73,7 @@ class Bot(commands.AutoShardedBot):
             )
 
         await error_log_channel.send(embed=embed)
+        return await ctx.send("Success, Sended to Error Channel")
 
     async def get_prefix(self, message):
         return [f"{PREFIX} ", f"<@{self.user.id}> ", f"<@!{self.user.id}> ", PREFIX]
@@ -87,7 +90,7 @@ class Bot(commands.AutoShardedBot):
 
     async def create_db(self):
         logger.info("creating database...")
-        await db.set_bind(POSTGRES_URI)
+        self.pool = await db.set_bind(POSTGRES_URI)
 
         await db.gino.create_all()
 
@@ -138,7 +141,7 @@ class Bot(commands.AutoShardedBot):
         return os.listdir(LOGS_BASE_PATH)
 
     async def process_command(self, message):
-        ctx = await self.get_context(message, cls=CustomContext)
+        ctx = await self.get_context(message, cls=commands.Context)
         if not ctx.command:
             return
 
@@ -235,13 +238,12 @@ class Bot(commands.AutoShardedBot):
 
     async def run_itself(self):
         log.setup()
-
         # setup stuff
         for extension in self._extensions:
             try:
                 self.load_extension(extension)
             except Exception as e:
-                logger.exception(e)
+                logger.error(str(e))
                 raise e
 
         try:

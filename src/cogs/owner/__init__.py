@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from typing import List, Union
+from typing import List
 import os
 from math import ceil
 
@@ -12,29 +12,28 @@ from data.base_cfg import LOGS_BASE_PATH
 from src.utils.set_owner import create_owner_user
 from src.models.user import UserApi
 
+
 class OwnerCommands(commands.Cog):
     """ Only for owners """
     def __init__(self, bot):
         self.bot = bot
         self.notes = []
 
-    async def cog_check(self, ctx: commands.Context) -> bool:
+    async def cog_check(self, ctx: commands.Context):
         user = await UserApi.get_user_by_id(ctx.author.id)
 
         if not user:
-            return await ctx.send("You not Authed")
+            return await ctx.send("You Not Authed")
 
         elif not user.is_owner:
             raise commands.MissingPermissions("Missing Owner permissions")
         return True
 
     @commands.command()
-    async def reboot(self, ctx: commands.Context):
+    async def shutdown(self, ctx: commands.Context):
         """ Reboot the bot """
-        await ctx.send("Rebooting...")
-        await asyncio.sleep(1)
+        await ctx.send("Shutdown...")
         sys.exit(0)
-
 
     @commands.command()
     async def dm_send(self, ctx: commands.Context, user_id: int, *, message: str):

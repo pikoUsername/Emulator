@@ -163,13 +163,7 @@ class FileManager:
             file.write(to_change)
 
     async def change_file_name(self, user: User, file: str, to_change: str):
-        try:
-            await self._loop.run_in_executor(None, os.rename, fr"{user.user_path}\{file}", fr"{user.user_path}\{to_change}")
-        except FileNotFoundError as e:
-            logger.error(str(e))
-            raise FileNotFoundError("File not Found")
-        except PermissionError:
-            raise PermissionError("Permission Error")
+        await self._loop.run_in_executor(None, os.rename, fr"{user.user_path}\{file}", fr"{user.user_path}\{to_change}")
 
 
     async def create_file(self, file_name: str, user: User, type_: str="py"):

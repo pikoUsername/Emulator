@@ -3,6 +3,7 @@ import asyncio
 import discord
 from discord.ext import commands, menus
 
+
 class Pages(menus.MenuPages):
     def __init__(self, source):
         super().__init__(source=source, check_embeds=True)
@@ -21,18 +22,12 @@ class Pages(menus.MenuPages):
         """shows this message"""
         embed = discord.Embed(title='Paginator help', description='Hello! Welcome to the help page.')
         messages = []
-        for (emoji, button) in self.buttons.items():
+        for emoji, button in self.buttons.items():
             messages.append(f'{emoji}: {button.action.__doc__}')
 
         embed.add_field(name='What are these reactions for?', value='\n'.join(messages), inline=False)
-        embed.set_footer(text=f'We were on page {self.current_page + 1} before this message.')
+        embed.set_footer(text=f'You on {self.current_page + 1} before this message.')
         await self.message.edit(content=None, embed=embed)
-
-        async def go_back_to_current_page():
-            await asyncio.sleep(30.0)
-            await self.show_page(self.current_page)
-
-        self.bot.loop.create_task(go_back_to_current_page())
 
     @menus.button('\N{INPUT SYMBOL FOR NUMBERS}', position=menus.Last(1.5))
     async def numbered_page(self, payload):
@@ -59,7 +54,7 @@ class Pages(menus.MenuPages):
 
         try:
             await channel.delete_messages(to_delete)
-        except Exception:
+        except commands.BotMissingPermissions:
             pass
 
 class BotHelpPageSource(menus.ListPageSource):
@@ -104,12 +99,7 @@ class BotHelpPageSource(menus.ListPageSource):
 
     async def format_page(self, menu, page):
         prefix = menu.ctx.prefix
-        text = [
-            f"use {prefix}help command for more info about command.",
-            f"use {prefix}help category for more info about category",
-        ]
-
-        embed = discord.Embed(title="Categoryes", description="\n".join(text), colour=discord.Colour.blue())
+        embed = discord.Embed(title="Categories", colour=discord.Colour.blue())
 
         for cog in page:
             commands = self.commands.get(cog)

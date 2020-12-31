@@ -18,6 +18,7 @@ class Guild(BaseModel):
     guild_id = db.Column(db.BigInteger)
     guild_name = db.Column(db.String(200))
 
+
 class GuildAPI:
     @staticmethod
     async def get_guild(guild_id: int):
@@ -54,5 +55,3 @@ class GuildAPI:
             await self.create_guild_folder(guild)
 
         return fr"{BASE_PATH}\\guild_{guild.id}"
-
-

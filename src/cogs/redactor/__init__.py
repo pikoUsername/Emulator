@@ -11,11 +11,11 @@ from src.utils.file_manager import FileManager
 from src.models import GuildAPI, UserApi
 from data.base_cfg import dstr, PREFIX, BASE_PATH
 
+
 class TextRedacotorCog(commands.Cog):
     """ typical file redactor """
     def __init__(self, bot):
         self.bot = bot
-        self.userapi = UserApi()
         self.fm: FileManager = self.bot.fm
 
     async def cog_check(self, ctx):
@@ -70,7 +70,7 @@ class TextRedacotorCog(commands.Cog):
         Set current file, and checks you out
         If you exists, your talbe current_file changes
         """
-        user = await self.userapi.get_user_by_id(ctx.author.id)
+        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
         if not user:
             return await ctx.send(f"Type {self.bot.command_prefix}start for start")
@@ -111,7 +111,8 @@ class TextRedacotorCog(commands.Cog):
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
         try:
             result = await self.fm.change_file_name(user, file, to_change)
-        except (FileNotFoundError, PermissionError):
+        except (FileNotFoundError, PermissionError) as e:
+            logger.error(e)
             result = None
 
         if not result:
@@ -150,7 +151,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command(aliases=("cf",))
     async def current_file(self, ctx: commands.Context):
         """ get current user file """
-        user = await self.userapi.get_user_by_id(ctx.author.id)
+        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
         if not user:
             embed = discord.Embed(colour=discord.Colour.blue())
@@ -173,7 +174,7 @@ class TextRedacotorCog(commands.Cog):
         ```
         but cary about it, because it can be deleted forever
         """
-        user = await self.userapi.get_user_by_id(ctx.author.id)
+        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
         if not user:
             return await ctx.send(f"Type {self.bot.command_prefix}start, and come here again")
@@ -262,9 +263,9 @@ class TextRedacotorCog(commands.Cog):
         ```
         """
         if not member:
-            user = await self.userapi.get_user_by_id(ctx.author.id)
+            user = await self.bot.uapi.get_user_by_id(ctx.author.id)
         else:
-            user = await self.userapi.get_user_by_id(member.id)
+            user = await self.bot.uapi.get_user_by_id(member.id)
 
         if not user:
             embed = discord.Embed(colour=discord.Colour.blue())

@@ -7,6 +7,7 @@ from src.models import UserApi
 from src.utils.set_owner import create_owner_user
 from src.utils.help import PaginatedHelpCommand
 
+
 class MetaCommands(commands.Cog):
     """ Trash Commands """
     def __init__(self, bot):
