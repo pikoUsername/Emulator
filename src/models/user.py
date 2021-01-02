@@ -2,7 +2,7 @@ import discord
 from sqlalchemy import sql
 
 from .base import BaseModel, db
-from data.base_cfg import BASE_PATH
+from data.config import BASE_PATH
 
 
 class User(BaseModel):
@@ -55,3 +55,8 @@ class UserApi:
         await new_user.create()
 
         return new_user
+
+    @staticmethod
+    async def get_all_owners():
+        all_owners = await User.query.where(User.is_owner == True).gino.all()
+        return all_owners

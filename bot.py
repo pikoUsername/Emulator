@@ -4,6 +4,7 @@ from loguru import logger
 
 from src.loader import Bot
 
+
 def main():
     bot = Bot()
     loop = asyncio.get_event_loop()
@@ -17,7 +18,7 @@ def main():
         logger.info("goodbye")
     finally:
         try:
-            run((bot.logout()))
+            run((bot.close_all()))
         except asyncio.TimeoutError:
             pass
 

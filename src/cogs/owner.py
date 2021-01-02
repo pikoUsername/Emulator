@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands, flags
 from loguru import logger
 
-from data.base_cfg import LOGS_BASE_PATH
+from data.config import LOGS_BASE_PATH
 from src.utils.set_owner import create_owner_user
 from src.models.user import UserApi
 

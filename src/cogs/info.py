@@ -7,7 +7,7 @@ from discord.ext import commands
 import discord
 
 from ...utils.cache import async_cache
-from data.base_cfg import PREFIX
+from data.config import PREFIX
 
 class DiscordInfo(commands.Cog):
     """ Info about bot and etc. """
@@ -137,4 +137,3 @@ class DiscordInfo(commands.Cog):
 
 def setup(bot):
     bot.add_cog(DiscordInfo(bot))
-

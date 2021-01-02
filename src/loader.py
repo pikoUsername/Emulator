@@ -10,13 +10,13 @@ from discord.ext.commands import errors
 from loguru import logger
 
 from src.utils import log
-from data.base_cfg import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX, description
+from data.config import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX, description
 from src.utils.help import HelpFormat
 from src.utils.file_manager import FileManager
 from src.models import GuildAPI, UserApi
 from src.models.base import db
 from src.utils.cache import async_cache
-from data.base_cfg import POSTGRES_URI
+from data.config import POSTGRES_URI
 
 
 class Bot(commands.AutoShardedBot):
@@ -33,11 +33,11 @@ class Bot(commands.AutoShardedBot):
         self.drop_after_restart = False
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = ':white_check_mark:'
-        self.error_channel = None
+        self.error_channel = Non
         self._extensions = [ # all extension for load
             "src.cogs.events",
             "src.cogs.redactor",
-            "src.cogs.info",
+            # "src.cogs.info",
             "src.cogs.owner",
             "src.cogs.meta",
             "src.cogs.admin",

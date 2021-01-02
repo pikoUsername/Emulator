@@ -9,7 +9,7 @@ import discord
 from .utils.urlcheck import UrlCheck
 from src.utils.file_manager import FileManager
 from src.models import GuildAPI, UserApi
-from data.base_cfg import dstr, PREFIX, BASE_PATH
+from data.config import dstr, PREFIX, BASE_PATH
 
 
 class TextRedacotorCog(commands.Cog):

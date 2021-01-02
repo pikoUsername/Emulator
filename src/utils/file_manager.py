@@ -8,8 +8,9 @@ from discord.ext import commands
 from loguru import logger
 
 from src.models import Guild, User
+from data.config import BASE_PATH
+from .http import get
 
-from data.base_cfg import BASE_PATH
 
 class FileManager:
     def __init__(self, loop=None):
@@ -19,6 +20,23 @@ class FileManager:
         if loop is None:
             self._loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
         self._loop: asyncio.AbstractEventLoop = loop
+
+    async def load_code_from_github(self, owner: str, repo: str, user: User, file_path: str=""):
+        """
+        Load from GitHub Repository,
+        This function Parse Jsom from github
+        and download with "download_url" in json reposnse
+        i guess it ll be slow function
+
+        :param owner: need for find github repo
+        :param repo: repo name
+        :param user: user for path
+        :param file_path:
+        :return:
+        """
+        url = f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}"
+        json = await get(url)
+        pass # no yet))
 
     @staticmethod
     def _create_file(name: str, user: User, type_: str = "py") -> None:

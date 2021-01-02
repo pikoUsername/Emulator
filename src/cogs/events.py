@@ -2,7 +2,9 @@ from discord.ext import commands
 import discord
 from loguru import logger
 
-from src.models import Guild, GuildAPI
+from src.models import Guild, GuildAPI, UserApi
+from ..utils.notify import notify_all_owners
+
 
 class DiscordEvents(commands.Cog):
     def __init__(self, bot):
@@ -10,12 +12,8 @@ class DiscordEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        try:
-            start_channel = getattr(self.bot, 'start_channel', None)
-            await start_channel.send("BOT STARTED")
-        except AttributeError:
-            pass
         logger.info("BOT READY!")
+        await notify_all_owners(self.bot, text="BOT_STARTED")
 
     @commands.Cog.listener()
     async def on_message_edit(self, after, before):
