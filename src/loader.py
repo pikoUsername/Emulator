@@ -5,6 +5,7 @@ import sys
 
 import aiohttp
 import discord
+from discord import Webhook, AsyncWebhookAdapter
 from discord.ext import commands
 from discord.ext.commands import errors
 from loguru import logger
@@ -16,7 +17,7 @@ from src.utils.file_manager import FileManager
 from src.models import GuildAPI, UserApi
 from src.models.base import db
 from src.utils.cache import async_cache
-from data.config import POSTGRES_URI
+from data.config import POSTGRES_URI, WEB_HOOK_URL
 
 
 class Bot(commands.AutoShardedBot):
@@ -30,14 +31,13 @@ class Bot(commands.AutoShardedBot):
         self.token = TOKEN
         self.uapi: UserApi = UserApi()
         self.session = aiohttp.ClientSession(loop=self.loop)
-        self.drop_after_restart = False
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = ':white_check_mark:'
-        self.error_channel = Non
+        self.error_channel = None
         self._extensions = [ # all extension for load
             "src.cogs.events",
             "src.cogs.redactor",
-            # "src.cogs.info",
+            "src.cogs.info",
             "src.cogs.owner",
             "src.cogs.meta",
             "src.cogs.admin",
@@ -79,7 +79,7 @@ class Bot(commands.AutoShardedBot):
         return [f"{PREFIX} ", f"<@{self.user.id}> ", f"<@!{self.user.id}> ", PREFIX]
 
     async def close_db(self):
-        bind = db.pop_bind()
+        bind = self.pool
         if bind:
             logger.info("Closing Postgres Connection")
             await bind.close()
@@ -88,11 +88,14 @@ class Bot(commands.AutoShardedBot):
         await self.session.close()
         await self.close_db()
 
-    async def create_db(self):
-        logger.info("creating database...")
+    async def conn_db(self):
+        logger.info("Connecting to DataBase")
+
         self.pool = await db.set_bind(POSTGRES_URI)
 
-        await db.gino.create_all()
+    async def create_db(self):
+        logger.info("creating database...")
+        await db.gino.create_all(bind=self.pool)
 
     async def on_ready(self):
         error_channel_id = ERROR_CHANNEL
@@ -101,23 +104,16 @@ class Bot(commands.AutoShardedBot):
             if isinstance(channel, discord.TextChannel):
                 self.error_channel = channel
 
-        await self.wait_for_connected()
         logger.info("BOT READY")
+        await self.wait_for_connected()
+        await self.postready()
 
-    async def on_guild_remove(self, guild: discord.Guild):
-        guild_ = await GuildAPI.get_guild(guild.id)
-        if guild:
-            try:
-                await guild_.delete()
-                await self.fm.delete_all_guild_files(guild_.id)
-                logger.info(f"leaved from {guild_.guild_name}, and deleted thats guild folder")
-            except Exception as e:
-                bot_author = self.get_user(self.owner_id)
-                if isinstance(bot_author, discord.DMChannel):
-                    await bot_author.send(f"BOT REMOVED ALL GUILD's FILES {guild_.guild_name}")
-
-                logger.exception(f"SHUTING DOWN:{e}")
-                await self.close_all()
+    async def postready(self):
+        webhook = Webhook.from_url(
+            WEB_HOOK_URL,
+            adapter=AsyncWebhookAdapter(
+                self.session))
+        await webhook.send('Bot is Online')
 
     @property
     def last_log(self) -> List:
@@ -236,6 +232,10 @@ class Bot(commands.AutoShardedBot):
         await self.wait_until_ready()
         await self._connected.wait()
 
+    async def init_db(self):
+        await self.conn_db()
+        await self.create_db()
+
     async def run_itself(self):
         log.setup()
         # setup stuff
@@ -247,10 +247,7 @@ class Bot(commands.AutoShardedBot):
                 raise e
 
         try:
-            await self.create_db()
-            if self.drop_after_restart:
-                logger.warning("Removing all files from files/ directory!")
-                await self.fm.delete_all_guild_files()
+            await self.init_db()
             await self.start(self.token)
         except Exception as e:
             logger.exception("CRITICAL ERROR")

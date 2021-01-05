@@ -5,11 +5,12 @@ import os
 from math import ceil
 
 import discord
-from discord.ext import commands, flags
+from discord.ext import commands
 from loguru import logger
 
 from data.config import LOGS_BASE_PATH
 from src.utils.set_owner import create_owner_user
+from ..utils.spammer import say_to_channel
 from src.models.user import UserApi
 
 
@@ -18,6 +19,7 @@ class OwnerCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.notes = []
+        self.command_activated = 0
 
     async def cog_check(self, ctx: commands.Context):
         user = await UserApi.get_user_by_id(ctx.author.id)
@@ -148,6 +150,13 @@ class OwnerCommands(commands.Cog):
 
     @commands.command()
     async def set_owner(self, ctx: commands.Context, user_id: int, remove: str=None):
+        user = await UserApi.get_user_by_id(ctx.author.id)
+        if not user:
+            return
+
+        if not user.is_owner:
+            return
+
         try:
             if remove == "-rm":
                 await create_owner_user(user_id, remove=True)
@@ -155,10 +164,7 @@ class OwnerCommands(commands.Cog):
                 await create_owner_user(user_id, remove=False)
             await ctx.message.add_reaction("✅")
         except Exception as e:
-            logger.exception(e)
-            await ctx.send("Error, cant create owner user")
-            await ctx.message.add_reaction("❌")
-
+            raise e
 
     @commands.command()
     async def reload_cogs(self, ctx: commands.Context):
@@ -185,11 +191,6 @@ class OwnerCommands(commands.Cog):
 
         await ctx.send(f"Successfully reloaded:\n{', '.join(successful)}")
 
-    @flags.add_flag("-uid", type=int)
-    @flags.command()
-    async def select(self, ctx: commands.Context, **options):
-        return await ctx.send(options.get("uid", None))
-
     def change_error_channel(self, channel_id: int):
         err_channel = getattr(self.bot, 'error_channel', None)
         if not err_channel:
@@ -207,20 +208,36 @@ class OwnerCommands(commands.Cog):
             result = None
 
         if not result:
-            return await ctx.send("Cant change channel_id")
+            return await ctx.send("Error channel not exists")
         await ctx.message.add_reaction("✅")
 
     @commands.command()
     async def notes(self, ctx: commands.Context):
         notes = getattr(self, 'notes', None)
+        embed = discord.Embed(
+            title="Notes",
+            description=f"\n".join(notes) or "Nothing To See",
+        )
 
-        return await ctx.send(notes)
+        return await ctx.send(embed=embed)
 
     @commands.command()
     async def add_note(self, ctx: commands.Context, *, text: str):
-        for n in text:
-            self.notes.append(n)
+        if text is None:
+            return
+
+        self.notes.append(text)
         await ctx.message.add_reaction("✅")
 
+    @commands.command()
+    async def send_channel(self, ctx: commands.Context, guild_id: int, channel_id: int,
+                           *,
+                           text: str
+                           ):
+        await say_to_channel(self.bot, guild_id, channel_id, text)
+        return await ctx.message.add_reaction("✅")
+
+
 def setup(bot):
+    """Setup Owner Commands"""
     bot.add_cog(OwnerCommands(bot))

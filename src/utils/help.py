@@ -57,10 +57,11 @@ class Pages(menus.MenuPages):
         except commands.BotMissingPermissions:
             pass
 
+
 class BotHelpPageSource(menus.ListPageSource):
-    def __init__(self, help_command, commands):
-        super().__init__(entries=sorted(commands.keys(), key=lambda c: c.qualified_name), per_page=6)
-        self.commands = commands
+    def __init__(self, help_command, commands_):
+        super().__init__(entries=sorted(commands_.keys(), key=lambda c: c.qualified_name), per_page=6)
+        self.commands = commands_
         self.help_command = help_command
         self.prefix = help_command.clean_prefix
 
@@ -98,7 +99,6 @@ class BotHelpPageSource(menus.ListPageSource):
         return short_doc + ' '.join(page) + '\n' + (ending_note % hidden)
 
     async def format_page(self, menu, page):
-        prefix = menu.ctx.prefix
         embed = discord.Embed(title="Categories", colour=discord.Colour.blue())
 
         for cog in page:
@@ -225,7 +225,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
         # No pagination necessary for a single command.
         embed = discord.Embed(colour=discord.Colour.blurple())
         self.common_command_formatting(embed, command)
-        await self.context.send(embed=embed)
+        await self.context.send(embed=embed, delete_after=60)
 
     async def send_group_help(self, group):
         subcommands = group.commands
@@ -286,7 +286,7 @@ class HelpFormat(commands.DefaultHelpCommand):
         # No pagination necessary for a single command.
         embed = discord.Embed(colour=discord.Colour.blurple())
         self.common_command_formatting(embed, command)
-        await self.context.send(embed=embed)
+        await self.context.send(embed=embed, delete_after=60)
 
     async def send_group_help(self, group):
         subcommands = group.commands

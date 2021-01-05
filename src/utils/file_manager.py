@@ -5,11 +5,9 @@ import shutil
 import glob
 
 from discord.ext import commands
-from loguru import logger
 
 from src.models import Guild, User
 from data.config import BASE_PATH
-from .http import get
 
 
 class FileManager:

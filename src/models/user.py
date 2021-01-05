@@ -1,11 +1,11 @@
 import discord
 from sqlalchemy import sql
 
-from .base import BaseModel, db
+from .base import TimedBaseModel, db
 from data.config import BASE_PATH
 
 
-class User(BaseModel):
+class User(TimedBaseModel):
     """No help"""
     __tablename__ = "user2"
 

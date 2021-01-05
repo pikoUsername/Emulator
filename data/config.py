@@ -28,11 +28,13 @@ POSTGRES_PORT = dint("DB_PORT")
 POSTGRES_USER = dstr("DB_USER")
 POSTGRES_PASS = dstr("DB_PASS")
 
+WEB_HOOK_URL = dstr("WEB_HOOK_URL")
 TOKEN = dstr("BOT_TOKEN")
 PREFIX = os.getenv("PREFIX")
 description = dstr("description", None)
 
 ERROR_CHANNEL = os.getenv("ERROR_CHANNEL")
+START_CHANNEL = os.getenv("START_CHANNEL")
 
 DROP_AFTER_RESTART = os.getenv("DROP_AFTER_RESTART")
 

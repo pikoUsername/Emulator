@@ -12,14 +12,14 @@ class DiscordEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        logger.info("BOT READY!")
-        await notify_all_owners(self.bot, text="BOT_STARTED")
+        await notify_all_owners(self.bot, text="BOT STARTED")
 
     @commands.Cog.listener()
     async def on_message_edit(self, after, before):
         """ Handler for edited messages, re-executes commands """
         if before.content != after.content:
-            await self.bot.on_message(after)
+            ctx = await self.bot.get_context(after)
+            await self.bot.invoke(ctx)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
@@ -28,6 +28,20 @@ class DiscordEvents(commands.Cog):
         if not guild:
             gapi = GuildAPI()
             await gapi.add_guild(guild)
+
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild):
+        g_id = str(guild.id)
+        async with self.bot.pool.acquire() as connection:
+            async with connection.transaction():
+                await self.bot.fm.delete_all_guild_files(g_id)
+                await connection.execute(
+                    """
+                        DELETE FROM guilds2
+                        WHERE (server_id = $1) ;
+                    """,
+                    g_id)
+            logger.info(f"leaved and deleted thats guild folder")
 
 
 def setup(bot):

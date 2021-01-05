@@ -5,3 +5,4 @@ loguru==0.5.3
 python-dotenv
 jishaku==1.20.0.220
 discord-flags
+alembic==1.4.3

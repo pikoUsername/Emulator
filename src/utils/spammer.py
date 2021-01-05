@@ -4,36 +4,24 @@ import discord
 from loguru import logger
 
 
-async def say_to_user(bot: commands.AutoShardedBot, user_id: int, *args, **kwargs):
-    user = Webhook(
-        f"https://discord.com/channels/@me/{user_id}",
-        adapter=bot.session,
-    )
+async def say_to_user(bot, user_id: int, *args, **kwargs):
+    user = bot.get_user(user_id)
     try:
-        await user.send(*args, **kwargs)
-    except AttributeError:
-        logger.error("User Not Available")
-        raise AttributeError("User Not Available")
-    except (discord.HTTPException, discord.NotFound):
-        user = bot.get_user(user_id)
-        await user.send(*args, **kwargs)
-
+        return await user.send(*args, **kwargs)
+    except (discord.HTTPException, discord.NotFound, AttributeError) as e:
+        pass
 
 async def say_to_channel(bot: commands.AutoShardedBot,
                          guild_id: int,
                          channel_id: int,
                          *args,
                          **kwargs):
-    webhook = Webhook.from_url(
-        f"https://discord.com/channels/{guild_id}/{channel_id}",
-        adapter=AsyncWebhookAdapter(
-            bot.session)
-    )
+    channel = bot.get_guild(guild_id).get_channel(channel_id)
     try:
-        await webhook.send(*args, **kwargs)
+        await channel.send(*args, **kwargs)
     except (discord.HTTPException, discord.NotFound):
         logger.error("Not Found")
         raise discord.HTTPException("Not Found", message=None)
     except discord.Forbidden:
-        logger.error("Forbiddin")
+        logger.error("Forbidden")
         raise discord.Forbidden("No Access", message=None)

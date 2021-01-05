@@ -1,3 +1,4 @@
+import asyncio
 import os
 from os.path import join
 import time
@@ -22,6 +23,13 @@ class TextRedacotorCog(commands.Cog):
         if not ctx.guild:
             raise commands.NoPrivateMessage('This command cannot be used in private messages.')
         return True
+
+    @commands.command()
+    async def upload_from_github(self, ctx: commands.Context, owner: str, repo: str):
+        """
+        Create Repo In Your User Directory, And Its Not Working
+        """
+        return await ctx.send("This Command Not working yet(((")
 
     @commands.command()
     async def start(self, ctx: commands.Context):
@@ -120,8 +128,8 @@ class TextRedacotorCog(commands.Cog):
         return await ctx.message.add_reaction("✅")
 
     @commands.command(alises=("w",))
-    async def write(self, ctx: commands.Context, *, text: str):
-        """ Write to current file, you can type anything """
+    async def write(self, ctx: commands.Context, file: str, *, text: str):
+        """ Write to current file, if you do not select file. You can type anything """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
         if not user:
@@ -132,7 +140,7 @@ class TextRedacotorCog(commands.Cog):
 
             return await ctx.send(embed=embed)
 
-        user_file = user.current_file
+        user_file = file or user.current_file
         embed = discord.Embed(colour=discord.Colour.blue())
 
         try:
@@ -164,7 +172,7 @@ class TextRedacotorCog(commands.Cog):
         return await ctx.send(f"Your current file ```{user.current_file}```")
 
     @commands.command(aliases=("rm", "remove_file", "remove"))
-    async def rm_file(self, ctx: commands.Context, *, files: str):
+    async def rm_file(self, ctx: commands.Context, *files):
         """
         remove selected file, be cary about it!
 
@@ -200,8 +208,7 @@ class TextRedacotorCog(commands.Cog):
 
         elif not user.is_owner:
             raise commands.MissingPermissions("Missing Owner permissions")
-
-        loop = self.bot.loop
+        loop = asyncio.get_event_loop()
 
         to_create = f"{path}/{name}"
         try:
@@ -226,11 +233,14 @@ class TextRedacotorCog(commands.Cog):
             return await ctx.send(embed=embed)
 
         if len(name) >= 78:
-            return await ctx.send(embed=discord.Embed(
-                title=f"Not have enough access {self.bot.X_EMOJI}",
-                description="Too long file name",
-                colour=discord.Colour.blue(),
-            ))
+            if user.is_owner:
+                pass
+            else:
+                return await ctx.send(embed=discord.Embed(
+                    title=f"Not have enough access {self.bot.X_EMOJI}",
+                    description="Too long file name",
+                    colour=discord.Colour.blue(),
+                ))
         elif os.path.exists(f"{BASE_PATH}/{name}.{type_}"):
             await ctx.send("this File aleardy exists")
 

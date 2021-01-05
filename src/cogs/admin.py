@@ -53,8 +53,8 @@ class AdminCommands(commands.Cog):
 
         try:
             await self.bot.fm.delete_all_guild_files()
-        except Exception:
-            return await ctx.send("Error for removing guild folder!")
+        except Exception as e:
+            raise e
         else:
             await ctx.send(embed=discord.Embed(
                 title="Success :white_check_mark:",

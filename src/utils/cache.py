@@ -1,5 +1,6 @@
 from functools import wraps
 
+
 # from https://github.com/AlexFlipnote/discord_bot.py/blob/master/utils/cache.py
 def cache(maxsize=128):
     cache = {}

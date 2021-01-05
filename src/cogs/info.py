@@ -6,7 +6,8 @@ import os
 from discord.ext import commands
 import discord
 
-from ...utils.cache import async_cache
+from ..utils.cache import async_cache
+from ..models import User
 from data.config import PREFIX
 
 class DiscordInfo(commands.Cog):
@@ -19,16 +20,15 @@ class DiscordInfo(commands.Cog):
             raise commands.NoPrivateMessage
         return True
 
-    @commands.command(aliases=["?"])
+    @commands.command(aliases=("?",))
     async def info(self, ctx: commands.Context):
         """ get Info about Bot """
 
-        text = [
+        text = (
             "Hello, i m bot, and i must simulate text redactor",
-            "I can make basic operations with files, delete, open, rewrite",
-            " ",
+            "I can make basic operations with files, delete, open, rewrite\n",
             f"You can start using me with command {PREFIX}start",
-        ]
+        )
         e = discord.Embed(title="Information", description="\n".join(text))
         e.add_field(name="Python version", value=f"{sys.version_info.major}.{sys.version_info.minor}")
         e.add_field(name="Author", value="piko#0381")
@@ -82,14 +82,14 @@ class DiscordInfo(commands.Cog):
                     return await ctx.send("File too long")
 
             embed.title = f"Text of file: {file_}"
-            text = [
+            text = (
                 f"```{lines}```",
-            ]
+            )
             embed.description = "\n".join(text)
         except Exception as e:
             embed.title = f"ERROR, {self.bot.X_EMOJI}"
             embed.description = e
-        embed.set_footer(text=f"Current file: {user.current_file}")
+        embed.set_footer(text=f"Current file: ../../{user.current_file[:-10]}")
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -134,6 +134,23 @@ class DiscordInfo(commands.Cog):
             await self.bot.send_error(ctx, text)
         except AttributeError:
             return await ctx.send("Error Channel Not allowed")
+
+
+    @commands.command()
+    async def select(self, ctx: commands.Context, *, user_id: int=None):
+        """Get Selected User"""
+        user_id = user_id or ctx.author.id
+        user = await User.query.where(User.user_id == user_id).gino.first()
+
+        if not user:
+            return await ctx.send("User Not Exists")
+        embed = discord.Embed(
+            title="Selected User",
+            description=f"name: {user.username}\nis owner: {user.is_owner}\ncurrent_file: {user.current_file}"
+                        f"\nuser path: {user.user_path}\ncreated at: {user.created_at}",
+        )
+        return await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(DiscordInfo(bot))
