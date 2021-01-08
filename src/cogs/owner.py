@@ -10,7 +10,6 @@ from loguru import logger
 
 from data.config import LOGS_BASE_PATH
 from src.utils.set_owner import create_owner_user
-from ..utils.spammer import say_to_channel
 from src.models.user import UserApi
 
 
@@ -207,21 +206,6 @@ class OwnerCommands(commands.Cog):
 
         self.notes.append(text)
         await ctx.message.add_reaction("✅")
-
-    @commands.command()
-    async def send_to_channel(self,
-            ctx: commands.Context,
-            guild_id: int,
-            channel_id: int,
-            *,
-            text: str
-        ):
-
-        result = await say_to_channel(self.bot, guild_id, channel_id, text, ctx)
-        if not result:
-            return
-        return await ctx.message.add_reaction("✅")
-
 
 def setup(bot):
     """Setup Owner Commands"""

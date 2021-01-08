@@ -17,6 +17,7 @@ from src.utils.file_manager import FileManager
 from src.models import UserApi
 from src.models.base import db
 from src.utils.cache import async_cache
+from .utils.spammer import Spammer
 from data.config import POSTGRES_URI, WEB_HOOK_URL
 
 
@@ -25,6 +26,7 @@ class Bot(commands.AutoShardedBot):
         super().__init__(command_prefix=self.get_prefix, description=description,
                          help_attrs=dict(hidden=True), pm_help=None)
 
+        self.spammer: Spammer = Spammer(self)
         self.owner_id = 426028608906330115
         self.help_command = HelpFormat()
         self.fm: FileManager = FileManager(self.loop) # Shortcut
