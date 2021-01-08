@@ -1,4 +1,5 @@
 import asyncio
+import typing
 from typing import List
 import os
 import sys
@@ -7,14 +8,13 @@ import aiohttp
 import discord
 from discord import Webhook, AsyncWebhookAdapter
 from discord.ext import commands
-from discord.ext.commands import errors
 from loguru import logger
 
 from src.utils import log
 from data.config import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX, description
 from src.utils.help import HelpFormat
 from src.utils.file_manager import FileManager
-from src.models import GuildAPI, UserApi
+from src.models import UserApi
 from src.models.base import db
 from src.utils.cache import async_cache
 from data.config import POSTGRES_URI, WEB_HOOK_URL
@@ -32,7 +32,7 @@ class Bot(commands.AutoShardedBot):
         self.uapi: UserApi = UserApi()
         self.session = aiohttp.ClientSession(loop=self.loop)
         self._connected = asyncio.Event()
-        self.APPLY_EMOJI = ':white_check_mark:'
+        self.APPLY_EMOJI = '\n{white check mark}'
         self.error_channel = None
         self._extensions = [ # all extension for load
             "src.cogs.events",
@@ -45,6 +45,7 @@ class Bot(commands.AutoShardedBot):
         self.count_commands = 0
         self.X_EMOJI = ":x:"
         self.pool = None
+        self.prefixes = {}
 
     @async_cache()
     async def send_error(self, ctx: commands.Context, err):
@@ -75,8 +76,15 @@ class Bot(commands.AutoShardedBot):
         await error_log_channel.send(embed=embed)
         return await ctx.send("Success, Sended to Error Channel")
 
+    def set_prefix(self, guild: discord.Guild, prefix: str):
+        if len(prefix) < 200:
+            return False
+
+        self.prefixes[guild.id] = prefix
+
     async def get_prefix(self, message):
-        return [f"{PREFIX} ", f"<@{self.user.id}> ", f"<@!{self.user.id}> ", PREFIX]
+        prefix = [f"<@{self.user.id}> ", f"<@!{self.user.id}> ", PREFIX, self.prefixes.get(message.guild.id, default=PREFIX)]
+        return prefix
 
     async def close_db(self):
         bind = self.pool
@@ -89,7 +97,7 @@ class Bot(commands.AutoShardedBot):
         await self.close_db()
 
     async def conn_db(self):
-        logger.info("Connecting to DataBase")
+        logger.info("Connecting to Database...")
 
         self.pool = await db.set_bind(POSTGRES_URI)
 
@@ -153,54 +161,6 @@ class Bot(commands.AutoShardedBot):
         except AttributeError:
             logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}")
 
-    async def on_command_error(self, ctx: commands.Context, err):
-        if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
-            helper = str(ctx.invoked_subcommand) if ctx.invoked_subcommand else str(ctx.command)
-            await ctx.send_help(helper)
-
-        elif isinstance(err, errors.CommandInvokeError):
-            logger.exception(f"{err}, {sys.exc_info()}")
-
-            # await self.error_channel.send(file=file)
-
-            if "2000 or fewer" in str(err) and len(ctx.message.clean_content) > 1900:
-                return await ctx.send(
-                    "You attempted to make the command display more than 2,000 characters...\n"
-                    "Both error and command will be ignored."
-                )
-
-            await ctx.send(f"There was an error processing the command ;-;\n{err}", delete_after=30)
-
-        elif isinstance(err, errors.MissingPermissions):
-            await ctx.send(embed=discord.Embed(
-                title=f"Fail {self.X_EMOJI}",
-                description="Permission ERROR",
-            ))
-
-        elif isinstance(err, errors.CheckFailure):
-            await ctx.send(embed=discord.Embed(
-                title=f"Fail {self.X_EMOJI}",
-                description="You cant made this",
-            ))
-
-        elif isinstance(err, errors.MaxConcurrencyReached):
-            await ctx.send("You've reached max capacity of command usage at once, please finish the previous one...", delete_after=30)
-
-        elif isinstance(err, errors.CommandOnCooldown):
-            await ctx.send(f"This command is on cool down... try again in {err.retry_after:.2f} seconds.", delete_after=30)
-
-        elif isinstance(err, errors.CommandNotFound):
-            pass
-
-        elif isinstance(err, errors.NoPrivateMessage):
-            await ctx.send(embed=discord.Embed(title="Private message Not work",
-                                               description="Bot work only in guild channels")
-                           )
-
-        else:
-            logger.exception(err)
-            await self.send_error(ctx, err)
-
     def get_last_log_file(self):
         """
         gets logs from directory /logs/  and return it
@@ -254,5 +214,3 @@ class Bot(commands.AutoShardedBot):
             raise e
         finally:
             await self.close_all()
-
-

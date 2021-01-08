@@ -50,14 +50,6 @@ class OwnerCommands(commands.Cog):
     @commands.command()
     async def load_extension(self, ctx: commands.Context, *, cogs: str):
         """ Load Extension """
-        user = await UserApi.get_user_by_id(ctx.author.id)
-
-        if not user:
-            return await ctx.send("You Not Authed")
-
-        elif not user.is_owner:
-            raise commands.MissingPermissions("Missing Owner permissions")
-
         try:
             for cog in cogs:
                 self.bot.load_extension(cog)
@@ -70,12 +62,6 @@ class OwnerCommands(commands.Cog):
     async def load_custom_extension(self, ctx: commands.Context, *, file: str):
         """ loade custom extesnion from user path """
         user = await UserApi.get_user_by_id(ctx.author.id)
-
-        if not user:
-            return await ctx.send("You Not Authed")
-
-        elif not user.is_owner:
-            raise commands.MissingPermissions("Missing Owner permissions")
 
         file_path = f"{user.user_path}/{file}"
 
@@ -150,13 +136,6 @@ class OwnerCommands(commands.Cog):
 
     @commands.command()
     async def set_owner(self, ctx: commands.Context, user_id: int, remove: str=None):
-        user = await UserApi.get_user_by_id(ctx.author.id)
-        if not user:
-            return
-
-        if not user.is_owner:
-            return
-
         try:
             if remove == "-rm":
                 await create_owner_user(user_id, remove=True)
@@ -230,11 +209,17 @@ class OwnerCommands(commands.Cog):
         await ctx.message.add_reaction("✅")
 
     @commands.command()
-    async def send_channel(self, ctx: commands.Context, guild_id: int, channel_id: int,
-                           *,
-                           text: str
-                           ):
-        await say_to_channel(self.bot, guild_id, channel_id, text)
+    async def send_to_channel(self,
+            ctx: commands.Context,
+            guild_id: int,
+            channel_id: int,
+            *,
+            text: str
+        ):
+
+        result = await say_to_channel(self.bot, guild_id, channel_id, text, ctx)
+        if not result:
+            return
         return await ctx.message.add_reaction("✅")
 
 

@@ -1,3 +1,5 @@
+import typing
+
 from discord.ext import commands
 import discord
 
@@ -39,6 +41,14 @@ class AdminCommands(commands.Cog):
                 description="Failed to remove user model, and folder! maybe permission error"
             ))
 
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def set_prefix(self, ctx: commands.Context, prefix: str):
+        result = self.bot.set_prefix(ctx.guild, prefix)
+
+        if not result:
+            return await ctx.send("Prefix Len is More than 10 letters")
+        return await ctx.send("Success")
 
     @commands.command()
     @commands.has_permissions(administrator=True)

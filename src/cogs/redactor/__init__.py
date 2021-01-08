@@ -190,13 +190,12 @@ class TextRedacotorCog(commands.Cog):
         try:
             for file in files:
                 if not os.path.exists(f"{user.user_path}/{file}"):
-                    await ctx.send("**FNE**(**F**ile **N**ot **E**xists)")
-                    return await ctx.message.add_reaction("❌")
-                await self.fm.remove_file(file, user)
+                    return await ctx.send("**FNE**(**F**ile **N**ot **E**xists)")
+                else:
+                    await self.fm.remove_file(file, user)
             await ctx.message.add_reaction("✅")
-        except Exception as e:
+        except Exception:
             await ctx.message.add_reaction("❌")
-
 
     @commands.command()
     async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
