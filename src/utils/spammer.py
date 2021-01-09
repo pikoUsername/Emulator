@@ -9,29 +9,23 @@ from discord.errors import DiscordException
 
 
 class Spammer:
-    def __init__(self, bot=None, guild_id: int = None, user_id: int = None, user_ids: typing.List[int] = None):
+    def __init__(self, bot):
         if not isinstance(bot, commands.AutoShardedBot):
             raise TypeError("Attribute 'bot' is not commands.AutoShardedBot isinstance")
-
-        self.user_id = user_id
         self._spamming = False
         self.bot = bot
-        self.guild_id = guild_id
-        self.user_ids = user_ids
 
     async def spam_with_period_to_channel(
-        self,
-        bot: commands.AutoShardedBot = None,
-        delay: int = 0,
-        channel_id: int = None,
-        channel_ids: typing.List[int] = None,
-        guild_id: int = None,
-        **message_params
-    ) -> None:
+            self,
+            delay: int = 0,
+            channel_id: int = None,
+            channel_ids: typing.List[int] = None,
+            guild_id: int = None,
+            **message_params
+    ) -> bool:
         """
         Sending Message with delay
 
-        :param bot: if None then get from class isinstance
         :param delay: delay for sleep
         :param channel_id:
         :param channel_ids:
@@ -41,63 +35,66 @@ class Spammer:
         """
         if self._spamming:
             raise RuntimeError("Current Bot Spamming")
-        bot = bot or self.bot
 
-        channels = [self.get_channel(guild_id, channel_id, channel_ids, bot=bot)]
+        channels = [self.get_channel(guild_id, channel_id, channel_ids)]
 
         self._spamming = True
 
-        for channel in channels:
-            with suppress(DiscordException):
-                if not isinstance(channel, discord.TextChannel):
-                    raise TypeError("Spamming To Not 'TextChannel'")
-                await channel.send(**message_params)
-                await asyncio.sleep(delay)
+        try:
+            for channel in channels:
+                with suppress(DiscordException):
+                    if not isinstance(channel, discord.TextChannel):
+                        raise TypeError("Spamming Not 'TextChannel'")
+                    await channel.send(**message_params)
+                    await asyncio.sleep(delay)
+        except commands.BotMissingPermissions or discord.NotFound:
+            return False
+        finally:
+            self._spamming = False
+            return True
 
-    def get_user(self,
-                 bot: commands.AutoShardedBot = None,
-                 user_id: int = None,
-                 user_ids: typing.List[int] = None
-        )-> typing.Union[typing.List[discord.abc.User], discord.abc.User]:
-        bot = bot or self.bot
+    def get_user(
+            self,
+            user_id: int = None,
+            user_ids: typing.List[int] = None,
+            ) -> typing.Union[typing.List[discord.User], discord.User]:
+        """
+        Get User Depends at arguments
+        """
         try:
             if user_id or user_ids is None:
-                self._spamming = True
-                user = bot.get_user(user_id)
+                user = self.bot.get_user(user_id)
                 return user
 
             if user_id and user_ids:
                 raise TypeError("cant Get Both Argument, as the same")
 
             result = []
-            self._spamming = True
             for user_id_ in user_ids:
-                user = bot.get_user(user_id_)
+                user = self.bot.get_user(user_id_)
                 result.append(user)
         except AttributeError as e:
-            self._spamming = False
             raise e
         else:
-            self._spamming = False
             return result
 
+    def get_channel(
+            self,
+            guild_id: int,
+            channel_id: int,
+            channel_ids: typing.List[int] = None,
+            ) -> typing.Union[typing.List[discord.abc.GuildChannel], discord.abc.GuildChannel]:
+        """
+        GetChannel with many checks
 
-    def get_channel(self,
-                    guild_id: int = None,
-                    channel_id: int = None,
-                    channel_ids: typing.List[int] = None,
-                    *,
-                    bot: commands.AutoShardedBot = None
-        ) -> typing.Union[typing.List[discord.abc.GuildChannel], discord.abc.GuildChannel]:
-        if self.guild_id and guild_id is None:
-            raise AttributeError("Attribute 'guild_id' and function 'guild_id' is None")
-
-        bot = bot or self.bot
-        guild_id = guild_id or self.guild_id
+        :param guild_id:
+        :param channel_id:
+        :param channel_ids:
+        """
+        bot = self.bot
 
         try:
             if channel_id:
-                self._spamming = True
                 channel = bot.get_guild(guild_id).get_channel(channel_id)
                 return channel
 
@@ -105,47 +102,39 @@ class Spammer:
                 raise TypeError("Cant Get Both Elements")
 
             channels = []
-            self._spamming = True
             for channel_id_ in channel_ids:
                 channel = bot.get_guild(guild_id).get_channel(channel_id_)
                 channels.append(channel)
         except AttributeError as e:
-            self._spamming = False
             raise e
         else:
-            self._spamming = False
             return channels
 
     async def say_to_user(
             self,
             *,
-            bot: commands.AutoShardedBot = None,
             user_id: int = None,
             user_ids: typing.List[int] = None,
             **message_params,
-        ) -> None:
+    ) -> None:
         if self._spamming:
             raise RuntimeError("Current Bot Spamming")
-
-        if user_id and self.user_id is None:
-            raise TypeError("User id Is Not Correct")
-
-        user_ids = user_ids or self.user_ids
-        user_id = user_id or self.user_id
-        bot = bot or self.bot
+        if user_ids and user_ids is None:
+            raise AttributeError("Attribute 'user_id' and 'users_id' is Empty")
 
         try:
             if user_id:
                 self._spamming = True
-                user = bot.get_user(user_id)
+                user = self.get_user(user_id)
                 await user.send(**message_params)
+                return
 
             if user_id and user_ids:
                 raise RuntimeError("Cant Get Both Elements")
 
             self._spamming = True
-            for one_id in user_ids:
-                user = bot.get_user(one_id)
+            users = self.get_user(user_ids=user_ids)
+            for user in users:
                 await user.send(**message_params)
 
         except AttributeError as e:
@@ -157,16 +146,15 @@ class Spammer:
     async def say_to_channel(self,
                              guild_id: int,
                              channel_id: int,
-                             text: str,
-                             ctx,
-                             bot = None) -> bool:
+                             *args,
+                             **kwargs,
+                             ) -> bool:
         try:
-            channel = bot.get_guild(guild_id).get_channel(channel_id)
+            channel = self.bot.get_guild(guild_id).get_channel(channel_id)
         except AttributeError:
-            await ctx.send("Channel and Guild Not Found")
             return False
         except (discord.Forbidden, commands.BotMissingPermissions):
-            await ctx.send("Not Enough access")
             return False
-        await channel.send(text)
-        return True
+        else:
+            await channel.send(*args, **kwargs)
+            return True

@@ -95,14 +95,11 @@ class FileManager:
 
         os.mkdir(user_path)
 
-    async def delete_all_guild_files(self, guild_id: int=None):
-        try:
-            await self._loop.run_in_executor(None, self._delete_all_guild_files, guild_id)
-        except Exception as e:
-            raise e
+    async def delete_all_guild_files(self, guild_id: int = None):
+        await self._loop.run_in_executor(None, self._delete_all_guild_files, guild_id)
 
     @staticmethod
-    def _delete_all_guild_files(guild_id: int=None):
+    def _delete_all_guild_files(guild_id: int = None):
         """
         Deleting all files from working directory!
         if DELETE_ALL_FILES is true that delete all files from file/ directory
@@ -164,8 +161,7 @@ class FileManager:
     async def change_file_name(self, user: User, file: str, to_change: str):
         await self._loop.run_in_executor(None, os.rename, fr"{user.user_path}\{file}", fr"{user.user_path}\{to_change}")
 
-
-    async def create_file(self, file_name: str, user: User, type_: str="py"):
+    async def create_file(self, file_name: str, user: User, type_: str = "py"):
         """
         Create file based on user path
         and user can set type of file
@@ -199,7 +195,6 @@ class FileManager:
         if not filename:
             return
         await self._loop.run_in_executor(None, os.remove, f"{user_path}/{filename}")
-
 
     async def open_file(self, filename: str, user: User):
         """
@@ -247,7 +242,6 @@ class FileManager:
         loop = self._loop
         await loop.run_in_executor(None, self._write_to_file, text, user)
 
-
     async def create_guild_folder(self, guild: Guild):
         try:
             await self._loop.run_in_executor(None, self._create_guild_folder, guild)
@@ -272,7 +266,7 @@ class FileManager:
         except Exception as e:
             raise e
 
-    async def change_line(self, user: User, line: int, to_change: str="\n"):
+    async def change_line(self, user: User, line: int, to_change: str = "\n"):
         try:
             await self._loop.run_in_executor(None, self._change_line, user, line, to_change)
         except Exception:

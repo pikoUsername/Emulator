@@ -10,6 +10,7 @@ from ..utils.cache import async_cache
 from ..models import User
 from data.config import PREFIX
 
+
 class DiscordInfo(commands.Cog):
     """ Info about bot and etc. """
     def __init__(self, bot):
@@ -34,8 +35,7 @@ class DiscordInfo(commands.Cog):
         e.add_field(name="Author", value="piko#0381")
         e.add_field(name="Github", value="[here](https://github.com/pikoUsername/Emulator)")
         e.add_field(name="Library", value="[discord.py](https://github.com/Rapptz/discord.py)")
-        e.set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}",
-                    icon_url=ctx.author.avatar_url),
+        e.set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}", icon_url=ctx.author.avatar_url),
         await ctx.send(embed=e)
 
     @commands.command()
@@ -55,10 +55,11 @@ class DiscordInfo(commands.Cog):
             title="Ping",
             description="\n".join(text)
         )
+        await message.delete()
         await message.edit(embed=embed)
 
     @commands.command()
-    async def file(self, ctx: commands.Context, *, file_: str=None):
+    async def file(self, ctx: commands.Context, *, file_: str = None):
         """ Show current file, if you set file, then show file text """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
         embed = discord.Embed()
@@ -98,11 +99,11 @@ class DiscordInfo(commands.Cog):
         await ctx.send(embed=discord.Embed(
             title="Time",
             description=f"Time: {datetime.utcnow()} :timer:",
-        ).set_footer(text=f"requested by {ctx.author.display_name}",icon_url=ctx.author.avatar_url))
+        ).set_footer(text=f"requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url))
 
     @commands.command()
     @async_cache()
-    async def avatar(self, ctx: commands.Context, user: discord.Member=None):
+    async def avatar(self, ctx: commands.Context, user: discord.Member = None):
         """ Gets Avatar of author """
         embed = discord.Embed()
         user = user or ctx.author
@@ -135,9 +136,8 @@ class DiscordInfo(commands.Cog):
         except AttributeError:
             return await ctx.send("Error Channel Not allowed")
 
-
     @commands.command()
-    async def select(self, ctx: commands.Context, *, user_id: int=None):
+    async def select(self, ctx: commands.Context, *, user_id: int = None):
         """Get Selected User"""
         user_id = user_id or ctx.author.id
         user = await User.query.where(User.user_id == user_id).gino.first()

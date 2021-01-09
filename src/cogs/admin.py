@@ -3,20 +3,22 @@ import typing
 from discord.ext import commands
 import discord
 
+
 class AdminCommands(commands.Cog):
     """ Here Admin commands, and mod commands """
+
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(aliases=["rm-ufull"])
     @commands.has_permissions(administrator=True)
-    async def remove_user(self, ctx: commands.Context, member: discord.Member, *, reason: str=None):
+    async def remove_user(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """ Deletes user from bot, not a discord Guild """
         if ctx.author.id == member.id:
             return await ctx.send(embed=discord.Embed(
-        		title=f"ERROR {self.bot.X_EMOJI}",
-        		description="You cant remove yourself!",
-        	))
+                title=f"ERROR {self.bot.X_EMOJI}",
+                description="You cant remove yourself!",
+            ))
 
         user = await self.bot.uapi.get_user_by_id(member.id)
 
@@ -42,7 +44,7 @@ class AdminCommands(commands.Cog):
             ))
 
     @commands.command()
-    @commands.has_permissions(administrator=True)
+    @commands.is_owner()
     async def set_prefix(self, ctx: commands.Context, prefix: str):
         result = self.bot.set_prefix(ctx.guild, prefix)
 
@@ -54,7 +56,7 @@ class AdminCommands(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def remove_guild_folder(self, ctx: commands.Context):
 
-        if getattr(self.bot, 'drop_after_restart') is False:
+        if not hasattr(self.bot, 'drop_after_restart'):
             await ctx.send(embed=discord.Embed(
                 title=f"Error, {self.bot.X_EMOJI}",
                 description="Deleting guild files is turned OFF, so you cant delete them!"
@@ -62,18 +64,18 @@ class AdminCommands(commands.Cog):
             return
 
         try:
-            await self.bot.fm.delete_all_guild_files()
+            await self.bot.fm.delete_all_guild_files(ctx.guild.id)
         except Exception as e:
-            raise e
+            raise commands.CommandInvokeError(e)
         else:
             await ctx.send(embed=discord.Embed(
-                title="Success :white_check_mark:",
+                title=f"Success {self.bot.APPLY_EMOJI}",
                 description="Now your discord servers folder was removed, now your members leave!",
             ).set_footer(text=f"Removed By {ctx.author.mention}", icon_url=ctx.author.avatar_url)
             )
         try:
             await ctx.send("@everyone All yours files was removed! Now leave from guild")
-        except PermissionError:
+        except commands.BotMissingPermissions:
             pass
 
 

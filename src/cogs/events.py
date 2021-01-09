@@ -36,14 +36,13 @@ class DiscordEvents(commands.Cog):
     async def on_guild_remove(self, guild: discord.Guild):
         g_id = str(guild.id)
         async with self.bot.pool.acquire() as connection:
-            async with connection.transaction():
-                await self.bot.fm.delete_all_guild_files(g_id)
-                await connection.execute(
-                    """
-                        DELETE FROM guilds2
-                        WHERE (server_id = $1) ;
-                    """,
-                    g_id)
+            await self.bot.fm.delete_all_guild_files(g_id)
+            await connection.first(
+                """
+                    DELETE FROM guilds2
+                    WHERE (server_id = $1);
+                """,
+                g_id)
             logger.info(f"leaved and deleted thats guild folder")
 
     @commands.Cog.listener()

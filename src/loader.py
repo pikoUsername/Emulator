@@ -29,14 +29,14 @@ class Bot(commands.AutoShardedBot):
         self.spammer: Spammer = Spammer(self)
         self.owner_id = 426028608906330115
         self.help_command = HelpFormat()
-        self.fm: FileManager = FileManager(self.loop) # Shortcut
+        self.fm: FileManager = FileManager(self.loop)  # Shortcut
         self.token = TOKEN
         self.uapi: UserApi = UserApi()
         self.session = aiohttp.ClientSession(loop=self.loop)
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = '\n{white check mark}'
         self.error_channel = None
-        self._extensions = [ # all extension for load
+        self._extensions = [  # all extension for load
             "src.cogs.events",
             "src.cogs.redactor",
             "src.cogs.info",
@@ -70,9 +70,9 @@ class Bot(commands.AutoShardedBot):
             embed.add_field(
                 name="Key Information:\n",
                 value=f"Channel: {ctx.channel} {ctx.channel.id}\n"
-                f"Guild: {ctx.guild} {ctx.guild.id}\n"
-                f"Command: {cmd}\n"
-                f"Message Content: {ctx.message.content}",
+                      f"Guild: {ctx.guild} {ctx.guild.id}\n"
+                      f"Command: {cmd}\n"
+                      f"Message Content: {ctx.message.content}",
             )
 
         await error_log_channel.send(embed=embed)
@@ -85,7 +85,8 @@ class Bot(commands.AutoShardedBot):
         self.prefixes[guild.id] = prefix
 
     async def get_prefix(self, message):
-        prefix = [f"<@{self.user.id}> ", f"<@!{self.user.id}> ", PREFIX, self.prefixes.get(message.guild.id, default=PREFIX)]
+        prefix = [f"<@{self.user.id}> ", f"<@!{self.user.id}> ", PREFIX,
+                  self.prefixes.get(message.guild.id, default=PREFIX)]
         return prefix
 
     async def close_db(self):
@@ -156,8 +157,8 @@ class Bot(commands.AutoShardedBot):
 
         await self.invoke(ctx)
 
-    async def on_command(self, ctx: commands.Context):
-        self.count_commands =+ 1
+    async def on_command_complete(self, ctx: commands.Context):
+        self.count_commands += 1
         try:
             logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}, guild: {ctx.guild.name}")
         except AttributeError:

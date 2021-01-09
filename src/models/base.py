@@ -7,6 +7,7 @@ from gino import Gino
 
 db = Gino()
 
+
 # https://github.com/aiogram/bot/blob/master/app/models/db.py nooooooooooo, i copied code ;(
 class BaseModel(db.Model):
     __abstract__ = True
