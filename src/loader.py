@@ -8,7 +8,6 @@ from discord import Webhook, AsyncWebhookAdapter
 from discord.ext import commands
 from loguru import logger
 
-from src.utils import log
 from data.config import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX, description
 from src.utils.help import HelpFormat
 from src.utils.file_manager import FileManager
@@ -34,7 +33,7 @@ class Bot(commands.AutoShardedBot):
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = '\n{white check mark}'
         self.error_channel = None
-        self.extensions = [ # all extension for load
+        self.extensions_ = [ # all extension for load
             "src.cogs.events",
             "src.cogs.redactor",
             "src.cogs.info",

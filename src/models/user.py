@@ -26,7 +26,7 @@ class UserApi:
         return user
 
     @staticmethod
-    async def add_new_user(user: discord.User, guild: discord.Guild=None):
+    async def add_new_user(user: discord.User, guild: discord.Guild = None):
         """
         Here must be a check, and DM mode
         create user folder for redacting
@@ -58,5 +58,5 @@ class UserApi:
 
     @staticmethod
     async def get_all_owners():
-        all_owners = await User.query.where(User.is_owner == True).gino.all()
+        all_owners = await User.query.where(User.is_owner is True).gino.all()
         return all_owners

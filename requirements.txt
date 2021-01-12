@@ -6,3 +6,5 @@ python-dotenv
 jishaku==1.20.0.220
 discord-flags
 alembic==1.4.3
+click==7.1.2
+aiohttp-autoreload==0.0.1
