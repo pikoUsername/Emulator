@@ -1,8 +1,6 @@
 import asyncio
-import typing
 from typing import List
 import os
-import sys
 
 import aiohttp
 import discord
@@ -36,7 +34,7 @@ class Bot(commands.AutoShardedBot):
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = '\n{white check mark}'
         self.error_channel = None
-        self._extensions = [ # all extension for load
+        self.extensions = [ # all extension for load
             "src.cogs.events",
             "src.cogs.redactor",
             "src.cogs.info",
@@ -198,21 +196,14 @@ class Bot(commands.AutoShardedBot):
         await self.conn_db()
         await self.create_db()
 
-    async def run_itself(self):
-        log.setup()
-        # setup stuff
-        for extension in self._extensions:
-            try:
-                self.load_extension(extension)
-            except Exception as e:
-                logger.error(str(e))
-                raise e
+    def __del__(self):
+        """
+        For Stop Polling
 
-        try:
-            await self.init_db()
-            await self.start(self.token)
-        except Exception as e:
-            logger.exception("CRITICAL ERROR")
-            raise e
-        finally:
-            await self.close_all()
+        :return:
+        """
+        self.loop.run_until_complete(self.close_all())
+
+    async def run_itself(self):
+        await self.init_db()
+        await self.start(self.token)
