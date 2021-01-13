@@ -51,7 +51,7 @@ class Bot(commands.AutoShardedBot):
         await self.conn_db()
 
         launch_time = datetime.datetime.utcnow()
-        logger.info("Bot Ready...")
+        logger.info("Bot Launching...")
 
     async def conn_db(self):
         try:
