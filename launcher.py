@@ -3,4 +3,4 @@ from bot import Bot
 
 def main():
     bot = Bot()
-    bot.start_bot()
+    bot.run_bot(bot.data["BOT_TOKEN"])

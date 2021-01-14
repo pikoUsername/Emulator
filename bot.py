@@ -53,6 +53,16 @@ class Bot(commands.AutoShardedBot):
         launch_time = datetime.datetime.utcnow()
         logger.info("Bot Launching...")
 
+    async def run_bot(self, *args, **kwargs):
+        try:
+            self.run(*args, **kwargs)
+        finally:
+            self.loop.run_until_complete(self.close_all())
+
+    async def close_all(self):
+        await self.pool.close()
+        await self.close()
+
     async def conn_db(self):
         try:
             self.pool = await asyncpg.create_pool(
