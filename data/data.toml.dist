@@ -1,0 +1,10 @@
+[bot]
+PREFIX = "::"
+BOT_TOKEN = ""
+onreadyurl = ""
+
+[db]
+dbhost = "localhost"
+database = ""
+user = ""
+dbpassword = ""
