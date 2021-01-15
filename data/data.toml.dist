@@ -2,6 +2,8 @@
 PREFIX = "::"
 BOT_TOKEN = ""
 onreadyurl = ""
+BASE_PATH = ""
+OWNER_IDS = []
 
 [db]
 dbhost = "localhost"
