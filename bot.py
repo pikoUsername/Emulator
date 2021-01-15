@@ -46,12 +46,17 @@ class Bot(commands.AutoShardedBot):
         self.fm = FileManager(self.pool, self.loop)
 
         self.extensions_ = [
-            "admin", "cursor", "edit",
-            "misc", "owner", "read",
-            "visual", "write", "events"
+            "admin", "cursor", "edit", "misc",
+            "owner", "visual", "write", "events",
         ]
         with open("./data/data.toml", 'r') as cfg:
             self.data = pytoml.load(cfg)
+
+    async def get_context(self, message, *, cls=commands.Context):
+        """Get Context, ignores Guild"""
+        if message.guild:
+            return
+        return await super().get_context(message, cls=cls)
 
     @property
     def token(self):
@@ -85,7 +90,8 @@ class Bot(commands.AutoShardedBot):
         await self.pool.close()
         await self.close()
 
-    def create_dsn(self, host: str, database: str, user: str, password: str, port: str):
+    @staticmethod
+    def create_dsn(host: str, database: str, user: str, password: str, port: str):
         dsn = f"postgresql://{user}:{password}@{host}:{port}/{database}"
         return dsn
 
