@@ -1,29 +1,7 @@
-import os
-import asyncio
-import functools
-
-
-def wrap(func):
-    @functools.wraps(func)
-    async def run(*args, loop=None, executor=None, **kwargs):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        pfunc = functools.partial(func, *args, **kwargs)
-        return await loop.run_in_executor(executor, pfunc)
-
-    return run
-
-
-stat = wrap(os.stat)
-rename = wrap(os.rename)
-remove = wrap(os.remove)
-mkdir = wrap(os.mkdir)
-rmdir = wrap(os.rmdir)
-
-
 class FileManager:
-    def __init__(self, loop):
+    def __init__(self, loop, bind):
         self.loop = loop
+        self.bind = bind
 
     async def create_user_folder(self, user_id: int):
         pass

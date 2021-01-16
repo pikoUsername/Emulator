@@ -42,7 +42,7 @@ class Bot(commands.AutoShardedBot):
         self.session = aiohttp.ClientSession(loop=loop)
         self.bind = None
         self.launch_time = None
-        self.fm = FileManager(self.loop)
+        self.fm = FileManager(self.loop, self.bind)
 
         self.extensions_ = [
             "admin", "cursor", "edit", "misc",
