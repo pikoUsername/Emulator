@@ -8,11 +8,11 @@ class Owner(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx) -> bool:
-        async with self.bot.pool.acquire() as connection:
+        async with self.bot.bind.acquire() as connection:
             async with connection.transaction():
                 is_admin = await connection.fetch("""
                     SELECT is_admin FROM users
-                    WHERE uid = $1 LIMIT 1;
+                    WHERE user_id = $1 LIMIT 1;
                 """, ctx.author.id)
                 if is_admin is False:
                     return False

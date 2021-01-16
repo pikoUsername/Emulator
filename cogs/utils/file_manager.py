@@ -22,8 +22,7 @@ rmdir = wrap(os.rmdir)
 
 
 class FileManager:
-    def __init__(self, pool, loop):
-        self.pool = pool
+    def __init__(self, loop):
         self.loop = loop
 
     async def create_user_folder(self, user_id: int):
@@ -38,3 +37,8 @@ class FileManager:
     async def read_file(self, user_id: int):
         pass
 
+    async def delete_guild_folder(self, guild_id: int):
+        pass
+
+    async def delete_user_folder(self, user_id: int, guild_id: int):
+        pass

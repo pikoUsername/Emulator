@@ -42,6 +42,21 @@ class Events(commands.Cog):
             ctx = await self.bot.get_context(after)
             await self.bot.invoke(ctx)
 
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        g_id = guild.id
+        async with self.bot.pool.acquire() as conn:
+            async with conn.transaction():
+                await conn.execute("""
+                    INSERT INTO guilds(
+                        guild_id, 
+                        guild_name
+                    ) VALUES ($1, $2)
+                """, g_id, guild.name)
+
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild):
+        pass
 
 def setup(bot):
     bot.add_cog(Events(bot))
