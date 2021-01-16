@@ -14,7 +14,10 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, err):
-        missing_pems = (commands.BotMissingPermissions, commands.MissingPermissions)
+        missing_perms = (
+            commands.BotMissingPermissions,
+            commands.MissingPermissions
+        )
         ignore_errors = (
             commands.MissingRequiredArgument,
             commands.BadArgument,
@@ -24,7 +27,7 @@ class Events(commands.Cog):
         if isinstance(err, ignore_errors):
             await ctx.send_help(ctx.command)
 
-        elif isinstance(err, missing_pems):
+        elif isinstance(err, missing_perms):
             await ctx.send("**M**issing **R**equired **P**ermissions")
 
         elif isinstance(err, commands.CommandInvokeError):
@@ -45,14 +48,11 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
         g_id = guild.id
-        async with self.bot.pool.acquire() as conn:
+        async with self.bot.bind.acquire() as conn:
             async with conn.transaction():
-                await conn.execute("""
-                    INSERT INTO guilds(
-                        guild_id, 
-                        guild_name
-                    ) VALUES ($1, $2)
-                """, g_id, guild.name)
+                await conn.execute(
+                    'INSERT INTO guilds(guild_id, guild_name) VALUES ($1, $2)',
+                g_id, guild.name)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):

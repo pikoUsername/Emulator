@@ -10,6 +10,7 @@ from loguru import logger
 
 from cogs.utils import FileManager
 from cogs.utils import log
+from cogs.utils import db
 
 LOGS_BASE_PATH = str(Path(__name__).parent.parent / "logs")
 
@@ -39,10 +40,11 @@ class Bot(commands.AutoShardedBot):
         )
         log.setup(LOGS_BASE_PATH)
         self.invoke_errors = 0
-        self.session = aiohttp.ClientSession(loop=loop)
         self.bind = None
         self.launch_time = None
+        self.session = aiohttp.ClientSession(loop=loop)
         self.fm = FileManager(self.loop, self.bind)
+        self.dbc = db.DBC(self)
 
         self.extensions_ = [
             "admin", "cursor", "edit", "misc",
@@ -61,7 +63,7 @@ class Bot(commands.AutoShardedBot):
     def token(self):
         return self.data['bot']["BOT_TOKEN"]
 
-    async def send_with_webhook(self, text: str=None, *args, **kwargs):
+    async def send_with_webhook(self, text: str = None, *args, **kwargs):
         webhook = Webhook.from_url(
             self.data['bot']['onreadyurl'],
             adapter=AsyncWebhookAdapter(
@@ -80,6 +82,7 @@ class Bot(commands.AutoShardedBot):
     async def run_bot(self):
         self.load_cogs()
         try:
+            await db.create_bind(self)
             await self.start(self.token)
         finally:
             await self.close_all()

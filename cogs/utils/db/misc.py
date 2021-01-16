@@ -44,24 +44,24 @@ class DBC:
         async with self.bot.bind.acquire() as conn:
             async with conn.transaction():
                 await conn.execute(
-                    'INSERT INTO guilds(guild_id, guild_name) VALUES ($1, $2);'
-                , g_id, guild.name)
+                    'INSERT INTO guilds(guild_id, guild_name) VALUES ($1, $2);',
+                g_id, guild.name)
 
     async def delete_user(self, user_id: int, guild_id: int):
         """Delete User model with folder"""
         async with self.bot.bind.acquire() as conn:
             async with conn.transaction():
                 await conn.execute(
-                    'DELETE FROM users u WHERE u.user_id = $1'
-                , user_id)
+                    'DELETE FROM users u WHERE u.user_id = $1',
+                user_id)
                 await self.bot.fm.delete_user_folder(user_id, guild_id)
 
     async def get_guild(self, guild_id: int):
         """Get Guild with Using Pool"""
         async with self.bot.bind.acquire() as conn:
             guild = await conn.fetchrow(
-                'SELECT g.* FROM guilds g WHERE g.guild_id = $1'
-            , guild_id)
+                'SELECT g.* FROM guilds g WHERE g.guild_id = $1',
+            guild_id)
         return guild
 
     async def remove_guild(self, guild_id: int):
@@ -71,5 +71,5 @@ class DBC:
         async with self.bot.bind.acquire() as conn:
             async with conn.transaction():
                 await conn.execute(
-                    'DELETE FROM guilds g WHERE g.guild_id = $1'
-                , guild_id)
+                    'DELETE FROM guilds g WHERE g.guild_id = $1',
+                guild_id)

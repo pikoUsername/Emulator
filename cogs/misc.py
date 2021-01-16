@@ -12,7 +12,7 @@ class Misc(commands.Cog):
         pass
 
     @commands.command(aliases="s/")
-    async def search(self, ctx: commands.Context):
+    async def search(self, ctx: commands.Context, *, args: str):
         pass
 
     @commands.command(aliases="undo")

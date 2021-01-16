@@ -1,5 +1,4 @@
 from discord.ext import commands
-import discord
 
 
 class Edit(commands.Cog):
@@ -10,7 +9,7 @@ class Edit(commands.Cog):
 
     @commands.command()
     async def edit_l(self, ctx: commands.Context, *, wtext: str):
-        """Edit Selected Line"""
+        """Edit Current Line"""
         pass
 
 

@@ -1,5 +1,4 @@
 from discord.ext import commands
-import discord
 
 
 class Cursor(commands.Cog):
@@ -12,7 +11,7 @@ class Cursor(commands.Cog):
         pass
 
     @commands.command(name="to")
-    async def change_cursor(self, ctx: commands.Context, l: int):
+    async def change_cursor(self, ctx: commands.Context, line_number: int):
         pass
 
     @commands.command(aliases="G")
