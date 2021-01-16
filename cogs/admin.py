@@ -8,7 +8,7 @@ class Admin(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    @commands.has_permissions(adminstrator=True)
+    @commands.has_permissions(administrator=True)
     async def del_user(self, ctx: commands.Context, user_id: int):
         """Del Selected User, only for Admins"""
         pass

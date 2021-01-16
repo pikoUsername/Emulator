@@ -31,7 +31,10 @@ class TimedBaseModel(BaseModel):
 
     created_at = db.Column(db.DateTime(True), server_default=db.func.now())
     updated_at = db.Column(
-        db.DateTime(True), default=db.func.now(), onupdate=db.func.now(), server_default=db.func.now()
+        db.DateTime(True),
+        default=db.func.now(),
+        onupdate=db.func.now(),
+        server_default=db.func.now(),
     )
 
 

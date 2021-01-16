@@ -20,7 +20,7 @@ class Owner(commands.Cog):
                     return False
                 return True
 
-    @commands.command(aliases="add_owner")
+    @commands.command()
     async def add_owner(self, ctx: commands.Context, user_id: int, remove: str = "1"):
         """Add Owner by id"""
         r = int(remove) if remove.isdigit() else None

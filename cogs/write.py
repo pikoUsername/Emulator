@@ -7,7 +7,7 @@ class Write(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="write", aliases='w')
+    @commands.command(aliases=['w'])
     async def write(self, ctx: commands.Context, *, txt: str):
         """Write To Cursor Position"""
         pass

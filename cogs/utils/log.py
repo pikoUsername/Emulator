@@ -3,13 +3,14 @@ import sys
 
 from loguru import logger
 
+
 class InterceptHandler(logging.Handler):
     LEVELS_MAP = {
         logging.CRITICAL: "CRITICAL",
-        logging.ERROR:    "ERROR",
-        logging.WARNING:  "WARNING",
-        logging.INFO:     "INFO",
-        logging.DEBUG:    "DEBUG",
+        logging.ERROR: "ERROR",
+        logging.WARNING: "WARNING",
+        logging.INFO: "INFO",
+        logging.DEBUG: "DEBUG",
     }
 
     def _get_level(self, record):

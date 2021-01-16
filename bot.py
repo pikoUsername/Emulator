@@ -42,9 +42,6 @@ class Bot(commands.AutoShardedBot):
         self.invoke_errors = 0
         self.bind = None
         self.launch_time = None
-        self.session = aiohttp.ClientSession(loop=loop)
-        self.fm = FileManager(self.loop, self.bind)
-        self.dbc = db.DBC(self)
 
         self.extensions_ = [
             "admin", "cursor", "edit", "misc",
@@ -52,6 +49,10 @@ class Bot(commands.AutoShardedBot):
         ]
         with open("./data/data.toml", 'r') as cfg:
             self.data = pytoml.load(cfg)
+        self.session = aiohttp.ClientSession(loop=loop)
+        self.fm = FileManager(self.loop, self.bind, self.data)
+        self.dbc: db.DBC = db.DBC(self)
+
 
     async def get_context(self, message, *, cls=commands.Context):
         """Get Context, ignores Guild"""

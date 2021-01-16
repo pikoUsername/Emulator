@@ -1,3 +1,4 @@
+import discord
 from discord.ext import commands
 from loguru import logger
 
@@ -46,17 +47,15 @@ class Events(commands.Cog):
             await self.bot.invoke(ctx)
 
     @commands.Cog.listener()
-    async def on_guild_join(self, guild):
-        g_id = guild.id
-        async with self.bot.bind.acquire() as conn:
-            async with conn.transaction():
-                await conn.execute(
-                    'INSERT INTO guilds(guild_id, guild_name) VALUES ($1, $2)',
-                g_id, guild.name)
+    async def on_guild_join(self, guild: discord.Guild):
+        await self.bot.dbc.add_new_guild(guild)
+
+        await self.bot.fm.create_guild_folder()
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
         pass
+
 
 def setup(bot):
     bot.add_cog(Events(bot))

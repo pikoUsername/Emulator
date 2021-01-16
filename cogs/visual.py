@@ -9,10 +9,10 @@ class Visual(commands.Cog):
 
     @commands.command()
     async def all(self, ctx: commands.Context):
-        """Show All File."""
+        """Show whole File."""
         pass
 
-    @commands.command(aliases="o")
+    @commands.command(aliases=["o"])
     async def open(self, ctx: commands.Context, file: str):
         """Show Selected File."""
         pass

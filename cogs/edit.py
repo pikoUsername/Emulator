@@ -8,7 +8,7 @@ class Edit(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def edit_l(self, ctx: commands.Context, *, wtext: str):
+    async def edit_l(self, ctx: commands.Context, *, w_text: str):
         """Edit Current Line"""
         pass
 

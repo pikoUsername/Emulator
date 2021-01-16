@@ -10,4 +10,4 @@ class User(TimedBaseModel):
     current_file = db.Column(db.String(256))
     user_path = db.Column(db.String(256))
     is_owner = db.Column(db.Boolean)
-    cursor = db.Column(db.Integer, default=0)
+    line_cursor = db.Column(db.Integer, default=0)

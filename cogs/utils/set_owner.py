@@ -10,5 +10,8 @@ async def set_owner(user_id: int, remove: bool) -> bool:
         raise TypeError("User Not Exists")
 
     await user.update(is_owner=not remove).apply()
-
+    if remove:
+        logger.warning(f"Now {user_id} is not owner")
+    else:
+        logger.warning(f"Now {user_id} is OWNER")
     return True
