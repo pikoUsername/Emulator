@@ -5,6 +5,7 @@ import discord
 
 
 class AdminCommands(commands.Cog):
+    __slots__ = ("bot",)
     """ Here Admin commands, and mod commands """
 
     def __init__(self, bot):

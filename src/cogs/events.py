@@ -10,6 +10,8 @@ from ..utils.notify import notify_all_owners
 
 
 class DiscordEvents(commands.Cog):
+    __slots__ = ("bot",)
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -37,12 +39,11 @@ class DiscordEvents(commands.Cog):
         g_id = str(guild.id)
         async with self.bot.pool.acquire() as connection:
             await self.bot.fm.delete_all_guild_files(g_id)
-            await connection.first(
+            await connection.fetch(
                 """
                     DELETE FROM guilds2
                     WHERE (server_id = $1);
-                """,
-                g_id)
+                """, g_id)
             logger.info(f"leaved and deleted thats guild folder")
 
     @commands.Cog.listener()

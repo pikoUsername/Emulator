@@ -1,34 +1,40 @@
-import os
+import asyncio
 
 import aiohttp
 
 from src.models import User
-from src.utils.http import get
 
 
-async def load_code_from_github(owner: str, repo: str, user: User, file_path: str = ""):
+async def load_code_from_github(owner: str,
+                                repo: str,
+                                user: User,
+                                branch: str):
     """
     Load from GitHub Repository,
-    This function Parse Jsom from github
-    and download with "download_url" in json reposnse
-    i guess it ll be slow function
+    i guess its bad method, but codeload.github.com/ is blocked, FUCK
 
     :param owner: need for find github repo
     :param repo: repo name
     :param user: user for path
-    :param file_path:
+    :param branch:
     :return:
     """
-    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}"
-    user_path = user.user_path
-    await download_n_upload(user_path, url)
+    url = f"https://github.com/{owner}/{repo}/{branch}.zip"
+    await upload(repo, user.user_path, url)
 
 
-async def download_n_upload(user_path: str, url: str):
-    if not os.path.exists(user_path):
-        return
-
+async def upload(repo: str, user_path: str, url: str):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
-            json = await resp.text()
-            pass  # I Cant
+            await download_as_zip(f"{user_path}/{repo}.zip", resp)
+
+
+async def download_as_zip(path: str, resp):
+    chunk_size = 30
+
+    with open(path, 'wb') as fd:
+        while True:
+            chunk = await resp.content.read(chunk_size)
+            if not chunk:
+                break
+            fd.write(chunk)

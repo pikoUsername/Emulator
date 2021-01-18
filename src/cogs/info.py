@@ -1,17 +1,16 @@
 from datetime import datetime
 import time
 import sys
-import os
 
 from discord.ext import commands
 import discord
 
 from ..utils.cache import async_cache
-from ..models import User
 from data.config import PREFIX
 
 
 class DiscordInfo(commands.Cog):
+    __slots__ = ("bot",)
     """ Info about bot and etc. """
     def __init__(self, bot):
         self.bot = bot
@@ -30,51 +29,44 @@ class DiscordInfo(commands.Cog):
             "I can make basic operations with files, delete, open, rewrite\n",
             f"You can start using me with command {PREFIX}start",
         )
-        e = discord.Embed(title="Information", description="\n".join(text))
-        e.add_field(name="Python version", value=f"{sys.version_info.major}.{sys.version_info.minor}")
-        e.add_field(name="Author", value="piko#0381")
-        e.add_field(name="Github", value="[here](https://github.com/pikoUsername/Emulator)")
-        e.add_field(name="Library", value="[discord.py](https://github.com/Rapptz/discord.py)")
-        e.set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}", icon_url=ctx.author.avatar_url),
+        e = discord.Embed(title="Information",
+                          description="\n".join(text))
+        e.add_field(name="Python version",
+                    value=f"{sys.version_info.major}.{sys.version_info.minor}")
+        e.add_field(name="Author",
+                    value="piko#0381")
+        e.add_field(name="Github",
+                    value="[here](https://github.com/pikoUsername/Emulator)")
+        e.add_field(name="Library",
+                    value="[discord.py](https://github.com/Rapptz/discord.py)")
+        e.set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}",
+                     icon_url=ctx.author.avatar_url),
         await ctx.send(embed=e)
 
     @commands.command()
     async def ping(self, ctx: commands.Context):
         """ Pong """
-        first_time = time.monotonic()
+        first_time = time.perf_counter()
 
         message = await ctx.send("...")
         ping = int(self.bot.latency * 1000)
 
-        second_time = first_time - time.monotonic()
+        second_time = first_time - time.perf_counter()
         text = (
             f"Message Ping: {int(second_time + ping)}",
             f"Bot Latency: {ping}",
         )
-        embed = discord.Embed(
-            title="Ping",
-            description="\n".join(text)
-        )
+        embed = discord.Embed(title="Ping",
+                              description="\n".join(text))
         await message.delete()
-        await message.edit(embed=embed)
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def file(self, ctx: commands.Context, *, file_: str = None):
         """ Show current file, if you set file, then show file text """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
         embed = discord.Embed()
-
-        if not user:
-            embed.title = f"You not authorizated {self.bot.X_EMOJI}"
-            embed.description = "No access for files"
-            return await ctx.send(embed=embed)
-        if not file_:
-            file_to_read = f"{user.current_file}"
-        else:
-            file_to_read = f"{user.user_path}/{file_}"
-
-        if not os.path.exists(file_to_read):
-            return await ctx.send("File not Exists!")
+        file_to_read = f"{user.current_file}/{file_}" or user.current_file
 
         try:
             with open(file_to_read, "r") as file:
@@ -115,7 +107,7 @@ class DiscordInfo(commands.Cog):
     @commands.command()
     async def invite(self, ctx: commands.Context):
         """ Invite bot """
-        perms = discord.Intents()
+        perms = discord.Intents().none()
         perms.messages = True
         perms.read_messages = True
         perms.embed_links = True
@@ -127,20 +119,10 @@ class DiscordInfo(commands.Cog):
                                            description=f"[Click here to invite]({discord.utils.oauth_url(self.bot.client_id, perms)})"))
 
     @commands.command()
-    async def bug_report(self, ctx: commands.Context, *, text: str):
-        """Bug report"""
-        if not text:
-            return await ctx.send("Describe a BUG or something like this")
-        try:
-            await self.bot.send_error(ctx, text)
-        except AttributeError:
-            return await ctx.send("Error Channel Not allowed")
-
-    @commands.command()
     async def select(self, ctx: commands.Context, *, user_id: int = None):
         """Get Selected User"""
         user_id = user_id or ctx.author.id
-        user = await User.query.where(User.user_id == user_id).gino.first()
+        user = await self.bot.uapi.get_user_by_id(user_id)
 
         if not user:
             return await ctx.send("User Not Exists")

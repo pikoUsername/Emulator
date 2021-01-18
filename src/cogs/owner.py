@@ -14,6 +14,7 @@ from src.models.user import UserApi
 
 
 class OwnerCommands(commands.Cog):
+    __slots__ = ("bot",)
     """ Only for owners """
     def __init__(self, bot):
         self.bot = bot

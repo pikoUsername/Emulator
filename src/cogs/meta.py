@@ -9,6 +9,7 @@ from src.utils.help import PaginatedHelpCommand
 
 
 class MetaCommands(commands.Cog):
+    __slots__ = ("bot",)
     """ Trash Commands """
     def __init__(self, bot):
         self.bot = bot
@@ -31,7 +32,9 @@ class MetaCommands(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def get_owner(self, ctx: commands.Context, member: Union[discord.Member, discord.User]=None):
-        user = await UserApi.get_user_by_id(ctx.author.id) or await UserApi.get_user_by_id(member.id)
+        user_id = member.id or ctx.author.id
+        user = await UserApi.get_user_by_id(user_id)
+
         try:
             result = await create_owner_user(user.user_id, remove=False)
         except ValueError:
