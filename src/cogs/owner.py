@@ -14,7 +14,7 @@ from src.models.user import UserApi
 
 
 class OwnerCommands(commands.Cog):
-    __slots__ = ("bot",)
+    __slots__ = "bot",
     """ Only for owners """
     def __init__(self, bot):
         self.bot = bot
@@ -30,22 +30,6 @@ class OwnerCommands(commands.Cog):
         elif not user.is_owner:
             raise commands.MissingPermissions("Missing Owner permissions")
         return True
-
-    @commands.command()
-    async def shutdown(self, ctx: commands.Context):
-        """ Reboot the bot """
-        await ctx.send("Shutdown...")
-        sys.exit(0)
-
-    @commands.command()
-    async def dm_send(self, ctx: commands.Context, user_id: int, *, message: str):
-        """ DM the user of your choice """
-        user = self.bot.get_user(user_id)
-        try:
-            await user.send(message)
-            await ctx.send(f"✉️ Sent a DM to **{user_id}**")
-        except discord.Forbidden:
-            await ctx.send("This user might be having DMs blocked or it's a bot account...")
 
     @commands.command()
     async def load_extension(self, ctx: commands.Context, *, cogs: str):
@@ -64,15 +48,12 @@ class OwnerCommands(commands.Cog):
         user = await UserApi.get_user_by_id(ctx.author.id)
 
         file_path = f"{user.user_path}/{file}"
-
-        if not os.path.exists(file_path):
-            return await ctx.send("File NOT EXISTS")
         to_load_extension = file_path.replace("/", ".")
 
         try:
             self.bot.load_extension(to_load_extension)
-        except Exception as e:
-            return await ctx.send(f"Failed to load. **ERROR: **\n```{e}```")
+        except commands.ExtensionNotFound:
+            await ctx.send("File Not Found")
 
     @commands.command()
     async def unload_cogs(self, ctx: commands.Context, cog: str):
@@ -94,7 +75,7 @@ class OwnerCommands(commands.Cog):
             await ctx.send(err)
 
     @property
-    def last_log(self) -> List:
+    def last_log(self) -> str:
         """
         Get last log from /logs/ folder
         :return:
@@ -102,10 +83,10 @@ class OwnerCommands(commands.Cog):
         logs_list: List = os.listdir(LOGS_BASE_PATH)
         full_list = [os.path.join(LOGS_BASE_PATH, i) for i in logs_list]
         time_sorted_list: List = sorted(full_list, key=os.path.getmtime)
-
-        if not time_sorted_list:
-            return
-        return time_sorted_list[-1]
+        try:
+            return time_sorted_list[-1]
+        except IndexError:
+            pass
 
     @staticmethod
     def parting(xs, parts):
@@ -117,22 +98,16 @@ class OwnerCommands(commands.Cog):
         file_ = self.last_log
         file_name = ''.join(file_)
 
-        try:
-            with open(f"{file_name}", "r") as file:
-                text = file.read()
-        except Exception:
-            return await ctx.send("Failed to load file!")
+        with open(f"{file_name}", "r") as file:
+            text = file.read()
 
         if len(text) <= 2048:
             return await ctx.author.send(embed=discord.Embed(title="Whole Log", description=f"```{text}```"))
 
-        try:
-            whole_log = await self.bot.loop.run_in_executor(None, self.parting, text, 5)
-            for peace in whole_log:
-                await ctx.author.send(peace)
-                await asyncio.sleep(0.2)
-        except Exception:
-            return await ctx.author.send(text)
+        whole_log = await self.bot.loop.run_in_executor(None, self.parting, text, 5)
+        for peace in whole_log:
+            await ctx.author.send(peace)
+            await asyncio.sleep(0.2)
 
     @commands.command()
     async def set_owner(self, ctx: commands.Context, user_id: int, remove: str=None):

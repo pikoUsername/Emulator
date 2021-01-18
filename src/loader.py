@@ -1,6 +1,7 @@
 import asyncio
 from typing import List
 import os
+import functools
 
 import aiohttp
 import discord

@@ -10,7 +10,7 @@ from ..utils.notify import notify_all_owners
 
 
 class DiscordEvents(commands.Cog):
-    __slots__ = ("bot",)
+    __slots__ = "bot",
 
     def __init__(self, bot):
         self.bot = bot

@@ -10,6 +10,8 @@ from src.models import Guild, User
 from data.config import BASE_PATH
 
 
+__all__ = ("FileManager",)
+
 class FileManager:
     def __init__(self, loop=None):
         """
@@ -190,8 +192,6 @@ class FileManager:
         """
         user_path = user.user_path
 
-        if not os.path.exists(f"{user_path}/{filename}"):
-            return
         if not filename:
             return
         await self._loop.run_in_executor(None, os.remove, f"{user_path}/{filename}")

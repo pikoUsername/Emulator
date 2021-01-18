@@ -10,7 +10,7 @@ from data.config import PREFIX
 
 
 class DiscordInfo(commands.Cog):
-    __slots__ = ("bot",)
+    __slots__ = "bot",
     """ Info about bot and etc. """
     def __init__(self, bot):
         self.bot = bot
@@ -68,20 +68,16 @@ class DiscordInfo(commands.Cog):
         embed = discord.Embed()
         file_to_read = f"{user.current_file}/{file_}" or user.current_file
 
-        try:
-            with open(file_to_read, "r") as file:
-                lines = file.read()
-                if len(lines) >= 2048:
-                    return await ctx.send("File too long")
+        with open(file_to_read, "r") as file:
+            lines = file.read()
+            if len(lines) >= 2048:
+                return await ctx.send("File too long")
 
-            embed.title = f"Text of file: {file_}"
-            text = (
-                f"```{lines}```",
-            )
-            embed.description = "\n".join(text)
-        except Exception as e:
-            embed.title = f"ERROR, {self.bot.X_EMOJI}"
-            embed.description = e
+        embed.title = f"Text of file: {file_}"
+        text = (
+            f"```{lines}```",
+        )
+        embed.description = "\n".join(text)
         embed.set_footer(text=f"Current file: ../../{user.current_file[:-10]}")
         await ctx.send(embed=embed)
 
@@ -96,7 +92,7 @@ class DiscordInfo(commands.Cog):
     @commands.command()
     @async_cache()
     async def avatar(self, ctx: commands.Context, user: discord.Member = None):
-        """ Gets Avatar of author """
+        """ Gets Avatar of author. """
         embed = discord.Embed()
         user = user or ctx.author
         avatar = user.avatar_url_as(static_format='png')
@@ -106,7 +102,7 @@ class DiscordInfo(commands.Cog):
 
     @commands.command()
     async def invite(self, ctx: commands.Context):
-        """ Invite bot """
+        """ Invite bot. """
         perms = discord.Intents().none()
         perms.messages = True
         perms.read_messages = True
@@ -120,17 +116,16 @@ class DiscordInfo(commands.Cog):
 
     @commands.command()
     async def select(self, ctx: commands.Context, *, user_id: int = None):
-        """Get Selected User"""
+        """ Get Selected User."""
         user_id = user_id or ctx.author.id
         user = await self.bot.uapi.get_user_by_id(user_id)
-
-        if not user:
-            return await ctx.send("User Not Exists")
-        embed = discord.Embed(
-            title="Selected User",
-            description=f"name: {user.username}\nis owner: {user.is_owner}\ncurrent_file: {user.current_file}"
-                        f"\nuser path: {user.user_path}\ncreated at: {user.created_at}",
-        )
+        try:
+            embed = discord.Embed(
+                title="Selected User",
+                description=f"name: {user.username}\nis owner: {user.is_owner}\ncurrent_file: {user.current_file}"
+                            f"\nuser path: {user.user_path}\ncreated at: {user.created_at}")
+        except AttributeError:
+            return await ctx.send("User Not Authed as User")
         return await ctx.send(embed=embed)
 
 

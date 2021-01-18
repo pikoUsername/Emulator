@@ -5,7 +5,7 @@ import discord
 
 
 class AdminCommands(commands.Cog):
-    __slots__ = ("bot",)
+    __slots__ = "bot",
     """ Here Admin commands, and mod commands """
 
     def __init__(self, bot):
@@ -16,10 +16,7 @@ class AdminCommands(commands.Cog):
     async def remove_user(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """ Deletes user from bot, not a discord Guild """
         if ctx.author.id == member.id:
-            return await ctx.send(embed=discord.Embed(
-                title=f"ERROR {self.bot.X_EMOJI}",
-                description="You cant remove yourself!",
-            ))
+            return
 
         user = await self.bot.uapi.get_user_by_id(member.id)
 
@@ -35,14 +32,11 @@ class AdminCommands(commands.Cog):
             await self.bot.fm.remove_user_folder(user)
             await ctx.send(embed=discord.Embed(
                 title=f"success {self.bot.APPLY_EMOJI}",
-                description="User folder was removed, and table too",
-            ))
+                description="User folder was removed, and table too",))
             await member.send(f"You now in {ctx.guild.guild_name}, was removed forever, reason: {reason}")
         except Exception:
-            await ctx.send(embed=discord.Embed(
-                title=f"failed {self.bot.X_EMOJI}",
-                description="Failed to remove user model, and folder! maybe permission error"
-            ))
+            await ctx.send(embed=discord.Embed(title=f"failed {self.bot.X_EMOJI}",
+                           description="Failed to remove user model, and folder! maybe permission error"))
 
     @commands.command()
     @commands.is_owner()

@@ -9,7 +9,7 @@ from src.utils.help import PaginatedHelpCommand
 
 
 class MetaCommands(commands.Cog):
-    __slots__ = ("bot",)
+    __slots__ = "bot",
     """ Trash Commands """
     def __init__(self, bot):
         self.bot = bot
