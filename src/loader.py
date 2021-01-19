@@ -9,7 +9,13 @@ from discord.ext import commands
 from gino import GinoEngine
 from loguru import logger
 
-from data.config import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, description
+from data.config import (
+    LOGS_BASE_PATH,
+    TOKEN,
+    ERROR_CHANNEL,
+    description,
+    PREFIX,
+)
 from src.utils.help import HelpFormat
 from src.utils.file_manager import FileManager
 from src.models import UserApi
@@ -21,7 +27,7 @@ from data.config import POSTGRES_URI, WEB_HOOK_URL
 
 class Bot(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=self.get_prefix, description=description,
+        super().__init__(command_prefix=PREFIX, description=description,
                          help_attrs=dict(hidden=True), pm_help=None)
 
         self.spammer: Spammer = Spammer(self)
@@ -48,18 +54,13 @@ class Bot(commands.AutoShardedBot):
         self.prefdict = {}
         self._data = {}
 
-    async def get_prefix(self, message):
-        try:
-            async with self.pool.acquire() as conn:
-                prefix = await conn.all("SELECT guild_id FROM guilds2 where i=]"
-                                        "tt6LIMIT 1")
-        except Exception:
-            prefix = ">> "
-        return commands.when_mentioned_or(prefix)(self, message)
-
     async def setup_stuff(self):
         await self.init_db()
-        # await prefix_cache(self)
+        for cog in self.extensions_:
+            try:
+                self.load_extension(f'{cog}')
+            except Exception as e:
+                logger.error(e)
 
     @async_cache()
     async def send_error(self, ctx: commands.Context, err):
@@ -93,7 +94,7 @@ class Bot(commands.AutoShardedBot):
     async def close_db(self):
         bind = self.pool
         if bind:
-            logger.info("Closing Postgres Connection")
+            logger.info("Closing Postgresql Connection")
             await bind.close()
 
     async def close_all(self):
@@ -203,7 +204,12 @@ class Bot(commands.AutoShardedBot):
 
     async def run_itself(self):
         await self.setup_stuff()
-        await self.start(self.token)
+        try:
+            await self.start(self.token)
+        except KeyboardInterrupt:
+            logger.info("GoodBye")
+        finally:
+            await self.close_all()
 
     def __getitem__(self, item):
         return self._data[item]

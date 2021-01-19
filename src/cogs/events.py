@@ -40,7 +40,7 @@ class DiscordEvents(commands.Cog):
             await connection.first(
                 """
                     DELETE FROM guilds2
-                    WHERE (server_id = $1);
+                    WHERE (guild_id = $1);
                 """,
                 g_id)
             logger.info(f"leaved and deleted thats guild folder")
@@ -90,8 +90,7 @@ class DiscordEvents(commands.Cog):
 
         elif isinstance(err, errors.NoPrivateMessage):
             await ctx.send(embed=discord.Embed(title="Private message Not work",
-                                               description="Bot work only in guild channels")
-                           )
+                                               description="Bot work only in guild channels"))
 
         else:
             logger.exception(err)

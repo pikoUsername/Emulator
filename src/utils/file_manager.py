@@ -190,8 +190,6 @@ class FileManager:
         """
         user_path = user.user_path
 
-        if not os.path.exists(f"{user_path}/{filename}"):
-            return
         if not filename:
             return
         await self._loop.run_in_executor(None, os.remove, f"{user_path}/{filename}")

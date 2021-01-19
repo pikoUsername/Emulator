@@ -172,7 +172,7 @@ class TextRedacotorCog(commands.Cog):
         return await ctx.send(f"Your current file ```{user.current_file}```")
 
     @commands.command(aliases=("rm", "remove_file", "remove"))
-    async def rm_file(self, ctx: commands.Context, *files):
+    async def rm_file(self, ctx: commands.Context, file: str):
         """
         remove selected file, be cary about it!
 
@@ -184,64 +184,48 @@ class TextRedacotorCog(commands.Cog):
         """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
 
-        if not user:
-            return await ctx.send(f"Type {self.bot.command_prefix}start, and come here again")
-
         try:
-            for file in files:
-                if not os.path.exists(f"{user.user_path}/{file}"):
-                    return await ctx.send("**FNE**(**F**ile **N**ot **E**xists)")
-                else:
-                    await self.fm.remove_file(file, user)
+            await self.fm.remove_file(file, user)
             await ctx.message.add_reaction("✅")
-        except Exception:
+        except AttributeError:
             await ctx.message.add_reaction("❌")
+        except FileNotFoundError:
+            await ctx.send("File Not Exists")
 
     @commands.command()
     async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
         """ make dir in any directory! only owner """
         user = await UserApi.get_user_by_id(ctx.author.id)
-
-        if not user:
-            return await ctx.send("You Not Authed")
-
-        elif not user.is_owner:
-            raise commands.MissingPermissions("Missing Owner permissions")
-        loop = asyncio.get_event_loop()
-
-        to_create = f"{path}/{name}"
         try:
+            if not user.is_owner:
+                raise commands.MissingPermissions("Missing Owner permissions")
+            loop = asyncio.get_event_loop()
+
+            to_create = f"{path}/{name}"
             await loop.run_in_executor(None, os.mkdir, to_create)
             await ctx.message.add_reaction("✅")
-        except Exception as e:
-            await ctx.send("Failed creating folder!")
-            await self.bot.error_channel.send(e)
+        except AttributeError:
+            return await ctx.send("You not authed as User, type command 'start'")
 
     @commands.command(aliases=["create_file"])
     @commands.cooldown(20, 2000, commands.BucketType.guild)
     async def touch(self, ctx: commands.Context, name: str, *, type_: str="py"):
         """ create file in your folder """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
-
-        if not user:
-            embed = discord.Embed(colour=discord.Colour.blue())
-
-            embed.title = "You dont authorizated"
-            embed.description = f"Type {self.bot.command_prefix}start,\n for start if you didnt started"
-
-            return await ctx.send(embed=embed)
-
-        if len(name) >= 78:
-            if user.is_owner:
-                pass
-            else:
-                return await ctx.send(embed=discord.Embed(
-                    title=f"Not have enough access {self.bot.X_EMOJI}",
-                    description="Too long file name",
-                    colour=discord.Colour.blue(),
-                ))
-        elif os.path.exists(f"{BASE_PATH}/{name}.{type_}"):
-            await ctx.send("this File aleardy exists")
+        try:
+            if len(name) >= 78:
+                if user.is_owner:
+                    pass
+                else:
+                    return await ctx.send(embed=discord.Embed(
+                        title=f"Not have enough access {self.bot.X_EMOJI}",
+                        description="Too long file name",
+                        colour=discord.Colour.blue(),
+                    ))
+            elif os.path.exists(f"{BASE_PATH}/{name}.{type_}"):
+                await ctx.send("this File aleardy exists")
+        except AttributeError:
+            return
 
         try:
             await self.fm.create_file(name, user, type_)
