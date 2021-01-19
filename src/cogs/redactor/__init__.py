@@ -1,3 +1,4 @@
+import asyncio
 import os
 from os.path import join
 import time
@@ -153,7 +154,7 @@ class TextRedacotorCog(commands.Cog):
             return await ctx.send("You Nor Authed as User")
 
     @commands.command(aliases=("rm", "remove_file", "remove"))
-    async def rm_file(self, ctx: commands.Context, *files):
+    async def rm_file(self, ctx: commands.Context, file: str):
         """
         remove selected file, be cary about it!
 
@@ -165,14 +166,18 @@ class TextRedacotorCog(commands.Cog):
         """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
         try:
-            for file in files:
-                try:
-                    await self.fm.remove_file(file, user)
-                except (FileNotFoundError, FileExistsError):
-                    return await ctx.send("**FNE**(**F**ile **N**ot **E**xists)")
+
             await ctx.message.add_reaction("✅")
         except AttributeError:
             return await ctx.send(f"Type {self.bot.command_prefix}start, and come here again")
+
+        try:
+            await self.fm.remove_file(file, user)
+            await ctx.message.add_reaction("✅")
+        except AttributeError:
+            await ctx.message.add_reaction("❌")
+        except FileNotFoundError:
+            await ctx.send("File Not Exists")
 
     @commands.command()
     async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
@@ -186,6 +191,16 @@ class TextRedacotorCog(commands.Cog):
         to_create = f"{path}/{name}"
         await loop.run_in_executor(None, os.mkdir, to_create)
         await ctx.message.add_reaction("✅")
+        try:
+            if not user.is_owner:
+                raise commands.MissingPermissions("Missing Owner permissions")
+            loop = asyncio.get_event_loop()
+
+            to_create = f"{path}/{name}"
+            await loop.run_in_executor(None, os.mkdir, to_create)
+            await ctx.message.add_reaction("✅")
+        except AttributeError:
+            return await ctx.send("You not authed as User, type command 'start'")
 
     @commands.command(aliases=["create_file"])
     @commands.cooldown(10, 200, commands.BucketType.channel)
@@ -218,6 +233,18 @@ class TextRedacotorCog(commands.Cog):
                 await ctx.message.add_reaction("✅")
         except AttributeError:
             return await ctx.send("You Not Authed as User")
+
+        try:
+            await self.fm.create_file(name, user, type_)
+        except Exception as e:
+            logger.exception(e)
+            return await ctx.send(embed=discord.Embed(
+                title=f"ERROR, {self.bot.X_EMOJI}",
+                description=f"```{e}```",
+                colour=discord.Colour.blue(),
+            ))
+        else:
+            await ctx.message.add_reaction("✅")
 
     @commands.command(aliases=["list", "list_files"])
     @commands.cooldown(30, 200, commands.BucketType.guild)

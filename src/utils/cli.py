@@ -5,7 +5,6 @@ from loguru import logger
 import click
 
 from ..loader import Bot
-from . import log
 
 try:
     import aiohttp_autoreload
@@ -19,12 +18,7 @@ run = loop.run_until_complete
 
 @click.group()
 def cli():
-    for extension in bot.extensions_:
-        try:
-            bot.load_extension(extension)
-        except Exception as e:
-            logger.error(str(e))
-            raise e
+    from . import log
     log.setup()
 
 
@@ -49,7 +43,10 @@ def auto_reload_mixin(func):
 @cli.command()
 @auto_reload_mixin
 def polling():
-    run((bot.run_itself()))
+    try:
+        run(bot.run_itself())
+    finally:
+        run(bot.close_all())
 
 
 @cli.command()

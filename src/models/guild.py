@@ -6,7 +6,7 @@ from sqlalchemy import sql
 import discord
 
 from src.models.base import BaseModel, db
-from data.config import BASE_PATH
+from data.config import BASE_PATH, PREFIX
 
 
 class Guild(BaseModel):
@@ -17,6 +17,7 @@ class Guild(BaseModel):
     id = db.Column(db.Integer, db.Sequence("user_id_seq"), primary_key=True)
     guild_id = db.Column(db.BigInteger)
     guild_name = db.Column(db.String(200))
+    command_prefix = db.Column(db.String(20), default=PREFIX)
 
 
 class GuildAPI:

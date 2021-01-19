@@ -41,7 +41,7 @@ class AdminCommands(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def set_prefix(self, ctx: commands.Context, prefix: str):
-        result = self.bot.set_prefix(ctx.guild, prefix)
+        result = self.bot.set_prefix_(ctx.guild, prefix)
 
         if not result:
             return await ctx.send("Prefix Len is More than 10 letters")
