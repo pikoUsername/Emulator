@@ -54,3 +54,8 @@ def async_cache(maxsize=128):
             return res
         return inner
     return decorator
+
+
+async def prefix_cache(bot):
+    async with bot.pool.acquire() as conn:
+        bot.prefixes = await conn.all("SELECT guild_id FROM guilds2")

@@ -19,7 +19,7 @@ run = loop.run_until_complete
 
 @click.group()
 def cli():
-    for extension in bot.extensions_:
+    for extension in bot.extensions:
         try:
             bot.load_extension(extension)
         except Exception as e:
@@ -49,7 +49,10 @@ def auto_reload_mixin(func):
 @cli.command()
 @auto_reload_mixin
 def polling():
-    run((bot.run_itself()))
+    try:
+        run(bot.run_itself())
+    except KeyboardInterrupt:
+        run(bot.close_all())
 
 
 @cli.command()

@@ -1,14 +1,15 @@
 import asyncio
-from typing import List
+from typing import List, Iterator
 import os
 
 import aiohttp
 import discord
 from discord import Webhook, AsyncWebhookAdapter
 from discord.ext import commands
+from gino import GinoEngine
 from loguru import logger
 
-from data.config import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, PREFIX, description
+from data.config import LOGS_BASE_PATH, TOKEN, ERROR_CHANNEL, description
 from src.utils.help import HelpFormat
 from src.utils.file_manager import FileManager
 from src.models import UserApi
@@ -43,8 +44,22 @@ class Bot(commands.AutoShardedBot):
         ]
         self.count_commands = 0
         self.X_EMOJI = ":x:"
-        self.pool = None
-        self.prefixes = {}
+        self.pool: GinoEngine
+        self.prefdict = {}
+        self._data = {}
+
+    async def get_prefix(self, message):
+        try:
+            async with self.pool.acquire() as conn:
+                prefix = await conn.all("SELECT guild_id FROM guilds2 where i=]"
+                                        "tt6LIMIT 1")
+        except Exception:
+            prefix = ">> "
+        return commands.when_mentioned_or(prefix)(self, message)
+
+    async def setup_stuff(self):
+        await self.init_db()
+        # await prefix_cache(self)
 
     @async_cache()
     async def send_error(self, ctx: commands.Context, err):
@@ -75,16 +90,6 @@ class Bot(commands.AutoShardedBot):
         await error_log_channel.send(embed=embed)
         return await ctx.send("Success, Sended to Error Channel")
 
-    def set_prefix(self, guild: discord.Guild, prefix: str):
-        if len(prefix) < 200:
-            return False
-
-        self.prefixes[guild.id] = prefix
-
-    async def get_prefix(self, message):
-        prefix = [f"<@{self.user.id}> ", f"<@!{self.user.id}> ", PREFIX, self.prefixes.get(message.guild.id, default=PREFIX)]
-        return prefix
-
     async def close_db(self):
         bind = self.pool
         if bind:
@@ -92,13 +97,14 @@ class Bot(commands.AutoShardedBot):
             await bind.close()
 
     async def close_all(self):
-        await self.session.close()
+        await self.close()
         await self.close_db()
 
     async def conn_db(self):
-        logger.info("Connecting to Database...")
+        logger.info("Connecting Database...")
 
         self.pool = await db.set_bind(POSTGRES_URI)
+        return self.pool
 
     async def create_db(self):
         logger.info("creating database...")
@@ -112,8 +118,8 @@ class Bot(commands.AutoShardedBot):
                 self.error_channel = channel
 
         logger.info("BOT READY")
-        await self.wait_for_connected()
         await self.postready()
+        await self.wait_for_connected()
 
     async def postready(self):
         webhook = Webhook.from_url(
@@ -195,14 +201,23 @@ class Bot(commands.AutoShardedBot):
         await self.conn_db()
         await self.create_db()
 
-    def __del__(self):
-        """
-        For Stop Polling
-
-        :return:
-        """
-        self.loop.run_until_complete(self.close_all())
-
     async def run_itself(self):
-        await self.init_db()
+        await self.setup_stuff()
         await self.start(self.token)
+
+    def __getitem__(self, item):
+        return self._data[item]
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self._data[key]
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._data)
+
+bot = Bot()
