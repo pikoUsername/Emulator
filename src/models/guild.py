@@ -6,7 +6,7 @@ from sqlalchemy import sql
 import discord
 
 from src.models.base import BaseModel, db
-from data.config import BASE_PATH, PREFIX
+from src.config import BASE_PATH, PREFIX
 
 
 class Guild(BaseModel):

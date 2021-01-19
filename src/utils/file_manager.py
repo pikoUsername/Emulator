@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import os
 from typing import List
 import shutil
@@ -7,10 +8,21 @@ import glob
 from discord.ext import commands
 
 from src.models import Guild, User
-from data.config import BASE_PATH
+from src.config import BASE_PATH
 
 
-__all__ = ("FileManager",)
+__all__ = ("FileManager", "wrap")
+
+
+def wrap(func):
+    @functools.wraps(func)
+    async def run(*args, loop=None, executor=None, **kwargs):
+        if loop is None:
+            loop = asyncio.get_event_loop()
+        pfunc = functools.partial(func, *args, **kwargs)
+        return await loop.run_in_executor(executor, pfunc)
+
+    return run
 
 
 class FileManager:
@@ -56,7 +68,8 @@ class FileManager:
         return files
 
     @staticmethod
-    def _create_guild_folder(guild: Guild):
+    @wrap
+    def create_guild_folder(guild: Guild):
         """
         Private function
         |staticmethod|
@@ -77,7 +90,8 @@ class FileManager:
             raise e
 
     @staticmethod
-    def _create_user_folder(user: User):
+    @wrap
+    def create_user_folder(user: User):
         """
         Private function
         get user_path and create user folder in guild_{guild_id}/ path
@@ -98,11 +112,9 @@ class FileManager:
 
         os.mkdir(user_path)
 
-    async def delete_all_guild_files(self, guild_id: int = None):
-        await self._loop.run_in_executor(None, self._delete_all_guild_files, guild_id)
-
     @staticmethod
-    def _delete_all_guild_files(guild_id: int = None):
+    @wrap
+    def delete_all_guild_files(guild_id: int = None):
         """
         Deleting all files from working directory!
         if DELETE_ALL_FILES is true that delete all files from file/ directory
@@ -120,7 +132,8 @@ class FileManager:
                 pass
 
     @staticmethod
-    def _remove_user_folder(user: User):
+    @wrap
+    def remove_user_folder(user: User):
         """
         Removes user folder, with all files directory
 
@@ -141,7 +154,8 @@ class FileManager:
             commands.CommandInvokeError("Failed to remove user dir")
 
     @staticmethod
-    def _get_line(line: int, user: User):
+    @wrap
+    def get_line(line: int, user: User):
         """
         get user path and select this, and open it
 
@@ -156,7 +170,8 @@ class FileManager:
         return data[line]
 
     @staticmethod
-    def _change_line(user: User, line: int, to_change: str):
+    @wrap
+    def change_line(user: User, line: int, to_change: str):
         with open(user.current_file, "w") as file:
             file.seek(line)
             file.write(to_change)
@@ -197,7 +212,8 @@ class FileManager:
             return
         await self._loop.run_in_executor(None, os.remove, f"{user_path}/{filename}")
 
-    async def open_file(self, filename: str, user: User):
+    @wrap
+    def open_file(self, filename: str, user: User):
         """
         Opens file, need a filename and User
         set user.current_file to filename
@@ -206,9 +222,11 @@ class FileManager:
         :param filename:
         :return:
         """
-        pass
+        with open(f"{user.current_file}/{filename}", "r") as f:
+            return f.readlines()
 
-    def _write_to_file(self, text: str, user: User):
+    @wrap
+    def write_to_file(self, text: str, user: User):
         """
         Private function
 
@@ -227,54 +245,3 @@ class FileManager:
 
         with open(current_file, "w") as file:
             file.write(text)
-
-    async def write_to_file(self, text: str, user: User):
-        """
-        run in executor _write_to_file function
-        need text and user arguments
-
-        :param user:
-        :param text:
-        :return:
-        """
-        if not text:
-            return
-
-        loop = self._loop
-        await loop.run_in_executor(None, self._write_to_file, text, user)
-
-    async def create_guild_folder(self, guild: Guild):
-        try:
-            await self._loop.run_in_executor(None, self._create_guild_folder, guild)
-        except Exception as e:
-            raise e
-
-    async def create_user_folder(self, user: User):
-        """
-        try to run _create_user_folder
-
-        :param user:
-        :return:
-        """
-        try:
-            await self._loop.run_in_executor(None, self._create_user_folder, user)
-        except Exception as e:
-            raise e
-
-    async def get_line(self, line: int, user: User):
-        try:
-            await self._loop.run_in_executor(None, self._get_line, line, user)
-        except Exception as e:
-            raise e
-
-    async def change_line(self, user: User, line: int, to_change: str = "\n"):
-        try:
-            await self._loop.run_in_executor(None, self._change_line, user, line, to_change)
-        except Exception:
-            raise commands.CommandInvokeError("Fail to change line")
-
-    async def remove_user_folder(self, user: User):
-        try:
-            await self._loop.run_in_executor(None, self._remove_user_folder, user)
-        except Exception as e:
-            commands.CommandInvokeError(e)

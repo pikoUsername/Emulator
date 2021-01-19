@@ -6,7 +6,7 @@ from discord.ext import commands
 import discord
 
 from ..utils.cache import async_cache
-from data.config import PREFIX
+from src.config import PREFIX
 
 
 class DiscordInfo(commands.Cog):

@@ -61,29 +61,26 @@ class Spammer:
         """
         Get User Depends at arguments
         """
-        try:
-            if user_id or user_ids is None:
-                user = self.bot.get_user(user_id)
-                return user
+        if user_id or user_ids is None:
+            user = self.bot.get_user(user_id)
+            return user
 
-            if user_id and user_ids:
-                raise TypeError("cant Get Both Argument, as the same")
+        if user_id and user_ids:
+            raise TypeError("cant Get Both Argument, as the same")
 
-            result = []
-            for user_id_ in user_ids:
-                user = self.bot.get_user(user_id_)
-                result.append(user)
-        except AttributeError as e:
-            raise e
-        else:
-            return result
+        result = []
+        for user_id_ in user_ids:
+            user = self.bot.get_user(user_id_)
+            result.append(user)
+        return result
 
     def get_channel(
             self,
             guild_id: int,
             channel_id: int,
             channel_ids: typing.List[int] = None,
-        ) -> typing.Union[typing.List[discord.abc.GuildChannel], discord.abc.GuildChannel]:
+        ) -> typing.Union[typing.List[discord.abc.GuildChannel],
+                          (discord.abc.GuildChannel, discord.DMChannel, discord.TextChannel)]:
         """
         GetChannel with many checks
 
@@ -93,22 +90,18 @@ class Spammer:
         """
         bot = self.bot
 
-        try:
-            if channel_id:
-                channel = bot.get_guild(guild_id).get_channel(channel_id)
-                return channel
+        if channel_id:
+            channel = bot.get_guild(guild_id).get_channel(channel_id)
+            return channel
 
-            if channel_id and channel_ids:
-                raise TypeError("Cant Get Both Elements")
+        if channel_id and channel_ids:
+            raise TypeError("Cant Get Both Elements")
 
-            channels = []
-            for channel_id_ in channel_ids:
-                channel = bot.get_guild(guild_id).get_channel(channel_id_)
-                channels.append(channel)
-        except AttributeError as e:
-            raise e
-        else:
-            return channels
+        channels = []
+        for channel_id_ in channel_ids:
+            channel = bot.get_guild(guild_id).get_channel(channel_id_)
+            channels.append(channel)
+        return channels
 
     async def say_to_user(
             self,
@@ -150,7 +143,7 @@ class Spammer:
                              **kwargs,
                              ) -> bool:
         try:
-            channel = self.bot.get_guild(guild_id).get_channel(channel_id)
+            channel = self.get_channel(guild_id, channel_id)
         except AttributeError:
             return False
         except (discord.Forbidden, commands.BotMissingPermissions):

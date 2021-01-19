@@ -1,4 +1,5 @@
 import asyncio
+import argparse
 import os
 from os.path import join
 import time
@@ -10,7 +11,7 @@ import discord
 from src.utils.file_manager import FileManager
 from src.models import GuildAPI, UserApi
 from .utils.upload import load_code_from_github
-from data.config import BASE_PATH
+from src.config import BASE_PATH
 
 
 class TextRedacotorCog(commands.Cog):
@@ -26,7 +27,7 @@ class TextRedacotorCog(commands.Cog):
         return True
 
     @commands.command()
-    async def upload_from_github(self, ctx: commands.Context, owner: str, repo: str, branch: str = "Master"):
+    async def upload_from_github(self, ctx: commands.Context, owner: str, repo: str, branch: str = "master"):
         """
         Create Repo In Your User Directory, And Its Not Working.
         """
@@ -94,12 +95,12 @@ class TextRedacotorCog(commands.Cog):
     async def rm_line(self, ctx: commands.Context, *, line: str):
         """ remove selected line in currect file, make sure you know what there"""
         if not line.isdigit():
-            await ctx.send("perametr not a digit!")
+            await ctx.send("perameter not a digit!")
             return
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
         embed = discord.Embed()
         try:
-            embed.title = f"Succes deleted line, {self.bot.APPLY_EMOJI}"
+            embed.title = f"Success deleted line, {self.bot.APPLY_EMOJI}"
             embed.description = f"Deleted line {line}"
 
             await self.bot.fm.change_line(user, line)
@@ -160,13 +161,12 @@ class TextRedacotorCog(commands.Cog):
 
         You can select more 1 file, example:
         ```
-        >> rm_file lol.py file.py kak.py hello.py
+        >> rm_file lol.py
         ```
         but cary about it, because it can be deleted forever
         """
         user = await self.bot.uapi.get_user_by_id(ctx.author.id)
         try:
-
             await ctx.message.add_reaction("✅")
         except AttributeError:
             return await ctx.send(f"Type {self.bot.command_prefix}start, and come here again")
@@ -300,6 +300,15 @@ class TextRedacotorCog(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command()
+    async def show_file(self, ctx: commands.Context, file: str = None):
+        user = await UserApi.get_user_by_id(ctx.author.id)
+
+        f = await self.bot.fm.open_file(file, user)
+        e = discord.Embed(title=f"File {file}",
+                          description=f"```{f}```")
+        return await ctx.send(embed=e)
+
     @staticmethod
     def get_files_info(dir_name):
         for root, dirs, files in os.walk(dir_name):
@@ -322,6 +331,31 @@ class TextRedacotorCog(commands.Cog):
     def get_date_as_string(dt):
         return time.strftime('%H:%M:%S %m.%d.%y', time.gmtime(dt))
 
+    @commands.command(aliases=['s/'])
+    async def search(self, ctx: commands.Context, *, query: str):
+        """
+        Search In current File
+        """
+        user = await UserApi.get_user_by_id(ctx.author.id)
+
+        result = await self.bot.fm.search_in_file(query, user.current_file)
+        if not result:
+            return await ctx.send(embed=discord.Embed(title="Results",
+                                                      description="No Results Found..."))
+        return await ctx.send(embed=discord.Embed(title="Results",
+                                                  description=f"```{result}```"))
+
+    @commands.command(aliases=['cp'])
+    async def copy(self, ctx: commands.Context, *, text: commands.clean_content(fix_channel_mentions=True)):
+        """
+        Cp like in *nix Systems, but badder
+        """
+        user = await UserApi.get_user_by_id(ctx.author.id)
+
+        argparse_ = argparse.ArgumentParser()
+        argparse_.add_argument('--file', '-f', default=)
+
+        self.bot.fm.copy_file()
 
 def setup(bot):
     bot.add_cog(TextRedacotorCog(bot))

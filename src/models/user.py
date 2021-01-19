@@ -2,7 +2,7 @@ import discord
 from sqlalchemy import sql
 
 from .base import TimedBaseModel, db
-from data.config import BASE_PATH
+from src.config import BASE_PATH
 
 
 class User(TimedBaseModel):

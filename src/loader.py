@@ -9,7 +9,7 @@ from discord.ext import commands
 from gino import GinoEngine
 from loguru import logger
 
-from data.config import (
+from src.config import (
     LOGS_BASE_PATH,
     TOKEN,
     ERROR_CHANNEL,
@@ -22,7 +22,7 @@ from src.models import UserApi
 from src.models.base import db
 from src.utils.cache import async_cache
 from .utils.spammer import Spammer
-from data.config import POSTGRES_URI, WEB_HOOK_URL
+from src.config import POSTGRES_URI, WEB_HOOK_URL
 
 
 class Bot(commands.AutoShardedBot):
@@ -105,7 +105,6 @@ class Bot(commands.AutoShardedBot):
         logger.info("Connecting Database...")
 
         self.pool = await db.set_bind(POSTGRES_URI)
-        return self.pool
 
     async def create_db(self):
         logger.info("creating database...")
