@@ -12,6 +12,7 @@ from data.config import BASE_PATH
 
 __all__ = ("FileManager",)
 
+
 class FileManager:
     def __init__(self, loop=None):
         """

@@ -205,7 +205,6 @@ class PaginatedHelpCommand(commands.HelpCommand):
             except KeyError:
                 all_commands[command.cog] = [command]
 
-
         menu = HelpMenu(BotHelpPageSource(self, all_commands))
         await menu.start(self.context)
 
@@ -241,11 +240,12 @@ class PaginatedHelpCommand(commands.HelpCommand):
         menu = HelpMenu(source)
         await menu.start(self.context)
 
+
 class HelpFormat(commands.DefaultHelpCommand):
     def __init__(self):
         super().__init__(command_attrs={
-                'cooldown': commands.Cooldown(1, 3.0, commands.BucketType.member),
-                'help': 'Shows help about the bot, a command, or a category'
+            'cooldown': commands.Cooldown(1, 3.0, commands.BucketType.member),
+            'help': 'Shows help about the bot, a command, or a category'
         })
 
     async def on_help_command_error(self, ctx, err):
@@ -279,8 +279,8 @@ class HelpFormat(commands.DefaultHelpCommand):
             embed_like.description = f'{command.description}\n\n{command.help}\nalises:\n{command.aliases}'
         else:
             embed_like.description = command.help
-            embed_like.add_field(name="alises",value=f"\n{command.aliases if command.aliases else 'No aliases'} " or 'No help found...')
-
+            embed_like.add_field(name="aliases", value=f"\n{command.aliases if command.aliases else 'No aliases'} "
+                                                       or "No help found...")
 
     async def send_command_help(self, command: commands.Command):
         # No pagination necessary for a single command.

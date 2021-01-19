@@ -44,7 +44,7 @@ class DiscordEvents(commands.Cog):
                     DELETE FROM guilds2
                     WHERE (server_id = $1);
                 """, g_id)
-            logger.info(f"leaved and deleted thats guild folder")
+            logger.info("leaved and deleted thats guild folder")
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, err):
@@ -81,18 +81,21 @@ class DiscordEvents(commands.Cog):
             ))
 
         elif isinstance(err, errors.MaxConcurrencyReached):
-            await ctx.send("You've reached max capacity of command usage at once, please finish the previous one...", delete_after=30)
+            await ctx.send(
+                "You've reached max capacity of command usage at once, please finish the previous one...",
+                delete_after=30)
 
         elif isinstance(err, errors.CommandOnCooldown):
-            await ctx.send(f"This command is on cool down... try again in {err.retry_after:.2f} seconds.", delete_after=30)
+            await ctx.send(
+                f"This command is on cool down... try again in {err.retry_after:.2f} seconds.",
+                delete_after=30)
 
         elif isinstance(err, errors.CommandNotFound):
             pass
 
         elif isinstance(err, errors.NoPrivateMessage):
             await ctx.send(embed=discord.Embed(title="Private message Not work",
-                                               description="Bot work only in guild channels")
-                           )
+                                               description="Bot work only in guild channels"))
 
         else:
             logger.exception(err)

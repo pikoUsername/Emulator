@@ -271,7 +271,7 @@ class TextRedacotorCog(commands.Cog):
 
         if not flags:
             await ctx.send(embed=discord.Embed(
-                title=f"All files in your directory",
+                title="All files in your directory",
                 description="\n".join(all_files),
                 colour=discord.Colour.blue(),
             ))
@@ -281,7 +281,8 @@ class TextRedacotorCog(commands.Cog):
             return await ctx.send_help(ctx.command)
 
         embed = discord.Embed(title="All files", colour=discord.Colour.blue())
-        files_sorted_by_size = sorted(self.get_files_info(f"{user.user_path}/"), reverse=True, key=lambda x: x[1].st_size)
+        files_sorted_by_size = sorted(
+            self.get_files_info(f"{user.user_path}/"), reverse=True, key=lambda x: x[1].st_size)
         sizes = []
         updated_at = []
         name_files = []
@@ -324,4 +325,3 @@ class TextRedacotorCog(commands.Cog):
 
 def setup(bot):
     bot.add_cog(TextRedacotorCog(bot))
-

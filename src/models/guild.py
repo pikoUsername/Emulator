@@ -26,7 +26,7 @@ class GuildAPI:
         guild = await Guild.query.where(Guild.guild_id == guild_id).gino.first()
         return guild
 
-    async def add_guild(self, guild: discord.Guild): # guild examplar
+    async def add_guild(self, guild: discord.Guild):
         old_guild = await self.get_guild(guild.id)
 
         if old_guild:
@@ -40,9 +40,8 @@ class GuildAPI:
         await new_guild.create()
         return new_guild
 
-    async def create_guild_folder(self, guild: discord.Guild):  # create folder in FILES path, and file path ll base on guild.id
+    async def create_guild_folder(self, guild: discord.Guild):
         await self.add_guild(guild)
-        # here creating folder
         loop = asyncio.get_event_loop()
 
         await loop.run_in_executor(None, os.mkdir, fr"{BASE_PATH}\guild_{guild.id}")

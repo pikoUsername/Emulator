@@ -1,4 +1,3 @@
-from discord.ext.commands import AutoShardedBot
 from loguru import logger
 
 from ..models import UserApi

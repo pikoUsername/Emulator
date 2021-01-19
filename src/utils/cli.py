@@ -16,6 +16,7 @@ bot = Bot()
 loop = asyncio.get_event_loop()
 run = loop.run_until_complete
 
+
 @click.group()
 def cli():
     from . import log

@@ -1,5 +1,4 @@
 import asyncio
-import sys
 from typing import List
 import os
 from math import ceil
@@ -110,7 +109,7 @@ class OwnerCommands(commands.Cog):
             await asyncio.sleep(0.2)
 
     @commands.command()
-    async def set_owner(self, ctx: commands.Context, user_id: int, remove: str=None):
+    async def set_owner(self, ctx: commands.Context, user_id: int, remove: str = None):
         try:
             if remove == "-rm":
                 await create_owner_user(user_id, remove=True)
@@ -170,8 +169,7 @@ class OwnerCommands(commands.Cog):
         notes = getattr(self, 'notes', None)
         embed = discord.Embed(
             title="Notes",
-            description=f"\n".join(notes) or "Nothing To See",
-        )
+            description=f"\n".join(notes) or "Nothing To See")
 
         return await ctx.send(embed=embed)
 
@@ -182,6 +180,7 @@ class OwnerCommands(commands.Cog):
 
         self.notes.append(text)
         await ctx.message.add_reaction("✅")
+
 
 def setup(bot):
     """Setup Owner Commands"""

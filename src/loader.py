@@ -1,7 +1,6 @@
 import asyncio
 from typing import List, Iterator
 import os
-import functools
 
 import aiohttp
 import discord
@@ -34,14 +33,14 @@ class Bot(commands.AutoShardedBot):
         self.spammer: Spammer = Spammer(self)
         self.owner_id = 426028608906330115
         self.help_command = HelpFormat()
-        self.fm: FileManager = FileManager(self.loop) # Shortcut
+        self.fm: FileManager = FileManager(self.loop)
         self.token = TOKEN
         self.uapi: UserApi = UserApi()
         self.session = aiohttp.ClientSession(loop=self.loop)
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = '\n{white check mark}'
         self.error_channel = None
-        self.extensions_ = [ # all extension for load
+        self.extensions_ = [
             "src.cogs.events",
             "src.cogs.redactor",
             "src.cogs.info",
@@ -162,7 +161,7 @@ class Bot(commands.AutoShardedBot):
         await self.invoke(ctx)
 
     async def on_command(self, ctx: commands.Context):
-        self.count_commands =+ 1
+        self.count_commands += 1
         try:
             logger.info(f"Activated command {ctx.command.name}, user: {ctx.author.name}, guild: {ctx.guild.name}")
         except AttributeError:
@@ -226,5 +225,3 @@ class Bot(commands.AutoShardedBot):
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._data)
-
-bot = Bot()

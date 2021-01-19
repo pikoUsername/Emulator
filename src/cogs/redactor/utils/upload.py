@@ -1,5 +1,3 @@
-import asyncio
-
 import aiohttp
 
 from src.models import User

@@ -51,7 +51,6 @@ class UserApi:
 
         new_user.user_id = user.id
         new_user.username = user.name
-        
         await new_user.create()
 
         return new_user

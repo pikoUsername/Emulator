@@ -83,7 +83,7 @@ class Spammer:
             guild_id: int,
             channel_id: int,
             channel_ids: typing.List[int] = None,
-            ) -> typing.Union[typing.List[discord.abc.GuildChannel], discord.abc.GuildChannel]:
+        ) -> typing.Union[typing.List[discord.abc.GuildChannel], discord.abc.GuildChannel]:
         """
         GetChannel with many checks
 

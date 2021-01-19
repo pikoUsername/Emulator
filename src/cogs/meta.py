@@ -19,7 +19,8 @@ class MetaCommands(commands.Cog):
 
     @commands.command(hidden=True)
     async def hello(self, ctx: commands.Context):
-        return await ctx.send(f"Hello, Здравствуйте, Здрастуйте, Hallo, 여보세요, dzień dobry, Bonjour, こんにちは, Сәлеметсіз бе")
+        return await ctx.send(
+            "Hello, Здравствуйте, Здрастуйте, Hallo, 여보세요, dzień dobry, Bonjour, こんにちは, Сәлеметсіз бе")
 
     @commands.command()
     async def no(self, ctx: commands.Context):
@@ -31,7 +32,9 @@ class MetaCommands(commands.Cog):
 
     @commands.command()
     @commands.is_owner()
-    async def get_owner(self, ctx: commands.Context, member: Union[discord.Member, discord.User]=None):
+    async def get_owner(self,
+                        ctx: commands.Context,
+                        member: Union[discord.Member, discord.User] = None):
         user_id = member.id or ctx.author.id
         user = await UserApi.get_user_by_id(user_id)
 
