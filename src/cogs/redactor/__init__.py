@@ -345,21 +345,6 @@ class TextRedacotorCog(commands.Cog):
         return await ctx.send(embed=discord.Embed(title="Results",
                                                   description=f"```{result}```"))
 
-    @commands.command(aliases=['cp'])
-    async def copy(self, ctx: commands.Context, *, text: commands.clean_content(fix_channel_mentions=True)):
-        """
-        Cp like in *nix Systems, but badder
-        copy current file if --file flag not setted
-        """
-        user = await UserApi.get_user_by_id(ctx.author.id)
-
-        argparse_ = argparse.ArgumentParser()
-        try:
-            argparse_.add_argument('--file', '-f', default=user.current_user)
-        except AttributeError:
-            return await ctx.send(f"You Not Authed as User, type {self.bot.command_prefix}start")
-
-        self.bot.fm.copy_file()  # 
 
 def setup(bot):
     bot.add_cog(TextRedacotorCog(bot))

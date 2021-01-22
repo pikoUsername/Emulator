@@ -245,3 +245,5 @@ class FileManager:
 
         with open(current_file, "w") as file:
             file.write(text)
+
+    async def copy_file(self, ):
