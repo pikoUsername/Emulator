@@ -246,4 +246,7 @@ class FileManager:
         with open(current_file, "w") as file:
             file.write(text)
 
-    async def copy_file(self, ):
+    @wrap
+    def search_in_file(self, query: str, current_file: str):
+        with open(current_file, 'r') as f:
+            return [m if m in [f'{query}\n', query] else None for m in f.readlines()]

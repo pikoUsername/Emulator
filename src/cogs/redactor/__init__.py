@@ -338,12 +338,12 @@ class TextRedacotorCog(commands.Cog):
         """
         user = await UserApi.get_user_by_id(ctx.author.id)
 
-        result = await self.bot.fm.search_in_file(query, user.current_file)
-        if not result:
+        results = await self.bot.fm.search_in_file(query, user.current_file)
+        if not results:
             return await ctx.send(embed=discord.Embed(title="Results",
                                                       description="No Results Found..."))
         return await ctx.send(embed=discord.Embed(title="Results",
-                                                  description=f"```{result}```"))
+                                                  description="```{}```".format(''.join(results))))
 
 
 def setup(bot):

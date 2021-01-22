@@ -92,7 +92,10 @@ class Bot(commands.AutoShardedBot):
         return await ctx.send("Success, Sended to Error Channel")
 
     async def close_db(self):
-        bind = self.pool
+        try:
+            bind = db.pop_bind()
+        except AttributeError:
+            bind = None
         if bind:
             logger.info("Closing Postgresql Connection")
             await bind.close()
@@ -104,7 +107,7 @@ class Bot(commands.AutoShardedBot):
     async def conn_db(self):
         logger.info("Connecting Database...")
 
-        self.pool = await db.set_bind(POSTGRES_URI)
+        self.pool = await db.set_bind(POSTGRES_URI, loop=self.loop)
 
     async def create_db(self):
         logger.info("creating database...")
