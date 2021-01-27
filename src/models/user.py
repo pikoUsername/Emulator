@@ -9,8 +9,6 @@ class User(TimedBaseModel):
     """No help"""
     __tablename__ = "user2"
 
-    query: sql.Select
-
     id = db.Column(db.Integer(), db.Sequence("users_id_seq"), primary_key=True)
     user_id = db.Column(db.BigInteger())
     username = db.Column(db.String(200))
@@ -18,8 +16,6 @@ class User(TimedBaseModel):
     user_path = db.Column(db.String(200))
     is_owner = db.Column(db.Boolean, default=True)
 
-
-class UserApi:
     @staticmethod
     async def get_user_by_id(user_id):
         user = await User.query.where(User.user_id == user_id).gino.first()

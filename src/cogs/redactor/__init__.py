@@ -1,5 +1,4 @@
 import asyncio
-import argparse
 import os
 from os.path import join
 import time
@@ -9,8 +8,8 @@ from loguru import logger
 import discord
 
 from src.utils.file_manager import FileManager
-from src.models import GuildAPI, UserApi
 from .utils.upload import load_code_from_github
+from src.models import User, Guild
 from src.config import BASE_PATH
 
 
@@ -41,7 +40,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command()
     async def start(self, ctx: commands.Context):
         """ register user, and create user folder in guild"""
-        user = await UserApi.get_user_by_id(user_id=ctx.author.id)
+        user = await User.get_user_by_id(user_id=ctx.author.id)
         if user:
             return await ctx.send(embed=discord.Embed(
                 title=f"Access Error {self.bot.X_EMOJI}",
@@ -50,8 +49,8 @@ class TextRedacotorCog(commands.Cog):
             ))
         if not user:
             try:
-                user = await UserApi.add_new_user(ctx.author, ctx.guild)
-                guild = await GuildAPI.get_guild(ctx.guild.id)
+                user = await User.add_new_user(ctx.author, ctx.guild)
+                guild = await Guild.get_guild(ctx.guild.id)
 
                 if not guild:
                     return await self.fm.create_user_folder(user)
@@ -67,7 +66,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command()
     async def add(self, ctx: commands.Context, *, text: str):
         """ add current file text which you add in command """
-        user = await UserApi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
         try:
             await self.fm.write_to_file(text, user)
             await ctx.message.add_reaction("✅")
@@ -182,7 +181,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command()
     async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
         """ make dir in any directory! only owner """
-        user = await UserApi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
 
         if not user.is_owner:
             raise commands.MissingPermissions("Missing Owner permissions")
@@ -302,7 +301,7 @@ class TextRedacotorCog(commands.Cog):
 
     @commands.command()
     async def show_file(self, ctx: commands.Context, file: str = None):
-        user = await UserApi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
 
         f = await self.bot.fm.open_file(file, user)
         e = discord.Embed(title=f"File {file}",
@@ -336,7 +335,7 @@ class TextRedacotorCog(commands.Cog):
         """
         Search In current File
         """
-        user = await UserApi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
 
         results = await self.bot.fm.search_in_file(query, user.current_file)
         if not results:

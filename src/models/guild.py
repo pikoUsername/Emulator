@@ -12,15 +12,11 @@ from src.config import BASE_PATH, PREFIX
 class Guild(BaseModel):
     __tablename__ = 'guilds2'
 
-    query: sql.Select
-
     id = db.Column(db.Integer, db.Sequence("user_id_seq"), primary_key=True)
     guild_id = db.Column(db.BigInteger)
     guild_name = db.Column(db.String(200))
     command_prefix = db.Column(db.String(20), default=PREFIX)
 
-
-class GuildAPI:
     @staticmethod
     async def get_guild(guild_id: int):
         guild = await Guild.query.where(Guild.guild_id == guild_id).gino.first()

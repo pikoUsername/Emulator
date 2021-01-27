@@ -5,7 +5,7 @@ from discord.ext.commands import errors
 import discord
 from loguru import logger
 
-from src.models import Guild, GuildAPI
+from src.models import Guild
 from ..utils.notify import notify_all_owners
 
 
@@ -31,7 +31,7 @@ class DiscordEvents(commands.Cog):
         guild = await Guild.query.where(guild.id == Guild.guild_id).gino.first()
 
         if not guild:
-            gapi = GuildAPI()
+            gapi = Guild()
             await gapi.add_guild(guild)
 
     @commands.Cog.listener()

@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 
-from src.utils import cache
+from . import async_cache
 
 
 # From https://github.com/AlexFlipnote/discord_bot.py/blob/master/utils/http.py
@@ -25,7 +25,7 @@ class HTTPSession(aiohttp.ClientSession):
 session = HTTPSession()
 
 
-@cache.async_cache()
+@async_cache()
 async def query(url, method="get", res_method="text", *args, **kwargs):
     async with getattr(session, method.lower())(url, *args, **kwargs) as res:
         return await getattr(res, res_method)()

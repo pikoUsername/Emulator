@@ -9,7 +9,7 @@ from loguru import logger
 
 from src.config import LOGS_BASE_PATH
 from src.utils.set_owner import create_owner_user
-from src.models.user import UserApi
+from src.models import User
 
 
 class OwnerCommands(commands.Cog):
@@ -21,7 +21,7 @@ class OwnerCommands(commands.Cog):
         self.command_activated = 0
 
     async def cog_check(self, ctx: commands.Context):
-        user = await UserApi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
 
         if not user:
             return await ctx.send("You Not Authed")
@@ -44,7 +44,7 @@ class OwnerCommands(commands.Cog):
     @commands.command()
     async def load_custom_extension(self, ctx: commands.Context, *, file: str):
         """ loade custom extesnion from user path """
-        user = await UserApi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
 
         file_path = f"{user.user_path}/{file}"
         to_load_extension = file_path.replace("/", ".")
@@ -145,13 +145,13 @@ class OwnerCommands(commands.Cog):
         await ctx.send(f"Successfully reloaded:\n{', '.join(successful)}")
 
     def change_error_channel(self, channel_id: int):
-        err_channel = getattr(self.bot, 'error_channel', None)
+        err_channel = getattr(self.bot, '_error_channel', None)
         if not err_channel:
             logger.error("Error channel not exists")
             raise ValueError("Error channel not exists")
 
         new_err_channel = self.bot.get_channel(channel_id)
-        setattr(self.bot, 'error_channel', new_err_channel)
+        setattr(self.bot, '_error_channel', new_err_channel)
 
     @commands.command()
     async def change_err_channel(self, ctx: commands.Context, channel_id: int):
@@ -172,14 +172,6 @@ class OwnerCommands(commands.Cog):
             description=f"\n".join(notes) or "Nothing To See")
 
         return await ctx.send(embed=embed)
-
-    @commands.command()
-    async def add_note(self, ctx: commands.Context, *, text: str):
-        if text is None:
-            return
-
-        self.notes.append(text)
-        await ctx.message.add_reaction("✅")
 
 
 def setup(bot):

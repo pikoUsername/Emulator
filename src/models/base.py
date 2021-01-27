@@ -3,7 +3,7 @@ import datetime
 
 import sqlalchemy as sa
 from gino import Gino
-
+from sqlalchemy import sql
 
 db = Gino()
 
@@ -11,6 +11,7 @@ db = Gino()
 # https://github.com/aiogram/bot/blob/master/app/models/db.py nooooooooooo, i copied code ;(
 class BaseModel(db.Model):
     __abstract__ = True
+    query: sql.Select
 
     def __str__(self):
         model = self.__class__.__name__

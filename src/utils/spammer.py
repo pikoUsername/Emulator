@@ -45,8 +45,8 @@ class Spammer:
                 with suppress(DiscordException):
                     if not isinstance(channel, discord.TextChannel):
                         raise TypeError("Spamming Not 'TextChannel'")
-                    await channel.send(**message_params)
-                    await asyncio.sleep(delay)
+                await channel.send(**message_params)
+                await asyncio.sleep(delay)
         except commands.BotMissingPermissions or discord.NotFound:
             return False
         finally:
@@ -147,6 +147,9 @@ class Spammer:
             return False
         except (discord.Forbidden, commands.BotMissingPermissions):
             return False
+        except commands.CommandOnCooldown as exc:
+            await asyncio.sleep(int(exc.retry_after))
+            await self.say_to_channel(guild_id, channel_id)
         else:
             await channel.send(*args, **kwargs)
             return True

@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Iterator
+from typing import List
 import os
 
 import aiohttp
@@ -16,30 +16,29 @@ from src.config import (
     description,
     PREFIX,
 )
-from src.utils.help import HelpFormat
-from src.utils.file_manager import FileManager
-from src.models import UserApi
-from src.models.base import db
-from src.utils.cache import async_cache
+from .utils.help import HelpFormat
+from .utils.file_manager import FileManager
+from .models import User
+from .models.base import db
+from .utils.cache import async_cache
 from .utils.spammer import Spammer
-from src.config import POSTGRES_URI, WEB_HOOK_URL
+from .config import POSTGRES_URI, WEB_HOOK_URL
 
 
-class Bot(commands.AutoShardedBot):
+class Bot(commands.AutoShardedBot, ):
     def __init__(self):
         super().__init__(command_prefix=PREFIX, description=description,
                          help_attrs=dict(hidden=True), pm_help=None)
 
         self.spammer: Spammer = Spammer(self)
-        self.owner_id = 426028608906330115
         self.help_command = HelpFormat()
         self.fm: FileManager = FileManager(self.loop)
         self.token = TOKEN
-        self.uapi: UserApi = UserApi()
+        self.uapi = User()
         self.session = aiohttp.ClientSession(loop=self.loop)
         self._connected = asyncio.Event()
         self.APPLY_EMOJI = '\n{white check mark}'
-        self.error_channel = None
+        self._error_channel = None
         self.extensions_ = [
             "src.cogs.events",
             "src.cogs.redactor",
@@ -52,7 +51,10 @@ class Bot(commands.AutoShardedBot):
         self.X_EMOJI = ":x:"
         self.pool: GinoEngine
         self.prefdict = {}
-        self._data = {}
+        self.error_ids = {
+            'guild_id': 775955280625926144,
+            'channel_id': 794125321389342790,
+        }
 
     async def setup_stuff(self):
         await self.init_db()
@@ -64,8 +66,6 @@ class Bot(commands.AutoShardedBot):
 
     @async_cache()
     async def send_error(self, ctx: commands.Context, err):
-        error_log_channel = self.get_guild(775955280625926144).get_channel(794125321389342790)
-
         embed = discord.Embed(
             title="Something went wrong...",
             description=f"```py\nAn Error Occurred:\n{err}\n```",
@@ -88,7 +88,7 @@ class Bot(commands.AutoShardedBot):
                 f"Message Content: {ctx.message.content}",
             )
 
-        await error_log_channel.send(embed=embed)
+        await self.error_channel.send(embed=embed)
         return await ctx.send("Success, Sended to Error Channel")
 
     async def close_db(self):
@@ -104,6 +104,25 @@ class Bot(commands.AutoShardedBot):
         await self.close()
         await self.close_db()
 
+    @property
+    def error_channel(self) -> discord.TextChannel:
+        if self._error_channel is None:
+            err_ch = self.get_guild(self.error_ids['guild_id'])\
+                .get_channel(self.error_ids['channel_id'])
+            if not isinstance(err_ch, discord.TextChannel):
+                raise TypeError("Canont Set error_channel with 'TextChannel'")
+        return self._error_channel
+
+    @error_channel.setter
+    def error_channel(self, item):
+        if not isinstance(item, discord.TextChannel):
+            raise TypeError("ITem is not isinstance of 'TextChannel'")
+        self._error_channel = item
+
+    @error_channel.deleter
+    def error_channel(self):
+        self.error_channel = None
+
     async def conn_db(self):
         logger.info("Connecting Database...")
 
@@ -118,7 +137,7 @@ class Bot(commands.AutoShardedBot):
         if error_channel_id:
             channel = self.get_channel(error_channel_id)
             if isinstance(channel, discord.TextChannel):
-                self.error_channel = channel
+                self._error_channel = channel
 
         logger.info("BOT READY")
         await self.postready()
@@ -212,18 +231,3 @@ class Bot(commands.AutoShardedBot):
             logger.info("GoodBye")
         finally:
             await self.close_all()
-
-    def __getitem__(self, item):
-        return self._data[item]
-
-    def __setitem__(self, key, value):
-        self._data[key] = value
-
-    def __delitem__(self, key: str) -> None:
-        del self._data[key]
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(self._data)
