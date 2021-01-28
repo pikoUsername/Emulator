@@ -4,7 +4,7 @@ import discord
 from ..models import User
 
 
-class AdminCommands(commands.Cog):
+class AdminCommands(commands.Cog, name="Admin"):
     __slots__ = "bot",
     """ Here Admin commands, and mod commands """
 

@@ -9,7 +9,7 @@ from ..models import Guild
 from ..utils.notify import notify_all_owners
 
 
-class DiscordEvents(commands.Cog):
+class DiscordEvents(commands.Cog, name="Events"):
     __slots__ = "bot",
 
     def __init__(self, bot: 'Bot'):

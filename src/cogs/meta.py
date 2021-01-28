@@ -8,7 +8,7 @@ from src.utils.set_owner import create_owner_user
 from src.utils.help import PaginatedHelpCommand
 
 
-class MetaCommands(commands.Cog):
+class MetaCommands(commands.Cog, name="Meta"):
     __slots__ = ("bot", "old_help_command")
     """ Trash Commands """
     def __init__(self, bot):

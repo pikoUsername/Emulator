@@ -12,12 +12,11 @@ from src.utils.set_owner import create_owner_user
 from src.models import User
 
 
-class OwnerCommands(commands.Cog):
+class OwnerCommands(commands.Cog, name="Owner"):
     __slots__ = "bot",
     """ Only for owners """
     def __init__(self, bot):
         self.bot = bot
-        self.notes = []
         self.command_activated = 0
 
     async def cog_check(self, ctx: commands.Context):

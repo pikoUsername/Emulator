@@ -13,7 +13,7 @@ from src.models import User, Guild
 from src.config import BASE_PATH
 
 
-class TextRedacotorCog(commands.Cog):
+class TextRedacotorCog(commands.Cog, name="Redactor"):
     __slots__ = "bot", "fm"
     """ typical file redactor """
     def __init__(self, bot):
@@ -30,7 +30,7 @@ class TextRedacotorCog(commands.Cog):
         """
         Create Repo In Your User Directory, And Its Not Working.
         """
-        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
 
         try:
             await load_code_from_github(owner, repo, user, branch)
@@ -79,7 +79,7 @@ class TextRedacotorCog(commands.Cog):
         Set current file, and checks you out
         If you exists, your talbe current_file changes
         """
-        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
         if not os.path.exists(f"{user.user_path}/{file}"):
             return await ctx.send("File not exists")
 
@@ -96,7 +96,7 @@ class TextRedacotorCog(commands.Cog):
         if not line.isdigit():
             await ctx.send("perameter not a digit!")
             return
-        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
         embed = discord.Embed()
         try:
             embed.title = f"Success deleted line, {self.bot.APPLY_EMOJI}"
@@ -109,7 +109,7 @@ class TextRedacotorCog(commands.Cog):
 
     @commands.command(aliases=("mv",))
     async def move(self, ctx: commands.Context, file: str, *, to_change: str):
-        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
         try:
             result = await self.fm.change_file_name(user, file, to_change)
         except (FileNotFoundError, PermissionError) as e:
@@ -125,7 +125,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command(alises=("w",))
     async def write(self, ctx: commands.Context, file: str, *, text: str):
         """ Write to current file, if you do not select file. You can type anything """
-        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
         user_file = file or user.current_file
         embed = discord.Embed(colour=discord.Colour.random())
 
@@ -147,7 +147,7 @@ class TextRedacotorCog(commands.Cog):
     @commands.command(aliases=("cf",))
     async def current_file(self, ctx: commands.Context):
         """ get current user file """
-        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
         try:
             return await ctx.send(f"Your current file ```{user.current_file}```")
         except AttributeError:
@@ -164,7 +164,7 @@ class TextRedacotorCog(commands.Cog):
         ```
         but cary about it, because it can be deleted forever
         """
-        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
         try:
             await ctx.message.add_reaction("✅")
         except AttributeError:
@@ -205,45 +205,21 @@ class TextRedacotorCog(commands.Cog):
     @commands.cooldown(10, 200, commands.BucketType.channel)
     async def touch(self, ctx: commands.Context, name: str, *, type_: str = "py"):
         """ create file in your folder """
-        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
         try:
             if len(name) >= 78:
-                if user.is_owner:
-                    pass
-                else:
+                if not user.is_owner:
                     return await ctx.send(embed=discord.Embed(
                         title=f"Not have enough access {self.bot.X_EMOJI}",
                         description="Too long file name",
-                        colour=discord.Colour.blue(),
-                    ))
+                        colour=discord.Colour.blue()))
             elif os.path.exists(f"{BASE_PATH}/{name}.{type_}"):
                 await ctx.send("this File aleardy exists")
-
-            try:
-                await self.fm.create_file(name, user, type_)
-            except Exception as e:
-                logger.exception(e)
-                return await ctx.send(embed=discord.Embed(
-                    title=f"ERROR, {self.bot.X_EMOJI}",
-                    description=f"```{e}```",
-                    colour=discord.Colour.blue(),
-                ))
-            else:
-                await ctx.message.add_reaction("✅")
+            await self.fm.create_file(name, user, type_)
         except AttributeError:
             return await ctx.send("You Not Authed as User")
 
-        try:
-            await self.fm.create_file(name, user, type_)
-        except Exception as e:
-            logger.exception(e)
-            return await ctx.send(embed=discord.Embed(
-                title=f"ERROR, {self.bot.X_EMOJI}",
-                description=f"```{e}```",
-                colour=discord.Colour.blue(),
-            ))
-        else:
-            await ctx.message.add_reaction("✅")
+        await self.fm.create_file(name, user, type_)
 
     @commands.command(aliases=["list", "list_files"])
     @commands.cooldown(30, 200, commands.BucketType.guild)
@@ -262,7 +238,7 @@ class TextRedacotorCog(commands.Cog):
         ```
         """
         user_id = ctx.author.id or member.id
-        user = await self.bot.uapi.get_user_by_id(user_id)
+        user = await User.get_user_by_id(user_id)
         try:
             all_files = await self.bot.loop.run_in_executor(None, os.listdir, user.user_path)
         except AttributeError:

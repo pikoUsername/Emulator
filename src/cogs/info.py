@@ -5,6 +5,7 @@ import sys
 from discord.ext import commands
 import discord
 
+from ..models import User
 from ..utils.cache import async_cache
 from src.config import PREFIX
 
@@ -64,7 +65,7 @@ class DiscordInfo(commands.Cog):
     @commands.command()
     async def file(self, ctx: commands.Context, *, file_: str = None):
         """ Show current file, if you set file, then show file text """
-        user = await self.bot.uapi.get_user_by_id(ctx.author.id)
+        user = await User.geUserer_by_id(ctx.author.id)
         embed = discord.Embed()
         file_to_read = f"{user.current_file}/{file_}" or user.current_file
 
@@ -120,7 +121,7 @@ class DiscordInfo(commands.Cog):
     async def select(self, ctx: commands.Context, *, user_id: int = None):
         """ Get Selected User."""
         user_id = user_id or ctx.author.id
-        user = await self.bot.uapi.get_user_by_id(user_id)
+        user = await User.get_user_by_id(user_id)
         try:
             embed = discord.Embed(
                 title="Selected User",
