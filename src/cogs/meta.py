@@ -3,13 +3,13 @@ from typing import Union
 from discord.ext import commands
 import discord
 
-from src.models import UserApi
+from src.models import User
 from src.utils.set_owner import create_owner_user
 from src.utils.help import PaginatedHelpCommand
 
 
 class MetaCommands(commands.Cog):
-    __slots__ = "bot",
+    __slots__ = ("bot", "old_help_command")
     """ Trash Commands """
     def __init__(self, bot):
         self.bot = bot
@@ -23,20 +23,12 @@ class MetaCommands(commands.Cog):
             "Hello, Здравствуйте, Здрастуйте, Hallo, 여보세요, dzień dobry, Bonjour, こんにちは, Сәлеметсіз бе")
 
     @commands.command()
-    async def no(self, ctx: commands.Context):
-        return await ctx.send(">> yes")
-
-    @commands.command()
-    async def yes(self, ctx: commands.Context):
-        return await ctx.send(">> no")
-
-    @commands.command()
     @commands.is_owner()
     async def get_owner(self,
                         ctx: commands.Context,
                         member: Union[discord.Member, discord.User] = None):
-        user_id = member.id or ctx.author.id
-        user = await UserApi.get_user_by_id(user_id)
+        user_id = member.id if member else ctx.author.id
+        user = await User.get_user_by_id(user_id)
 
         try:
             result = await create_owner_user(user.user_id, remove=False)

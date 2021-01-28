@@ -1,17 +1,16 @@
 import asyncio
-
 import typing
-from contextlib import suppress
 
 from discord.ext import commands
 import discord
-from discord.errors import DiscordException
+
+from .mixins import ContextInstanceMixin
 
 
-class Spammer:
-    def __init__(self, bot):
-        if not isinstance(bot, commands.AutoShardedBot):
-            raise TypeError("Attribute 'bot' is not commands.AutoShardedBot isinstance")
+class Spammer(ContextInstanceMixin):
+    __slots__ = ("spamming", "bot")
+
+    def __init__(self, bot: 'Bot'):
         self._spamming = False
         self.bot = bot
 
@@ -37,14 +36,10 @@ class Spammer:
             raise RuntimeError("Current Bot Spamming")
 
         channels = [self.get_channel(guild_id, channel_id, channel_ids)]
-
         self._spamming = True
 
         try:
             for channel in channels:
-                with suppress(DiscordException):
-                    if not isinstance(channel, discord.TextChannel):
-                        raise TypeError("Spamming Not 'TextChannel'")
                 await channel.send(**message_params)
                 await asyncio.sleep(delay)
         except commands.BotMissingPermissions or discord.NotFound:

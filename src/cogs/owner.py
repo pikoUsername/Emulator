@@ -164,15 +164,6 @@ class OwnerCommands(commands.Cog):
             return await ctx.send("Error channel not exists")
         await ctx.message.add_reaction("✅")
 
-    @commands.command()
-    async def notes(self, ctx: commands.Context):
-        notes = getattr(self, 'notes', None)
-        embed = discord.Embed(
-            title="Notes",
-            description=f"\n".join(notes) or "Nothing To See")
-
-        return await ctx.send(embed=embed)
-
 
 def setup(bot):
     """Setup Owner Commands"""

@@ -111,8 +111,10 @@ class DiscordInfo(commands.Cog):
         perms.add_reactions = True
         perms.attach_files = True
 
-        await ctx.send(embed=discord.Embed(title="Invite",
-                                           description=f"[Click here to invite]({discord.utils.oauth_url(self.bot.client_id, perms)})"))
+        await ctx.send(
+            embed=discord.Embed(title="Invite",
+                                description="[Click here to invite]"
+                                            f"({discord.utils.oauth_url(self.bot.client_id, perms)})"))
 
     @commands.command()
     async def select(self, ctx: commands.Context, *, user_id: int = None):

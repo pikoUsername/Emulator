@@ -124,12 +124,14 @@ class FileManager:
             list_dirs = glob.glob(fr"{BASE_PATH}\*")
         else:
             list_dirs = glob.glob(fr"{BASE_PATH}\guild_{guild_id}")
-
+        successful = []
+        unsuccessful = {}
         for dirs in list_dirs:
             try:
                 shutil.rmtree(dirs)
-            except Exception:
-                pass
+                successful.append(dirs)
+            except (FileExistsError, FileNotFoundError, NotADirectoryError) as exc:
+                unsuccessful[dirs] = exc
 
     @staticmethod
     @wrap
@@ -146,12 +148,9 @@ class FileManager:
             return
 
         list_files = os.listdir(user_path)
-        try:
-            for file in list_files:
-                os.remove(f"{user_path}/{file}")
-            shutil.rmtree(user_path)
-        except Exception:
-            commands.CommandInvokeError("Failed to remove user dir")
+        for file in list_files:
+            os.remove(f"{user_path}/{file}")
+        shutil.rmtree(user_path)
 
     @staticmethod
     @wrap

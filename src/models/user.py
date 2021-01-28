@@ -1,5 +1,4 @@
 import discord
-from sqlalchemy import sql
 
 from .base import TimedBaseModel, db
 from src.config import BASE_PATH

@@ -5,14 +5,14 @@ from discord.ext.commands import errors
 import discord
 from loguru import logger
 
-from src.models import Guild
+from ..models import Guild
 from ..utils.notify import notify_all_owners
 
 
 class DiscordEvents(commands.Cog):
     __slots__ = "bot",
 
-    def __init__(self, bot):
+    def __init__(self, bot: 'Bot'):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -37,14 +37,10 @@ class DiscordEvents(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild):
         g_id = str(guild.id)
-        async with self.bot.pool.acquire() as connection:
-            await self.bot.fm.delete_all_guild_files(g_id)
-            await connection.fetch(
-                """
-                    DELETE FROM guilds2
-                    WHERE (server_id = $1);
-                """, g_id)
-            logger.info("leaved and deleted thats guild folder")
+        await self.bot.fm.delete_all_guild_files(g_id)
+        guild = await Guild.get_guild(guild.id)
+        await guild.delete()
+        logger.info("leaved and deleted thats guild folder")
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, err):
@@ -55,8 +51,6 @@ class DiscordEvents(commands.Cog):
         elif isinstance(err, errors.CommandInvokeError):
             logger.exception(f"{err}, {sys.exc_info()}")
 
-            # await self.error_channel.send(file=file)
-
             if "2000 or fewer" in str(err) and len(ctx.message.clean_content) > 1900:
                 return await ctx.send(
                     "You attempted to make the command display more than 2,000 characters...\n"
@@ -65,7 +59,7 @@ class DiscordEvents(commands.Cog):
 
             await ctx.send(embed=discord.Embed(
                 title="Error on processing Command",
-                description=f"error: \n```{err}```",
+                description=f"```{err}```",
                 ), delete_after=30)
 
         elif isinstance(err, errors.MissingPermissions):

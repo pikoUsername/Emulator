@@ -20,7 +20,7 @@ from .utils.help import HelpFormat
 from .utils.file_manager import FileManager
 from .models import User
 from .models.base import db
-from .utils.cache import async_cache
+from .utils import async_cache
 from .utils.spammer import Spammer
 from .config import POSTGRES_URI, WEB_HOOK_URL
 
@@ -229,5 +229,7 @@ class Bot(commands.AutoShardedBot, ):
             await self.start(self.token)
         except KeyboardInterrupt:
             logger.info("GoodBye")
-        finally:
-            await self.close_all()
+
+    def __del__(self):
+        self.loop.run_until_complete(self.close_all())
+        self.loop.run_until_complete(self.session.close())

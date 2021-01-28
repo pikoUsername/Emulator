@@ -280,7 +280,7 @@ class HelpFormat(commands.DefaultHelpCommand):
         else:
             embed_like.description = command.help
             embed_like.add_field(name="aliases", value=f"\n{command.aliases if command.aliases else 'No aliases'} "
-                                                       or "No help found...")
+                                 or "No help found...")
 
     async def send_command_help(self, command: commands.Command):
         # No pagination necessary for a single command.

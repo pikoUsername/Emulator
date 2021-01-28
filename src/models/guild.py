@@ -2,7 +2,6 @@ import asyncio
 import os
 import os.path
 
-from sqlalchemy import sql
 import discord
 
 from src.models.base import BaseModel, db
