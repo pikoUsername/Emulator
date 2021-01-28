@@ -1,6 +1,7 @@
 from datetime import datetime
 import time
 import sys
+from typing import Union
 
 from discord.ext import commands
 import discord
@@ -43,6 +44,20 @@ class DiscordInfo(commands.Cog):
         e.set_footer(text=f"requested by {ctx.author.display_name} || {datetime.utcnow()}",
                      icon_url=ctx.author.avatar_url),
         await ctx.send(embed=e)
+
+    @commands.command()
+    async def profile(
+            self, ctx: commands.Context, member: Union[discord.Member, int, str, discord.User] = None
+    ):
+        user_id = member
+        if member is None:
+            user_id = ctx.author.id
+
+        user = await User.get_user_by_id(user_id)
+
+        if not user:
+            await self.bot.get_cog('Redactor').get_command('start')(ctx)
+
 
     @commands.command()
     async def ping(self, ctx: commands.Context):

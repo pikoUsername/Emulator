@@ -5,10 +5,9 @@ from typing import List
 import shutil
 import glob
 
-from discord.ext import commands
-
-from src.models import Guild, User
-from src.config import BASE_PATH
+from ..models import Guild, User
+from ..config import BASE_PATH
+from .mixins import ContextInstanceMixin
 
 
 __all__ = ("FileManager", "wrap")
@@ -25,7 +24,7 @@ def wrap(func):
     return run
 
 
-class FileManager:
+class FileManager(ContextInstanceMixin):
     def __init__(self, loop=None):
         """
         :param loop: need for execute blocking IO
@@ -132,6 +131,8 @@ class FileManager:
                 successful.append(dirs)
             except (FileExistsError, FileNotFoundError, NotADirectoryError) as exc:
                 unsuccessful[dirs] = exc
+        g = await Guild.get_guild(guild_id)
+        return await g.delete()
 
     @staticmethod
     @wrap
@@ -151,6 +152,7 @@ class FileManager:
         for file in list_files:
             os.remove(f"{user_path}/{file}")
         shutil.rmtree(user_path)
+        user.delete()
 
     @staticmethod
     @wrap

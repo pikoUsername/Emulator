@@ -1,19 +1,11 @@
-import asyncio
 import aiohttp
 
 from . import async_cache
 
 
-class HTTPSession(aiohttp.ClientSession):
-    """ Abstract class for aiohttp. """
-
-    def __init__(self, loop=None):
-        super().__init__(loop=loop if loop else asyncio.get_event_loop())
-
-
 @async_cache()
 async def query(url, method="get", res_method="text", *args, **kwargs):
-    async with HTTPSession() as session:
+    async with aiohttp.ClientSession() as session:
         async with getattr(session, method.lower())(url, *args, **kwargs) as res:
             return await getattr(res, res_method)()
 

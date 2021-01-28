@@ -38,9 +38,7 @@ class ContextInstanceMixin:
         return cls
 
     @classmethod
-    def get_current(cls: Type[T], no_error=True) -> T:
-        if no_error:
-            return cls.__context_instance.get(None)
+    def get_current(cls: Type[T]) -> T:
         return cls.__context_instance.get()
 
     @classmethod

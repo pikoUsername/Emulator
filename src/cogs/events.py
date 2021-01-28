@@ -38,8 +38,6 @@ class DiscordEvents(commands.Cog, name="Events"):
     async def on_guild_remove(self, guild: discord.Guild):
         g_id = str(guild.id)
         await self.bot.fm.delete_all_guild_files(g_id)
-        guild = await Guild.get_guild(guild.id)
-        await guild.delete()
         logger.info("leaved and deleted thats guild folder")
 
     @commands.Cog.listener()

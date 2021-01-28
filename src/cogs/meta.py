@@ -10,7 +10,7 @@ from src.utils.help import PaginatedHelpCommand
 
 class MetaCommands(commands.Cog, name="Meta"):
     __slots__ = ("bot", "old_help_command")
-    """ Trash Commands """
+    """Utils Commands, And Some Fun..."""
     def __init__(self, bot):
         self.bot = bot
         self.old_help_command = bot.help_command
@@ -22,7 +22,7 @@ class MetaCommands(commands.Cog, name="Meta"):
         return await ctx.send(
             "Hello, Здравствуйте, Здрастуйте, Hallo, 여보세요, dzień dobry, Bonjour, こんにちは, Сәлеметсіз бе")
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def get_owner(self,
                         ctx: commands.Context,

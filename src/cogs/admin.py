@@ -19,13 +19,8 @@ class AdminCommands(commands.Cog, name="Admin"):
             return
 
         user = await User.get_user_by_id(member.id)
-        try:
-            await user.delete()
-        except AttributeError:
-            await ctx.send(embed=discord.Embed(
-                title="This user Not exists",
-                description="You cant remove user, whose not authed in bot",
-            ))
+        if not user:
+            await self.bot.get_cog('Redactor').get_command('start')(ctx)
         await self.bot.fm.remove_user_folder(user)
         await ctx.send(embed=discord.Embed(
             title=f"success {self.bot.APPLY_EMOJI}",

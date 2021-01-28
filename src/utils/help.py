@@ -2,6 +2,7 @@ import asyncio
 
 import discord
 from discord.ext import commands, menus
+from discord.ext.commands import Command
 
 
 class Pages(menus.MenuPages):
@@ -45,7 +46,7 @@ class Pages(menus.MenuPages):
         try:
             msg = await self.bot.wait_for('message', check=message_check, timeout=30.0)
         except asyncio.TimeoutError:
-            to_delete.append(await channel.send('Took too long.'))
+            to_delete.append(await channel.send('Took too long.', delete_after=30.0))
             await asyncio.sleep(5)
         else:
             page = int(msg.content)
@@ -69,7 +70,7 @@ class BotHelpPageSource(menus.ListPageSource):
         if cog.description:
             short_doc = cog.description.split('\n', 1)[0] + '\n'
         else:
-            short_doc = 'No help found...\n'
+            short_doc = ''
 
         current_count = len(short_doc)
         ending_note = '+%d not shown'
@@ -178,13 +179,13 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
     async def on_help_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError):
-            await ctx.send(str(error.original))
+            await ctx.send(str(error.original), delete_after=30)
 
     def get_command_signature(self, command):
         parent = command.full_parent_name
         if len(command.aliases) > 0:
-            aliases = '|'.join(command.aliases)
-            fmt = f'[{command.name}|{aliases}]'
+            aliases = ' | '.join(command.aliases)
+            fmt = f'{command.name} | {aliases}'
             if parent:
                 fmt = f'{parent} {fmt}'
             alias = fmt
@@ -213,12 +214,12 @@ class PaginatedHelpCommand(commands.HelpCommand):
         menu = HelpMenu(GroupHelpPageSource(cog, entries, prefix=self.clean_prefix))
         await menu.start(self.context)
 
-    def common_command_formatting(self, embed_like, command):
+    def common_command_formatting(self, embed_like, command: Command):
         embed_like.title = self.get_command_signature(command)
         if command.description:
             embed_like.description = f'{command.description}\n\n{command.help}'
         else:
-            embed_like.description = command.help or 'No help found...'
+            embed_like.description = command.help or 'No Help Given'
 
     async def send_command_help(self, command):
         # No pagination necessary for a single command.
@@ -250,7 +251,7 @@ class HelpFormat(commands.DefaultHelpCommand):
 
     async def on_help_command_error(self, ctx, err):
         if isinstance(err, commands.CommandInvokeError):
-            await ctx.send(str(err.original))
+            await ctx.send(str(err.original), delete_after=30)
 
     async def send_bot_help(self, mapping):
         bot = self.context.bot
@@ -276,11 +277,11 @@ class HelpFormat(commands.DefaultHelpCommand):
     def common_command_formatting(self, embed_like, command: commands.Command):
         embed_like.title = self.get_command_signature(command)
         if command.description:
-            embed_like.description = f'{command.description}\n\n{command.help}\nalises:\n{command.aliases}'
+            embed_like.description = f'{command.description}\n\n{command.help}\nalises:\n{"".join(command.aliases)}'
         else:
             embed_like.description = command.help
             embed_like.add_field(name="aliases", value=f"\n{command.aliases if command.aliases else 'No aliases'} "
-                                 or "No help found...")
+                                 or "")
 
     async def send_command_help(self, command: commands.Command):
         # No pagination necessary for a single command.

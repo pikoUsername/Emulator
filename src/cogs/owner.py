@@ -23,7 +23,7 @@ class OwnerCommands(commands.Cog, name="Owner"):
         user = await User.get_user_by_id(ctx.author.id)
 
         if not user:
-            return await ctx.send("You Not Authed")
+            await self.bot.get_cog('Redactor').get_command('start')(ctx)
 
         elif not user.is_owner:
             raise commands.MissingPermissions("Missing Owner permissions")
