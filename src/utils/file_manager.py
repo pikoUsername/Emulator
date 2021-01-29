@@ -5,7 +5,7 @@ from typing import List
 import shutil
 import glob
 
-from ..models import Guild, User
+from ..models import Guild
 from ..config import BASE_PATH
 from .mixins import ContextInstanceMixin
 
@@ -34,7 +34,7 @@ class FileManager(ContextInstanceMixin):
         self._loop: asyncio.AbstractEventLoop = loop
 
     @staticmethod
-    def _create_file(name: str, user: User, type_: str = "py") -> None:
+    def _create_file(name: str, user, type_: str = "py") -> None:
         """
         Private func
 
@@ -53,7 +53,7 @@ class FileManager(ContextInstanceMixin):
             pass
 
     @staticmethod
-    def list_files(user: User) -> List:
+    def list_files(user) -> List[str]:
         """
         Get user path based on user model
         no checks
@@ -90,7 +90,7 @@ class FileManager(ContextInstanceMixin):
 
     @staticmethod
     @wrap
-    def create_user_folder(user: User):
+    def create_user_folder(user):
         """
         Private function
         get user_path and create user folder in guild_{guild_id}/ path
@@ -112,8 +112,7 @@ class FileManager(ContextInstanceMixin):
         os.mkdir(user_path)
 
     @staticmethod
-    @wrap
-    def delete_all_guild_files(guild_id: int = None):
+    async def delete_all_guild_files(guild_id: int = None):
         """
         Deleting all files from working directory!
         if DELETE_ALL_FILES is true that delete all files from file/ directory
@@ -131,12 +130,10 @@ class FileManager(ContextInstanceMixin):
                 successful.append(dirs)
             except (FileExistsError, FileNotFoundError, NotADirectoryError) as exc:
                 unsuccessful[dirs] = exc
-        g = await Guild.get_guild(guild_id)
-        return await g.delete()
 
     @staticmethod
     @wrap
-    def remove_user_folder(user: User):
+    def remove_user_folder(user):
         """
         Removes user folder, with all files directory
 
@@ -156,7 +153,7 @@ class FileManager(ContextInstanceMixin):
 
     @staticmethod
     @wrap
-    def get_line(line: int, user: User):
+    def get_line(line: int, user):
         """
         get user path and select this, and open it
 
@@ -172,15 +169,15 @@ class FileManager(ContextInstanceMixin):
 
     @staticmethod
     @wrap
-    def change_line(user: User, line: int, to_change: str):
+    def change_line(user, line: int, to_change: str):
         with open(user.current_file, "w") as file:
             file.seek(line)
             file.write(to_change)
 
-    async def change_file_name(self, user: User, file: str, to_change: str):
+    async def change_file_name(self, user, file: str, to_change: str):
         await self._loop.run_in_executor(None, os.rename, fr"{user.user_path}\{file}", fr"{user.user_path}\{to_change}")
 
-    async def create_file(self, file_name: str, user: User, type_: str = "py"):
+    async def create_file(self, file_name: str, user, type_: str = "py"):
         """
         Create file based on user path
         and user can set type of file
@@ -198,7 +195,7 @@ class FileManager(ContextInstanceMixin):
         else:
             return
 
-    async def remove_file(self, filename: str, user: User):
+    async def remove_file(self, filename: str, user):
         """
         need user, and filename argument for delete file
         run os.remove blocking io in executor
@@ -213,8 +210,7 @@ class FileManager(ContextInstanceMixin):
             return
         await self._loop.run_in_executor(None, os.remove, f"{user_path}/{filename}")
 
-    @wrap
-    def open_file(self, filename: str, user: User):
+    async def open_file(self, filename: str, user):
         """
         Opens file, need a filename and User
         set user.current_file to filename
@@ -223,14 +219,14 @@ class FileManager(ContextInstanceMixin):
         :param filename:
         :return:
         """
-        with open(f"{user.current_file}/{filename}", "r") as f:
+        fp = f"{user.current_file}/{filename}"
+        with open(fp, "r") as f:
+            await user.update(current_file=fp).apply()
             return f.readlines()
 
     @wrap
-    def write_to_file(self, text: str, user: User):
+    def write_to_file(self, text: str, user):
         """
-        Private function
-
         checks for user current file if not current file
         function dissmiss it.
         in stock user.current_file is main.py, starter script

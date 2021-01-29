@@ -12,7 +12,7 @@ from ..utils.notify import notify_all_owners
 class DiscordEvents(commands.Cog, name="Events"):
     __slots__ = "bot",
 
-    def __init__(self, bot: 'Bot'):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -28,16 +28,14 @@ class DiscordEvents(commands.Cog, name="Events"):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
-        guild = await Guild.query.where(guild.id == Guild.guild_id).gino.first()
-
-        if not guild:
-            gapi = Guild()
-            await gapi.add_guild(guild)
+        g = await Guild.query.where(guild.id == Guild.guild_id).gino.first()
+        g.add_guild(guild)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild):
-        g_id = str(guild.id)
-        await self.bot.fm.delete_all_guild_files(g_id)
+        await self.bot.fm.delete_all_guild_files(guild.id)
+        g = await Guild.get_guild(guild.id)
+        await g.delete()
         logger.info("leaved and deleted thats guild folder")
 
     @commands.Cog.listener()

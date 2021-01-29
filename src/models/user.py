@@ -1,9 +1,24 @@
 import discord
+from discord.ext import commands
+from loguru import logger
 
 from .base import TimedBaseModel, db
 from .guild import Guild
 from ..config import BASE_PATH
 from ..utils.file_manager import FileManager
+
+
+__all__ = ("User", "reg_user", "create_files")
+
+
+async def create_files(user: 'User', guild_id: int):
+    guild = await Guild.get_guild(guild_id)
+    fm = FileManager.get_current()
+    logger.info(f"Created File for {user.username}")
+    if not guild:
+        return await fm.create_user_folder(user)
+    await fm.create_user_folder(user=user)
+    await fm.create_file(file_name="main", user=user)
 
 
 class User(TimedBaseModel):
@@ -16,14 +31,13 @@ class User(TimedBaseModel):
     user_path = db.Column(db.String(200))
     is_owner = db.Column(db.Boolean, default=True)
 
-    async def get_user_by_id(self, user_id):
-        try:
-            user = self.get_current()
-        except LookupError:
-            user = await User.query.where(User.user_id == user_id).gino.first()
-        return user
+    @staticmethod
+    async def get_user_by_id(user_id: int):
+        user = await User.query.where(User.user_id == user_id).gino.first()
+        return user if user else False
 
-    async def add_new_user(self, user: discord.User, guild: discord.Guild):
+    @staticmethod
+    async def add_new_user(user: discord.User, guild: discord.Guild):
         """
         Here must be a check, and DM mode
         create user folder for redacting
@@ -32,33 +46,34 @@ class User(TimedBaseModel):
         :param guild:
         :return:
         """
-        old_user = await User.get_current()
+        old_user = await User.query.where(User.user_id == user.id).gino.first()
 
         if old_user:
             return old_user
 
         new_user = User()
 
-        new_user.user_path = fr"{BASE_PATH}\guild_{guild.id}\{user.name}"
-        new_user.current_file = fr"{BASE_PATH}\guild_{guild.id}\{user.name}\main.py"
+        new_user.user_path = fr"{BASE_PATH}\guild_{guild.id}\user_{user.id}"
+        new_user.current_file = fr"{BASE_PATH}\guild_{guild.id}\user_{user.id}\main.py"
 
         new_user.user_id = user.id
         new_user.username = user.name
 
         await new_user.create()
-        await self.create_files(user, guild.id)
+        await create_files(user, guild.id)
         return new_user
-
-    @staticmethod
-    async def create_files(user: 'User', guild_id: int):
-        guild = await Guild.get_guild(guild_id)
-        fm = FileManager.get_current()
-        if not guild:
-            return await fm.create_user_folder(user)
-        await fm.create_user_folder(user=user)
-        await fm.create_file(file_name="main", user=user)
 
     @staticmethod
     async def get_all_owners():
         all_owners = await User.query.where(User.is_owner is True).gino.all()
         return all_owners
+
+
+async def reg_user(ctx, user: User = None, check: bool = True) -> [bool, User]:
+    user = user or await User.add_new_user(ctx.author, ctx.guild)
+    if user and check:
+        return False, None
+    # await ctx.send(embed=discord.Embed(title=f"Success :white_check_mark:",
+    #                                    description="Success created folder with ur name!",
+    #                                    colour=discord.Colour.blue()))
+    return True, user

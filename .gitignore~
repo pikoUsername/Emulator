@@ -10,8 +10,6 @@ logs/
 files/
 files/*
 
-test.py 
-
 # pycahce
 */__pycache__/
 */__pycache__/*

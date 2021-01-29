@@ -10,7 +10,7 @@ from .mixins import ContextInstanceMixin
 class Spammer(ContextInstanceMixin):
     __slots__ = ("spamming", "bot")
 
-    def __init__(self, bot: 'Bot'):
+    def __init__(self, bot):
         self._spamming = False
         self.bot = bot
 

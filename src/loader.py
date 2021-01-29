@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import suppress
 from typing import List
 import os
 
@@ -6,7 +7,7 @@ import aiohttp
 import discord
 from discord import Webhook, AsyncWebhookAdapter
 from discord.ext import commands
-from gino import GinoEngine
+from gino import GinoEngine, UninitializedError
 from loguru import logger
 
 from src.config import (
@@ -17,7 +18,6 @@ from src.config import (
     PREFIX,
 )
 from .utils.help import HelpFormat
-from .utils.file_manager import FileManager
 from .models import User
 from .models.base import db
 from .utils import async_cache
@@ -26,13 +26,13 @@ from .config import POSTGRES_URI, WEB_HOOK_URL
 
 
 class Bot(commands.AutoShardedBot, ):
-    def __init__(self):
+    def __init__(self, fm):
         super().__init__(command_prefix=PREFIX, description=description,
                          help_attrs=dict(hidden=True), pm_help=None)
 
-        self.spammer: Spammer = Spammer(self)
+        self.fm = fm
+        self.spammer = Spammer(self)
         self.help_command = HelpFormat()
-        self.fm: FileManager = FileManager(self.loop)
         self.token = TOKEN
         self.uapi = User()
         self.session = aiohttp.ClientSession(loop=self.loop)
@@ -92,13 +92,9 @@ class Bot(commands.AutoShardedBot, ):
         return await ctx.send("Success, Sended to Error Channel")
 
     async def close_db(self):
-        try:
-            bind = db.pop_bind()
-        except AttributeError:
-            bind = None
-        if bind:
+        with suppress(UninitializedError):
             logger.info("Closing Postgresql Connection")
-            await bind.close()
+            await db.pop_bind().close()
 
     async def close_all(self):
         await self.close()

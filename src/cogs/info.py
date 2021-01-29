@@ -6,7 +6,7 @@ from typing import Union
 from discord.ext import commands
 import discord
 
-from ..models import User
+from ..models import User, reg_user
 from ..utils.cache import async_cache
 from src.config import PREFIX
 
@@ -49,15 +49,14 @@ class DiscordInfo(commands.Cog):
     async def profile(
             self, ctx: commands.Context, member: Union[discord.Member, int, str, discord.User] = None
     ):
-        user_id = member
+        user_id = member if isinstance(member, (str, int)) else member.id
         if member is None:
             user_id = ctx.author.id
 
         user = await User.get_user_by_id(user_id)
-
         if not user:
-            await self.bot.get_cog('Redactor').get_command('start')(ctx)
-
+            _, user = await reg_user(ctx, check=False)
+        # todo profile
 
     @commands.command()
     async def ping(self, ctx: commands.Context):
@@ -80,9 +79,11 @@ class DiscordInfo(commands.Cog):
     @commands.command()
     async def file(self, ctx: commands.Context, *, file_: str = None):
         """ Show current file, if you set file, then show file text """
-        user = await User.geUserer_by_id(ctx.author.id)
+        user = await User.get_user_by_id(ctx.author.id)
+        if not user:
+            _, user = await reg_user(ctx, check=False)
         embed = discord.Embed()
-        file_to_read = f"{user.current_file}/{file_}" or user.current_file
+        file_to_read = f"{user.current_file}/{file_}" if file_ else user.current_file
 
         with open(file_to_read, "r") as file:
             lines = file.read()

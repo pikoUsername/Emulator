@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 
-from ..models import User
+from ..models import User, reg_user
 
 
 class AdminCommands(commands.Cog, name="Admin"):
@@ -20,7 +20,7 @@ class AdminCommands(commands.Cog, name="Admin"):
 
         user = await User.get_user_by_id(member.id)
         if not user:
-            await self.bot.get_cog('Redactor').get_command('start')(ctx)
+            _, user = await reg_user(ctx, check=False)
         await self.bot.fm.remove_user_folder(user)
         await ctx.send(embed=discord.Embed(
             title=f"success {self.bot.APPLY_EMOJI}",

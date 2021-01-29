@@ -5,13 +5,13 @@ import sqlalchemy as sa
 from gino import Gino
 from sqlalchemy import sql
 
-from ..utils.mixins import ContextInstanceMixin
-
 db = Gino()
 
 
-# https://github.com/aiogram/bot/blob/master/app/models/db.py nooooooooooo, i copied code ;(
-class BaseModel(db.Model, ContextInstanceMixin):
+__all__ = ("db", "TimedBaseModel", "BaseModel")
+
+
+class BaseModel(db.Model):
     __abstract__ = True
     query: sql.Select
 

@@ -5,6 +5,7 @@ from loguru import logger
 import click
 
 from ..loader import Bot
+from .file_manager import FileManager
 
 try:
     import aiohttp_autoreload
@@ -12,9 +13,7 @@ except ImportError:
     aiohttp_autoreload = None
 
 
-bot = Bot()
-loop = asyncio.get_event_loop()
-run = loop.run_until_complete
+__all__ = ("cli", "polling", "superuser")
 
 
 @click.group()
@@ -44,6 +43,12 @@ def auto_reload_mixin(func):
 @cli.command()
 @auto_reload_mixin
 def polling():
+    fm = FileManager()
+    FileManager.set_current(fm)
+    bot = Bot(fm=fm)
+    loop = asyncio.get_event_loop()
+    run = loop.run_until_complete
+
     try:
         run(bot.run_itself())
     finally:
@@ -55,7 +60,8 @@ def polling():
 @click.option("--remove", "--rm", is_flag=True, default=False, help="Remove superuser rights")
 def superuser(user_id: int, remove: bool):
     from src.utils.set_owner import create_owner_user
-
+    loop = asyncio.get_event_loop()
+    run = loop.run_until_complete
     try:
         result = run(create_owner_user(user_id, remove))
     except Exception as e:

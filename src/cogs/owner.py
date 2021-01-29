@@ -9,7 +9,7 @@ from loguru import logger
 
 from src.config import LOGS_BASE_PATH
 from src.utils.set_owner import create_owner_user
-from src.models import User
+from src.models import User, reg_user
 
 
 class OwnerCommands(commands.Cog, name="Owner"):
@@ -23,7 +23,7 @@ class OwnerCommands(commands.Cog, name="Owner"):
         user = await User.get_user_by_id(ctx.author.id)
 
         if not user:
-            await self.bot.get_cog('Redactor').get_command('start')(ctx)
+            await reg_user(ctx)
 
         elif not user.is_owner:
             raise commands.MissingPermissions("Missing Owner permissions")

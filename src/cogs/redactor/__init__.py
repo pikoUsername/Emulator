@@ -9,16 +9,19 @@ import discord
 
 from src.utils.file_manager import FileManager
 from .utils.upload import load_code_from_github
-from src.models import User, Guild
+from src.models import User, reg_user, create_files
 from src.config import BASE_PATH
+
+
+__all__ = ("setup",)
 
 
 class TextRedacotorCog(commands.Cog, name="Redactor"):
     __slots__ = ("bot", "fm")
     """Files Redactor..."""
-    def __init__(self, bot: 'Bot'):
+    def __init__(self, bot):
         self.bot = bot
-        self.fm: FileManager = self.bot.fm
+        self.fm = FileManager.get_current()
 
     async def cog_check(self, ctx):
         if not ctx.guild:
@@ -32,41 +35,28 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """
         user = await User.get_user_by_id(ctx.author.id)
         if not user:
-            self.bot.get_cog('Redactor')
+            _, user = await reg_user(ctx, check=False)
         await load_code_from_github(owner, repo, user, branch)
 
     @commands.command()
     async def start(self, ctx: commands.Context):
         """ register user, and create user folder in guild"""
-        user = await User.get_user_by_id(user_id=ctx.author.id)
-        if user:
-            return await ctx.send(embed=discord.Embed(
-                title=f"Access Error {self.bot.X_EMOJI}",
-                description="You aleardy registered in DB!",
-                colour=discord.Colour.red(),
-            ))
-        if not user:
-            try:
-                user = await User.add_new_user(ctx.author, ctx.guild)
-                guild = await Guild.get_guild(ctx.guild.id)
+        try:
+            result, _ = await reg_user(ctx)
+        except ValueError:
+            result = None
 
-                if not guild:
-                    return await self.fm.create_user_folder(user)
-                await self.fm.create_user_folder(user=user)
-                await self.fm.create_file(file_name="main", user=user)
-            except Exception as e:
-                logger.exception(e)
-                return await ctx.send("ERROR in creating folder and main.py script!")
-        await ctx.send(embed=discord.Embed(title=f"Success {self.bot.APPLY_EMOJI}",
-                                           description="Success created folder with ur name!",
-                                           colour=discord.Colour.blue()))
+        if result is None:
+            await ctx.send("User Aleardy Exists")
+        return await ctx.send("Success Fully :white_check_mark: ")
 
     @commands.command()
     async def add(self, ctx: commands.Context, *, text: str):
         """ add current file text which you add in command """
         user = await User.get_user_by_id(ctx.author.id)
+
         if not user:
-            await self.bot.get_cog('Redactor').get_command('start')(ctx)
+            _, user = await reg_user(ctx, check=False)
         await self.fm.write_to_file(text, user)
         await ctx.message.add_reaction("✅")
 
@@ -77,10 +67,10 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         If you exists, your talbe current_file changes
         """
         user = await User.get_user_by_id(ctx.author.id)
+        if not user:
+            _, user = await reg_user(ctx, check=False)
         if not os.path.exists(f"{user.user_path}/{file}"):
             return await ctx.send("File not exists")
-        if not user:
-            await self.bot.get_cog('Redactor').get_command('start')(ctx)
         await user.update(current_file=f"{user.user_path}/{file}").apply()
         await ctx.send(embed=discord.Embed(title=f"Success, {self.bot.APPLY_EMOJI}",
                                            description=f"Now your current file is ``{file}``"))
@@ -93,10 +83,10 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
             return
         user = await User.get_user_by_id(ctx.author.id)
         if not user:
-            await self.bot.get_cog('Redactor').get_command('start')(ctx)
-        embed = discord.Embed()
-        embed.title = f"Success deleted line, {self.bot.APPLY_EMOJI}"
-        embed.description = f"Deleted line {line}"
+            _, user = await reg_user(ctx)
+        embed = discord.Embed(
+            title=f"Success deleted line, {self.bot.APPLY_EMOJI}",
+            description=f"Deleted line {line}")
 
         await self.bot.fm.change_line(user, line)
         await ctx.send(embed=embed)
@@ -105,7 +95,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
     async def move(self, ctx: commands.Context, file: str, *, to_change: str):
         user = await User.get_user_by_id(ctx.author.id)
         if not user:
-            await self.bot.get_cog('Redactor').get_command('start')
+            _, user = await reg_user(ctx, check=False)
         try:
             result = await self.fm.change_file_name(user, file, to_change)
         except (FileNotFoundError, PermissionError) as e:
@@ -121,7 +111,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """ Write to current file, if you do not select file. You can type anything """
         user = await User.get_user_by_id(ctx.author.id)
         if not user:
-            await self.bot.get_cog('Redactor').get_command('start')(ctx)
+            _, user = await reg_user(ctx, check=False)
         user_file = file or user.current_file
         embed = discord.Embed(colour=discord.Colour.random())
 
@@ -129,7 +119,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
             with os.open(user_file, os.O_RDONLY) as file:
                 await self.bot.loop.run_in_executor(None, file.write, text)
             embed.title = f"Succes {self.bot.APPLY_EMOJI}"
-            embed.description = f"Writed to current file, check it with command, {self.bot.command_prefix}cf."
+            embed.description = f"Writed to current file, check it out with command, {self.bot.command_prefix}cf."
         except FileNotFoundError:
             embed.title = f"ERROR, {self.bot.X_EMOJI}"
             embed.description = "Error, file not exists"
@@ -143,16 +133,18 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """ get current user file """
         user = await User.get_user_by_id(ctx.author.id)
         try:
-            return await ctx.send(f"Your current file ```{user.current_file}```")
+            await ctx.send(f"Your current file ```{user.current_file}```")
+            if not os.path.exists(user.current_file):
+                await create_files(user, ctx.guild.id)
         except AttributeError:
-            return await ctx.send("You Nor Authed as User")
+            return await ctx.send("You Not Authed as User")
 
     @commands.command(aliases=("rm", "remove_file", "remove"))
     async def rm_file(self, ctx: commands.Context, file: str):
         """
         remove selected file, be cary about it!
 
-        You can select more 1 file, example:
+        You can select 1 file, example:
         ```
         >> rm_file lol.py
         ```
@@ -160,17 +152,17 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """
         user = await User.get_user_by_id(ctx.author.id)
         try:
-            await ctx.message.add_reaction("✅")
+            _ = user.current_file
         except AttributeError:
             return await ctx.send(f"Type {self.bot.command_prefix}start, and come here again")
 
         try:
             await self.fm.remove_file(file, user)
-            await ctx.message.add_reaction("✅")
         except AttributeError:
-            await ctx.message.add_reaction("❌")
+            return await ctx.message.add_reaction("❌")
         except FileNotFoundError:
-            await ctx.send("File Not Exists")
+            return await ctx.send("File Not Exists")
+        await ctx.message.add_reaction("✅")
 
     @commands.command()
     async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
@@ -201,7 +193,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """ create file in your folder """
         user = await User.get_user_by_id(ctx.author.id)
         if not user:
-            await self.bot.get_cog('Redactor').get_command('start')(ctx)
+            _, user = await reg_user(ctx)
         if len(name) >= 78:
             if not user.is_owner:
                 return await ctx.send(embed=discord.Embed(
@@ -232,7 +224,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         user_id = ctx.author.id or member.id
         user = await User.get_user_by_id(user_id)
         if not user:
-            await self.bot.get_cog('Redactor').get_command('start')(ctx)
+            _, user = await reg_user(ctx)
         all_files = await self.bot.loop.run_in_executor(None, os.listdir, user.user_path)
 
         if not flags:

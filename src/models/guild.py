@@ -8,6 +8,9 @@ from src.models.base import BaseModel, db
 from src.config import BASE_PATH, PREFIX
 
 
+__all__ = ("Guild",)
+
+
 class Guild(BaseModel):
     __tablename__ = 'guilds2'
 
