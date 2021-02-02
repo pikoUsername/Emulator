@@ -263,6 +263,8 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
 
         f = await self.bot.fm.open_file(
             filename=file, user_path=user.user_path, user_id=ctx.author.id)
+        query_sql = "UPDATE user2 SET current_file = $1 WHERE user_id = $2;"
+        await make_request(query_sql, (fp, user_id), fetch=True)
         e = discord.Embed(title=f"File {file}",
                           description=f"```{f}```")
         return await ctx.send(embed=e)
@@ -302,6 +304,12 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
                                                       description="No Results Found..."))
         return await ctx.send(embed=discord.Embed(title="Results",
                                                   description="```{}```".format(''.join(results))))
+
+
+    @commands.command()
+    async def append(self, ctx: commands.Context, file: str, *, text: str = None):
+        _, user = await reg_user(ctx, check=False)
+        l = await self.fm.open_file(filename=file, user_path=user.user_path, user_id=ctx.author.id)
 
 
 def setup(bot):

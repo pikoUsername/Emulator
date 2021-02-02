@@ -222,20 +222,23 @@ class FileManager(ContextInstanceMixin):
             return
         await self._loop.run_in_executor(None, os.remove, f"{user_path}/{filename}")
 
-    async def open_file(self, filename: str, user_path: str, user_id: int):
+    async def read_file(self, filename: str, user_path: str):
+
+
+    @wrap
+    def open_file(self, filename: str, user_path: str, user_id: int):
         """
         Opens file, need a filename and User
         set user.current_file to filename
 
-        :param current_file:
+        :param user_path:
         :param filename:
+        :param user_id:
         :return:
         """
         fp = f"{user_path}/{filename}"
-        query_sql = "UPDATE user2 SET current_file = $1 WHERE user_id = $2;"
 
         with open(fp, "r") as f:
-            await make_request(query_sql, (fp, user_id), fetch=True)
             lines = f.readlines()
             return "\n".join(lines) if lines else "File is Empty..."
 
