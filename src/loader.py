@@ -221,10 +221,7 @@ class Bot(commands.AutoShardedBot, ):
 
     async def run_itself(self):
         await self.setup_stuff()
-        try:
-            await self.start(self.token)
-        except KeyboardInterrupt:
-            logger.info("GoodBye")
+        await self.start(self.token)
 
     def __del__(self):
         self.loop.run_until_complete(self.close_all())

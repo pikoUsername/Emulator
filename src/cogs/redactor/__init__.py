@@ -133,11 +133,14 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """ get current user file """
         user = await User.get_user_by_id(ctx.author.id)
         try:
-            await ctx.send(f"Your current file ```{user.current_file}```")
             if not os.path.exists(user.current_file):
-                await create_files(user, ctx.guild.id)
-        except AttributeError:
-            return await ctx.send("You Not Authed as User")
+                f_time = time.time()
+                await create_files(ctx.guild.id, user=user)
+                print(time.time() - f_time)
+            await ctx.send(f"Your current file ```{user.current_file}```")
+        except AttributeError as exc:
+            logger.error(exc)
+            await ctx.send("You Not Authed as User")
 
     @commands.command(aliases=("rm", "remove_file", "remove"))
     async def rm_file(self, ctx: commands.Context, file: str):
@@ -152,7 +155,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """
         user = await User.get_user_by_id(ctx.author.id)
         try:
-            _ = user.current_file
+            user.current_file  # check for user ;)
         except AttributeError:
             return await ctx.send(f"Type {self.bot.command_prefix}start, and come here again")
 
@@ -189,21 +192,17 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
 
     @commands.command(aliases=["create_file"])
     @commands.cooldown(10, 200, commands.BucketType.channel)
-    async def touch(self, ctx: commands.Context, name: str, *, type_: str = "py"):
+    async def touch(self, ctx: commands.Context, name: str, *, type_: str = None):
         """ create file in your folder """
         user = await User.get_user_by_id(ctx.author.id)
         if not user:
             _, user = await reg_user(ctx)
         if len(name) >= 78:
-            if not user.is_owner:
-                return await ctx.send(embed=discord.Embed(
-                    title=f"Not have enough access {self.bot.X_EMOJI}",
-                    description="Too long file name",
-                    colour=discord.Colour.blue()))
-        elif os.path.exists(f"{BASE_PATH}/{name}.{type_}"):
+            return
+        elif os.path.exists(f"{BASE_PATH}/{name}"):
             await ctx.send("this File aleardy exists")
-        await self.fm.create_file(name, user, type_)
-        await self.fm.create_file(name, user, type_)
+        await self.fm.create_file(file_name=name, user_path=user.user_path, type_=type_)
+        await ctx.message.add_reaction("✅")
 
     @commands.command(aliases=["list", "list_files"])
     @commands.cooldown(30, 200, commands.BucketType.guild)
@@ -221,7 +220,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         kik.js    90KB    1923.12.29 16:22:32
         ```
         """
-        user_id = ctx.author.id or member.id
+        user_id = member.id if member else ctx.author.id
         user = await User.get_user_by_id(user_id)
         if not user:
             _, user = await reg_user(ctx)
@@ -259,10 +258,11 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def show_file(self, ctx: commands.Context, file: str = None):
+    async def open_file(self, ctx: commands.Context, file: str = None):
         user = await User.get_user_by_id(ctx.author.id)
 
-        f = await self.bot.fm.open_file(file, user)
+        f = await self.bot.fm.open_file(
+            filename=file, user_path=user.user_path, user_id=ctx.author.id)
         e = discord.Embed(title=f"File {file}",
                           description=f"```{f}```")
         return await ctx.send(embed=e)

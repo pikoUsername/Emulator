@@ -1,6 +1,5 @@
 import discord
-from discord.ext import commands
-from loguru import logger
+from gino import GinoConnection
 
 from .base import TimedBaseModel, db
 from .guild import Guild
@@ -11,30 +10,34 @@ from ..utils.file_manager import FileManager
 __all__ = ("User", "reg_user", "create_files")
 
 
-async def create_files(user: 'User', guild_id: int):
-    guild = await Guild.get_guild(guild_id)
+async def create_files(guild_id: int, *, user: 'User' = None, user_id: int = None):
+    if user_id:
+        user = await User.get_user_by_id(user_id)
+
     fm = FileManager.get_current()
-    logger.info(f"Created File for {user.username}")
+    guild = await Guild.get_guild(guild_id)
     if not guild:
-        return await fm.create_user_folder(user)
-    await fm.create_user_folder(user=user)
-    await fm.create_file(file_name="main", user=user)
+        await fm.create_guild_folder(guild_id)
+    await fm.create_user_folder(user.user_path, user.user_id)
+    await fm.create_file(file_name="main", user_path=user.user_path)
 
 
 class User(TimedBaseModel):
     __tablename__ = "user2"
 
-    id = db.Column(db.Integer(), db.Sequence("users_id_seq"), primary_key=True)
-    user_id = db.Column(db.BigInteger())
+    id = db.Column(db.Integer(), db.Sequence("users_id_seq"), primary_key=True, index=True)
+    user_id = db.Column(db.BigInteger(), index=True)
     username = db.Column(db.String(200))
     current_file = db.Column(db.String(100))
     user_path = db.Column(db.String(200))
-    is_owner = db.Column(db.Boolean, default=True)
+    is_owner = db.Column(db.Boolean, default=False)
 
     @staticmethod
     async def get_user_by_id(user_id: int):
-        user = await User.query.where(User.user_id == user_id).gino.first()
-        return user if user else False
+        async with db.acquire() as conn:
+            conn: GinoConnection = conn
+            user = await conn.first(f"SELECT * FROM {User.__tablename__} WHERE user_id = $1;", user_id)
+        return user
 
     @staticmethod
     async def add_new_user(user: discord.User, guild: discord.Guild):
@@ -46,7 +49,7 @@ class User(TimedBaseModel):
         :param guild:
         :return:
         """
-        old_user = await User.query.where(User.user_id == user.id).gino.first()
+        old_user = await User.get_user_by_id(user.id)
 
         if old_user:
             return old_user
@@ -60,7 +63,9 @@ class User(TimedBaseModel):
         new_user.username = user.name
 
         await new_user.create()
-        await create_files(user, guild.id)
+
+        await create_files(guild.id, user=new_user)
+
         return new_user
 
     @staticmethod

@@ -26,6 +26,6 @@ class InterceptHandler(logging.Handler):
 # noinspection PyArgumentList
 def setup():
     logger.add(sys.stderr, format="{time} {level} {message}", filter="my_module", level=config.LOG_LEVEL)
-    logger.add(config.LOGS_BASE_PATH + "/log.log")
+    logger.add(config.LOGS_BASE_PATH + "/{time}.log")
     logger.disable("sqlalchemy.engine.base")
     logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)

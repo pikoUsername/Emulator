@@ -17,14 +17,9 @@ class DiscordEvents(commands.Cog, name="Events"):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await notify_all_owners(self.bot, text="BOT STARTED")
-
-    @commands.Cog.listener()
-    async def on_message_edit(self, after, before):
-        """ Handler for edited messages, re-executes commands """
-        if before.content != after.content:
-            ctx = await self.bot.get_context(after)
-            await self.bot.invoke(ctx)
+        import os
+        if os.environ.get("notify_admins"):
+            await notify_all_owners(self.bot, text="BOT STARTED")
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):

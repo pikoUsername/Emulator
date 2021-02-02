@@ -2,15 +2,19 @@ import asyncio
 import functools
 import os
 from typing import List
+from pathlib import Path
 import shutil
 import glob
 
-from ..models import Guild
+from loguru import logger
+
 from ..config import BASE_PATH
 from .mixins import ContextInstanceMixin
 
 
 __all__ = ("FileManager", "wrap")
+
+from ..models.base import make_request
 
 
 def wrap(func):
@@ -34,7 +38,7 @@ class FileManager(ContextInstanceMixin):
         self._loop: asyncio.AbstractEventLoop = loop
 
     @staticmethod
-    def _create_file(name: str, user, type_: str = "py") -> None:
+    def _create_file(name: str, user_path: str, type_: str = "py") -> None:
         """
         Private func
 
@@ -43,13 +47,13 @@ class FileManager(ContextInstanceMixin):
         calling for create file
 
         :param name:
-        :param user:
+        :param user_path:
         :param type_:
         :return:
         """
         if not name:
             return
-        with open(f"{user.user_path}/{name}.{type_}", "w"):
+        with open(f"{user_path}/{name}.{type_}", "w"):
             pass
 
     @staticmethod
@@ -68,40 +72,42 @@ class FileManager(ContextInstanceMixin):
 
     @staticmethod
     @wrap
-    def create_guild_folder(guild: Guild):
+    def create_guild_folder(guild_id: int):
         """
-        Private function
-        |staticmethod|
-
         create guild folder, and when bot joins guild folder will create
 
-        :param guild:
+        :param guild_id:
         :return:
         """
-        guild_path = fr"{BASE_PATH}\guild_{guild.guild_id}"
+        bs_p = Path(__file__).parent.parent.parent
+        guild_path = fr"{bs_p}\{BASE_PATH}\guild_{guild_id}"
+
+        p = fr"{bs_p}\{BASE_PATH}"
+        if os.path.exists(p):
+            pass
+        else:
+            os.mkdir(p)
 
         if os.path.exists(guild_path):
             return
 
-        try:
-            os.mkdir(guild_path)
-        except Exception as e:
-            raise e
+        os.mkdir(guild_path)
 
     @staticmethod
     @wrap
-    def create_user_folder(user):
+    def create_user_folder(user_path: str, user_id: int):
         """
         Private function
         get user_path and create user folder in guild_{guild_id}/ path
 
-        :param user:
+        :param user_path:
+        :param user_id:
         :return:
         """
-        user_path = user.user_path
+        user_path = user_path
         user_path_len = len(user_path)
 
-        path_to_slice = len(user.username)
+        path_to_slice = len(f"user_{user_id}")
         path_final = user_path_len - path_to_slice
 
         if not os.path.exists(user_path[0:path_final]):
@@ -177,21 +183,27 @@ class FileManager(ContextInstanceMixin):
     async def change_file_name(self, user, file: str, to_change: str):
         await self._loop.run_in_executor(None, os.rename, fr"{user.user_path}\{file}", fr"{user.user_path}\{to_change}")
 
-    async def create_file(self, file_name: str, user, type_: str = "py"):
+    async def create_file(self, file_name: str, user_path: str, type_: str = None):
         """
         Create file based on user path
         and user can set type of file
         if not type then creates .py file
 
         :param file_name:
-        :param user:
+        :param user_path:
         :param type_:
         :return:
         """
         if not file_name:
             return
-        if not os.path.exists(f"{user.user_path}/{file_name}"):
-            await self._loop.run_in_executor(None, self._create_file, file_name, user, type_)
+        if not os.path.exists(f"{user_path}/{file_name}"):
+            print(f"{user_path=} {file_name=}")
+            loop = asyncio.get_running_loop()
+            type = type_ if type_ else "py"
+            try:
+                await loop.run_in_executor(None, self._create_file, file_name, user_path, type)
+            except OSError as exc:
+                logger.error(exc)
         else:
             return
 
@@ -210,19 +222,22 @@ class FileManager(ContextInstanceMixin):
             return
         await self._loop.run_in_executor(None, os.remove, f"{user_path}/{filename}")
 
-    async def open_file(self, filename: str, user):
+    async def open_file(self, filename: str, user_path: str, user_id: int):
         """
         Opens file, need a filename and User
         set user.current_file to filename
 
-        :param user:
+        :param current_file:
         :param filename:
         :return:
         """
-        fp = f"{user.current_file}/{filename}"
+        fp = f"{user_path}/{filename}"
+        query_sql = "UPDATE user2 SET current_file = $1 WHERE user_id = $2;"
+
         with open(fp, "r") as f:
-            await user.update(current_file=fp).apply()
-            return f.readlines()
+            await make_request(query_sql, (fp, user_id), fetch=True)
+            lines = f.readlines()
+            return "\n".join(lines) if lines else "File is Empty..."
 
     @wrap
     def write_to_file(self, text: str, user):

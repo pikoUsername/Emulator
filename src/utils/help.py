@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import discord
 from discord.ext import commands, menus
@@ -170,6 +171,7 @@ class GroupHelpPageSource(menus.ListPageSource):
         embed.set_footer(text=f'Use "{self.prefix}help command" for more info on a command.')
         return embed
 
+
 class PaginatedHelpCommand(commands.HelpCommand):
     def __init__(self):
         super().__init__(command_attrs={
@@ -290,6 +292,7 @@ class HelpFormat(commands.DefaultHelpCommand):
         await self.context.send(embed=embed, delete_after=60)
 
     async def send_group_help(self, group):
+        f_time = time.time()
         subcommands = group.commands
         if len(subcommands) == 0:
             return await self.send_command_help(group)
@@ -302,3 +305,4 @@ class HelpFormat(commands.DefaultHelpCommand):
         self.common_command_formatting(source, group)
         menu = HelpMenu(source)
         await menu.start(self.context)
+        print(time.time() - f_time)

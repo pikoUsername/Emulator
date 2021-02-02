@@ -1,14 +1,30 @@
-from typing import List
+from typing import Optional, Union, List
 import datetime
 
 import sqlalchemy as sa
-from gino import Gino
+from gino import Gino, GinoConnection
 from sqlalchemy import sql
 
 db = Gino()
 
-
 __all__ = ("db", "TimedBaseModel", "BaseModel")
+
+
+async def make_request(
+        query: str,
+        params: Union[Optional[tuple], str, List[str]] = None,
+        multi: bool = False,
+        fetch: bool = False,
+):
+    async with db.acquire() as conn:
+        conn: GinoConnection = conn
+        async with conn.transaction():
+            if fetch:
+                if multi:
+                    res = await conn.all(query, *params if len(params) != 1 else params)
+                else:
+                    res = await conn.first(query, *params if len(params) != 1 else params)
+                return res
 
 
 class BaseModel(db.Model):
