@@ -14,8 +14,6 @@ from .mixins import ContextInstanceMixin
 
 __all__ = ("FileManager", "wrap")
 
-from ..models.base import make_request
-
 
 def wrap(func):
     @functools.wraps(func)
@@ -38,7 +36,7 @@ class FileManager(ContextInstanceMixin):
         self._loop: asyncio.AbstractEventLoop = loop
 
     @staticmethod
-    def _create_file(name: str, user_path: str, type_: str = "py") -> None:
+    def _create_file(name: str, user_path: str) -> None:
         """
         Private func
 
@@ -48,12 +46,11 @@ class FileManager(ContextInstanceMixin):
 
         :param name:
         :param user_path:
-        :param type_:
         :return:
         """
         if not name:
             return
-        with open(f"{user_path}/{name}.{type_}", "w"):
+        with open(f"{user_path}/{name}", "w"):
             pass
 
     @staticmethod
@@ -109,12 +106,11 @@ class FileManager(ContextInstanceMixin):
 
         path_to_slice = len(f"user_{user_id}")
         path_final = user_path_len - path_to_slice
-
+        print(user_path[0:path_final])
         if not os.path.exists(user_path[0:path_final]):
             os.mkdir(user_path[0:path_final])
         if os.path.exists(user_path):
             return
-
         os.mkdir(user_path)
 
     @staticmethod
@@ -175,15 +171,15 @@ class FileManager(ContextInstanceMixin):
 
     @staticmethod
     @wrap
-    def change_line(user, line: int, to_change: str):
-        with open(user.current_file, "w") as file:
+    def change_line(user_cur_f: str, line: int, to_change: str):
+        with open(user_cur_f, "w") as file:
             file.seek(line)
             file.write(to_change)
 
-    async def change_file_name(self, user, file: str, to_change: str):
-        await self._loop.run_in_executor(None, os.rename, fr"{user.user_path}\{file}", fr"{user.user_path}\{to_change}")
+    async def change_file_name(self, user_path: str, file: str, to_change: str):
+        await self._loop.run_in_executor(None, os.rename, fr"{user_path}\{file}", fr"{user_path}\{to_change}")
 
-    async def create_file(self, file_name: str, user_path: str, type_: str = None):
+    async def create_file(self, file_name: str, user_path: str):
         """
         Create file based on user path
         and user can set type of file
@@ -191,75 +187,57 @@ class FileManager(ContextInstanceMixin):
 
         :param file_name:
         :param user_path:
-        :param type_:
         :return:
         """
-        if not file_name:
-            return
+
         if not os.path.exists(f"{user_path}/{file_name}"):
-            print(f"{user_path=} {file_name=}")
-            loop = asyncio.get_running_loop()
-            type = type_ if type_ else "py"
+            loop = self._loop
             try:
-                await loop.run_in_executor(None, self._create_file, file_name, user_path, type)
+                await loop.run_in_executor(None, self._create_file, file_name, user_path)
             except OSError as exc:
                 logger.error(exc)
-        else:
-            return
 
-    async def remove_file(self, filename: str, user):
+    async def remove_file(self, filename: str, user_path: str):
         """
         need user, and filename argument for delete file
         run os.remove blocking io in executor
 
         :param filename:
-        :param user:
+        :param user_path:
         :return:
         """
-        user_path = user.user_path
 
         if not filename:
             return
         await self._loop.run_in_executor(None, os.remove, f"{user_path}/{filename}")
 
     async def read_file(self, filename: str, user_path: str):
-
-
-    @wrap
-    def open_file(self, filename: str, user_path: str, user_id: int):
-        """
-        Opens file, need a filename and User
-        set user.current_file to filename
-
-        :param user_path:
-        :param filename:
-        :param user_id:
-        :return:
-        """
-        fp = f"{user_path}/{filename}"
-
-        with open(fp, "r") as f:
-            lines = f.readlines()
-            return "\n".join(lines) if lines else "File is Empty..."
+        with open(fr"{user_path}\{filename}", "r") as f:
+            return f.readlines()
 
     @wrap
-    def write_to_file(self, text: str, user):
+    def open_file(self, fp: str, mode: str):
+        return open(fp, mode)
+
+    @wrap
+    def write_to_file(self, text: str, current_file: str):
         """
         checks for user current file if not current file
         function dissmiss it.
         in stock user.current_file is main.py, starter script
 
         :param text:
-        :param user:
+        :param current_file:
         :return:
         """
-        current_file = user.current_file
-
         if not self.list_files:
             return
 
-        with open(current_file, "w") as file:
-            file.write(text)
+        with open(current_file, "r") as f:
+            saved_lines = f.readlines()
+            with open(current_file, "w") as file:
+                saved_lines.append(text)
+                file.write("".join(saved_lines))
 
     @wrap
     def search_in_file(self, query: str, current_file: str):

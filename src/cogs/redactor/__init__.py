@@ -1,7 +1,6 @@
 import asyncio
 import os
 from os.path import join
-import time
 
 from discord.ext import commands
 from loguru import logger
@@ -12,8 +11,9 @@ from .utils.upload import load_code_from_github
 from src.models import User, reg_user, create_files
 from src.config import BASE_PATH
 
-
 __all__ = ("setup",)
+
+from ...utils.misc import create_path
 
 
 class TextRedacotorCog(commands.Cog, name="Redactor"):
@@ -33,16 +33,14 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """
         Create Repo In Your User Directory, And Its Not Working.
         """
-        user = await User.get_user_by_id(ctx.author.id)
-        if not user:
-            _, user = await reg_user(ctx, check=False)
-        await load_code_from_github(owner, repo, user, branch)
+        [_, user] = await reg_user(ctx, check=False)
+        await load_code_from_github(owner, repo, user.user_path, branch)
 
     @commands.command()
     async def start(self, ctx: commands.Context):
         """ register user, and create user folder in guild"""
         try:
-            result, _ = await reg_user(ctx)
+            [result, _] = await reg_user(ctx)
         except ValueError:
             result = None
 
@@ -53,24 +51,21 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
     @commands.command()
     async def add(self, ctx: commands.Context, *, text: str):
         """ add current file text which you add in command """
-        user = await User.get_user_by_id(ctx.author.id)
-
-        if not user:
-            _, user = await reg_user(ctx, check=False)
-        await self.fm.write_to_file(text, user)
+        [_, user] = await reg_user(ctx, check=False)
+        await self.fm.write_to_file(text, user.user_path)
         await ctx.message.add_reaction("✅")
 
     @commands.command()
     async def go_to_file(self, ctx: commands.Context, *, file: str):
         """
         Set current file, and checks you out
-        If you exists, your talbe current_file changes
+        If you exists, your table current_file changes
         """
-        user = await User.get_user_by_id(ctx.author.id)
-        if not user:
-            _, user = await reg_user(ctx, check=False)
+        [_, user] = await reg_user(ctx, check=False)
+
         if not os.path.exists(f"{user.user_path}/{file}"):
             return await ctx.send("File not exists")
+
         await user.update(current_file=f"{user.user_path}/{file}").apply()
         await ctx.send(embed=discord.Embed(title=f"Success, {self.bot.APPLY_EMOJI}",
                                            description=f"Now your current file is ``{file}``"))
@@ -81,23 +76,22 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         if not line.isdigit():
             await ctx.send("perameter not a digit!")
             return
-        user = await User.get_user_by_id(ctx.author.id)
-        if not user:
-            _, user = await reg_user(ctx)
+
+        [_, user] = await reg_user(ctx)
+
         embed = discord.Embed(
             title=f"Success deleted line, {self.bot.APPLY_EMOJI}",
             description=f"Deleted line {line}")
 
-        await self.bot.fm.change_line(user, line)
+        await self.fm.change_line(user.current_file, line)
         await ctx.send(embed=embed)
 
     @commands.command(aliases=("mv",))
     async def move(self, ctx: commands.Context, file: str, *, to_change: str):
-        user = await User.get_user_by_id(ctx.author.id)
-        if not user:
-            _, user = await reg_user(ctx, check=False)
+        [_, user] = await reg_user(ctx, check=False)
+
         try:
-            result = await self.fm.change_file_name(user, file, to_change)
+            result = await self.fm.change_file_name(user.user_path, file, to_change)
         except (FileNotFoundError, PermissionError) as e:
             logger.error(e)
             result = None
@@ -109,9 +103,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
     @commands.command(alises=("w",))
     async def write(self, ctx: commands.Context, file: str, *, text: str):
         """ Write to current file, if you do not select file. You can type anything """
-        user = await User.get_user_by_id(ctx.author.id)
-        if not user:
-            _, user = await reg_user(ctx, check=False)
+        [_, user] = await reg_user(ctx, check=False)
         user_file = file or user.current_file
         embed = discord.Embed(colour=discord.Colour.random())
 
@@ -132,11 +124,10 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
     async def current_file(self, ctx: commands.Context):
         """ get current user file """
         user = await User.get_user_by_id(ctx.author.id)
+
         try:
             if not os.path.exists(user.current_file):
-                f_time = time.time()
-                await create_files(ctx.guild.id, user=user)
-                print(time.time() - f_time)
+                await create_files(ctx.guild.id, user_id=ctx.author.id)
             await ctx.send(f"Your current file ```{user.current_file}```")
         except AttributeError as exc:
             logger.error(exc)
@@ -160,7 +151,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
             return await ctx.send(f"Type {self.bot.command_prefix}start, and come here again")
 
         try:
-            await self.fm.remove_file(file, user)
+            await self.fm.remove_file(file, user.user_path)
         except AttributeError:
             return await ctx.message.add_reaction("❌")
         except FileNotFoundError:
@@ -172,36 +163,26 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """ make dir in any directory! only owner """
         user = await User.get_user_by_id(ctx.author.id)
 
-        if not user.is_owner:
-            raise commands.MissingPermissions("Missing Owner permissions")
-        loop = self.bot.loop
+        if not user.is_owner and user:
+            return
+
+        loop = asyncio.get_running_loop()
 
         to_create = f"{path}/{name}"
         await loop.run_in_executor(None, os.mkdir, to_create)
         await ctx.message.add_reaction("✅")
-        try:
-            if not user.is_owner:
-                raise commands.MissingPermissions("Missing Owner permissions")
-            loop = asyncio.get_event_loop()
-
-            to_create = f"{path}/{name}"
-            await loop.run_in_executor(None, os.mkdir, to_create)
-            await ctx.message.add_reaction("✅")
-        except AttributeError:
-            return await ctx.send("You not authed as User, type command 'start'")
 
     @commands.command(aliases=["create_file"])
     @commands.cooldown(10, 200, commands.BucketType.channel)
-    async def touch(self, ctx: commands.Context, name: str, *, type_: str = None):
+    async def touch(self, ctx: commands.Context, file_name: str):
         """ create file in your folder """
-        user = await User.get_user_by_id(ctx.author.id)
-        if not user:
-            _, user = await reg_user(ctx)
-        if len(name) >= 78:
+        if len(file_name) >= 78:
             return
-        elif os.path.exists(f"{BASE_PATH}/{name}"):
+        elif os.path.exists(f"{BASE_PATH}/{file_name}"):
             await ctx.send("this File aleardy exists")
-        await self.fm.create_file(file_name=name, user_path=user.user_path, type_=type_)
+
+        user_path = create_path(ctx.guild.id, ctx.author.id)
+        await self.fm.create_file(file_name=file_name, user_path=user_path)
         await ctx.message.add_reaction("✅")
 
     @commands.command(aliases=["list", "list_files"])
@@ -221,10 +202,12 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         ```
         """
         user_id = member.id if member else ctx.author.id
-        user = await User.get_user_by_id(user_id)
-        if not user:
-            _, user = await reg_user(ctx)
-        all_files = await self.bot.loop.run_in_executor(None, os.listdir, user.user_path)
+        user_path = create_path(ctx.guild.id, user_id)
+        if not os.path.exists(user_path):
+            return await ctx.send("Type Start for to able activate this command")
+        loop = asyncio.get_running_loop()
+        all_files = await loop.run_in_executor(
+            None, os.listdir, user_path)
 
         if not flags:
             await ctx.send(embed=discord.Embed(
@@ -239,7 +222,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
 
         embed = discord.Embed(title="All files", colour=discord.Colour.blue())
         files_sorted_by_size = sorted(
-            self.get_files_info(f"{user.user_path}/"), reverse=True, key=lambda x: x[1].st_size)
+            self.get_files_info(f"{user_path}/"), reverse=True, key=lambda x: x[1].st_size)
         sizes = []
         updated_at = []
         name_files = []
@@ -259,12 +242,9 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
 
     @commands.command()
     async def open_file(self, ctx: commands.Context, file: str = None):
-        user = await User.get_user_by_id(ctx.author.id)
-
-        f = await self.bot.fm.open_file(
-            filename=file, user_path=user.user_path, user_id=ctx.author.id)
-        query_sql = "UPDATE user2 SET current_file = $1 WHERE user_id = $2;"
-        await make_request(query_sql, (fp, user_id), fetch=True)
+        f = await self.fm.read_file(
+            file if file else "main.py",
+            str(create_path(ctx.guild.id, ctx.author.id)))
         e = discord.Embed(title=f"File {file}",
                           description=f"```{f}```")
         return await ctx.send(embed=e)
@@ -289,6 +269,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
 
     @staticmethod
     def get_date_as_string(dt):
+        import time
         return time.strftime('%H:%M:%S %m.%d.%y', time.gmtime(dt))
 
     @commands.command(aliases=['s/'])
@@ -296,20 +277,14 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """
         Search In current File
         """
-        user = await User.get_user_by_id(ctx.author.id)
+        [_, user] = await reg_user(ctx)
 
-        results = await self.bot.fm.search_in_file(query, user.current_file)
+        results = await self.fm.search_in_file(query, user.current_file)
         if not results:
             return await ctx.send(embed=discord.Embed(title="Results",
                                                       description="No Results Found..."))
         return await ctx.send(embed=discord.Embed(title="Results",
                                                   description="```{}```".format(''.join(results))))
-
-
-    @commands.command()
-    async def append(self, ctx: commands.Context, file: str, *, text: str = None):
-        _, user = await reg_user(ctx, check=False)
-        l = await self.fm.open_file(filename=file, user_path=user.user_path, user_id=ctx.author.id)
 
 
 def setup(bot):

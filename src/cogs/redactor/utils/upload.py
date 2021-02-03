@@ -5,7 +5,7 @@ from src.models import User
 
 async def load_code_from_github(owner: str,
                                 repo: str,
-                                user: User,
+                                user_path: str,
                                 branch: str):
     """
     Load from GitHub Repository,
@@ -13,12 +13,12 @@ async def load_code_from_github(owner: str,
 
     :param owner: need for find github repo
     :param repo: repo name
-    :param user: user for path
+    :param user_path: user for path
     :param branch:
     :return:
     """
     url = f"https://github.com/{owner}/{repo}/{branch}.zip"
-    await upload(repo, user.user_path, url)
+    await upload(repo, user_path, url)
 
 
 async def upload(repo: str, user_path: str, url: str):
