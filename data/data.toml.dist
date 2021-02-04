@@ -6,7 +6,8 @@ BASE_PATH = ""
 OWNER_IDS = []
 
 [db]
-dbhost = "localhost"
-database = ""
+host = ""
+name = ""
 user = ""
-dbpassword = ""
+password = ""
+port = 5432

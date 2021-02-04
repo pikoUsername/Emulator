@@ -17,12 +17,14 @@ class Misc(commands.Cog):
 
     @commands.command()
     async def start(self, ctx: commands.Context, ref_id: int):
-        user = await self.bot.dbc.get_user(ctx.author.id)
-        if user:
-            return await ctx.send("You Aleardy in db")
+        """
+        On Type command, check out if user exists,
+        and if user exists, then he ll send the fuck
+        Usage
+        ```
 
-        await self.bot.dbc.add_new_user(ctx.author)
-
+        """
+        pass
 
 def setup(bot):
     bot.add_cog(Misc(bot))

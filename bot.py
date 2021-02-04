@@ -8,17 +8,19 @@ from discord import AsyncWebhookAdapter, Webhook
 from discord.ext import commands
 from loguru import logger
 
-from cogs.utils import FileManager
 from cogs.utils import log
-from cogs.utils import db
+from cogs.utils.mixins import ContextInstanceMixin
 
 LOGS_BASE_PATH = str(Path(__name__).parent.parent / "logs")
 
+
 async def get_prefix(bot, message):
-    return bot.data["PREFIX"]
+    # need to do custom prefix for every user
+    return bot.data['bot']["PREFIX"]
 
 
 def make_intents() -> discord.Intents:
+    # i used Intent class, not a none intent, it was a bad idea ;(
     intents = discord.Intents.none()
     intents.emojis = True
     intents.messages = True
@@ -27,70 +29,71 @@ def make_intents() -> discord.Intents:
     return intents
 
 
-class Bot(commands.AutoShardedBot):
-    def __init__(self, loop=None):
-        # self.loop = loop or asyncio.get_event_loop()
-
+class Bot(commands.AutoShardedBot, ContextInstanceMixin):
+    def __init__(self):
         super().__init__(
             command_prefix=get_prefix,
             case_insensitive=True,
-            description="Oops...",
-            max_messages=100,
             intents=make_intents()
         )
+        # setup in __init__
         log.setup(LOGS_BASE_PATH)
+
+        # counter for errors, and error ticket
+        # its bad, but it s only available method
         self.invoke_errors = 0
-        self.bind = None
+        # uptime
         self.launch_time = None
 
+        # extensions for setup in bot
         self.extensions_ = [
-            "admin", "cursor", "edit", "misc",
-            "owner", "visual", "write", "events",
+            "admin", "edit", "misc", "owner",
+            "visual", "write", "events",
         ]
         with open("./data/data.toml", 'r') as cfg:
             self.data = pytoml.load(cfg)
-        self.session = aiohttp.ClientSession(loop=loop)
-        self.fm = FileManager(self.loop, self.bind, self.data)
-        self.dbc: db.DBC = db.DBC(self)
-
 
     async def get_context(self, message, *, cls=commands.Context):
-        """Get Context, ignores Guild"""
+        # bot cant be used in guilds, it s not working without this
+        # so fuck
         if message.guild:
             return
         return await super().get_context(message, cls=cls)
 
     @property
     def token(self):
+        # useless property
         return self.data['bot']["BOT_TOKEN"]
 
-    async def send_with_webhook(self, text: str = None, *args, **kwargs):
+    @token.setter
+    def token(self):
+        import warnings
+        warnings.warn(
+            "Token is READ ONLY!"
+        )
+
+    @token.deleter
+    def token(self):
+        self.token = None
+
+    async def send_with_webhook(self, *args, **kwargs):
+        # maybe its crash everything, but i dk
         webhook = Webhook.from_url(
             self.data['bot']['onreadyurl'],
             adapter=AsyncWebhookAdapter(
-                self.session)
-        )
-        await webhook.send(text, *args, **kwargs)
+                aiohttp.ClientSession()))
+        await webhook.send(*args, **kwargs)
 
-    def load_cogs(self):
+    async def run_bot(self):
         for extension in self.extensions_:
             try:
                 self.load_extension(f"cogs.{extension}")
                 logger.info(f"Loaded {extension}")
             except Exception as e:
-                 logger.error(e)
+                # if exception cathced, bot running dont stop
+                logger.error(e)
 
-    async def run_bot(self):
-        self.load_cogs()
-        try:
-            await db.create_bind(self)
-            await self.start(self.token)
-        finally:
-            await self.close_all()
-
-    async def close_all(self):
-        await self.bind.close()
-        await self.close()
+        await self.start(self.token)
 
     async def on_ready(self):
         random_text = [
