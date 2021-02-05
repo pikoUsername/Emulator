@@ -4,3 +4,4 @@ asyncpg==0.21.0
 loguru==0.5.3
 flake8==3.8.4
 pytoml==0.1.21
+aiofiles

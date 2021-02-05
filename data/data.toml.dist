@@ -7,7 +7,7 @@ OWNER_IDS = []
 
 [db]
 host = ""
-name = ""
+database = ""
 user = ""
 password = ""
 port = 5432

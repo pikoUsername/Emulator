@@ -3,7 +3,6 @@ from typing import TypeVar, Type, List, Union, Any, Dict, Optional
 import asyncpg
 
 from .base import RawConnection
-from ....bot import Bot  # yes
 
 __all__ = ("PostgresConnection",)
 
@@ -11,7 +10,7 @@ T = TypeVar("T")
 
 
 class PostgresConnection(RawConnection):
-    pool: asyncpg.pool.Pool
+    pool: asyncpg.pool.Pool = None
 
     @staticmethod
     async def __make_request(
@@ -21,12 +20,14 @@ class PostgresConnection(RawConnection):
             mult: bool = False,
             retries_count: int = 5
     ) -> Optional[Union[List[Dict[str, Any]], Dict[str, Any]]]:
-        if not PostgresConnection.connection_pool:
-            bot = Bot.get_current()
-            PostgresConnection.connection_pool = await asyncpg.create_pool(
-                **bot.data['db']
+        if not PostgresConnection.pool:
+            import pytoml
+            with open("data/data.toml") as f:
+                data = pytoml.load(f)
+            PostgresConnection.pool = await asyncpg.create_pool(
+                **data['db']
             )
-        async with PostgresConnection.connection_pool.acquire() as conn:
+        async with PostgresConnection.pool.acquire() as conn:
             conn: asyncpg.Connection = conn
             async with conn.transaction():
                 if fetch:
@@ -37,13 +38,6 @@ class PostgresConnection(RawConnection):
                     return r
                 else:
                     await conn.execute(sql, *params)
-
-    @staticmethod
-    def _convert_to_model(data: Optional[dict], model: Type[T]) -> Optional[T]:
-        if data is not None:
-            return model(**data)
-        else:
-            return None
         
     @staticmethod
     async def _make_request(
@@ -61,10 +55,10 @@ class PostgresConnection(RawConnection):
                 return None
         else:
             if mult:
-                if PostgresConnection:
-                    return [PostgresConnection._convert_to_model(i, model_type) for i in raw]
-                else:
-                    return list(raw)
+                # if PostgresConnection:
+                #     return [PostgresConnection._convert_to_model(i, model_type) for i in raw]
+                # else:
+                return list(raw)
             else:
                 if model_type:
                     return PostgresConnection._convert_to_model(raw, model_type)

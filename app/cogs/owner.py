@@ -1,6 +1,6 @@
 from discord.ext import commands
 
-from .utils import set_owner
+from .utils import set_owner, CustomContext
 
 
 class Owner(commands.Cog):
@@ -9,19 +9,13 @@ class Owner(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def cog_check(self, ctx) -> bool:
-        async with self.bot.bind.acquire() as connection:
-            async with connection.transaction():
-                is_owner = await connection.fetch("""
-                    SELECT is_owner FROM users
-                    WHERE user_id = $1 LIMIT 1;
-                """, ctx.author.id)
-                if is_owner is False:
-                    return False
-                return True
+    async def cog_check(self, ctx: CustomContext) -> bool:
+        sql = "SELECT is_owner FROM users WHERE user_id = $1;"
+        is_owner = await ctx._make_request(sql, (ctx.author.id,), fetch=True)
+        return bool(is_owner)
 
     @commands.command()
-    async def add_owner(self, ctx: commands.Context, user_id: int, remove: str = "1"):
+    async def add_owner(self, ctx: CustomContext, user_id: int, remove: str = "1"):
         """Add Owner by id"""
         r = int(remove) if remove.isdigit() else None
 

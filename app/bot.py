@@ -1,5 +1,6 @@
 import random
 from pathlib import Path
+from typing import Optional
 
 import aiohttp
 import pytoml
@@ -8,10 +9,13 @@ from discord import AsyncWebhookAdapter, Webhook
 from discord.ext import commands
 from loguru import logger
 
-from cogs.utils import log
-from cogs.utils.mixins import ContextInstanceMixin
+from app.cogs.utils import log
+from app.cogs.utils import CustomContext
+from app.cogs.utils import ContextInstanceMixin
 
-LOGS_BASE_PATH = str(Path(__name__).parent.parent / "logs")
+LOGS_BASE_PATH = str(Path(__name__).parent.parent.parent / "logs")
+
+__all__ = ("Bot",)
 
 
 async def get_prefix(bot, message):
@@ -33,7 +37,6 @@ class Bot(commands.AutoShardedBot, ContextInstanceMixin):
     def __init__(self):
         super().__init__(
             command_prefix=get_prefix,
-            case_insensitive=True,
             intents=make_intents()
         )
         # setup in __init__
@@ -44,16 +47,11 @@ class Bot(commands.AutoShardedBot, ContextInstanceMixin):
         self.invoke_errors = 0
         # uptime
         self.launch_time = None
-
-        # extensions for setup in bot
-        self.extensions_ = [
-            "admin", "edit", "misc", "owner",
-            "visual", "write", "events",
-        ]
-        with open("./data/data.toml", 'r') as cfg:
+        self.extensions_ = None
+        with open("data/data.toml") as cfg:
             self.data = pytoml.load(cfg)
 
-    async def get_context(self, message, *, cls=commands.Context):
+    async def get_context(self, message, *, cls=CustomContext):
         # bot cant be used in guilds, it s not working without this
         # so fuck
         if message.guild:
@@ -72,27 +70,49 @@ class Bot(commands.AutoShardedBot, ContextInstanceMixin):
             "Token is READ ONLY!"
         )
 
-    @token.deleter
-    def token(self):
-        self.token = None
+    @property
+    def file_path(self) -> Optional[Path]:
+        up = self.data['bot']['BASE_PATH']
+        if up is None or up == " ":
+            raise TypeError("BASE_PATH is Empty")
+        res = Path(up)
+        return res
+
+    @file_path.setter
+    def file_path(self):
+        import warnings
+        warnings.warn(
+            "File Path is READ ONLY Property"
+        )
+
+    def create_path(self, user_id: int, guild_id: int) -> str:
+        bf = self.file_path
+        return f"{bf}/guild_{guild_id}/user_{user_id}"
 
     async def send_with_webhook(self, *args, **kwargs):
         # maybe its crash everything, but i dk
+        session = aiohttp.ClientSession()
         webhook = Webhook.from_url(
             self.data['bot']['onreadyurl'],
             adapter=AsyncWebhookAdapter(
-                aiohttp.ClientSession()))
+                session))
         await webhook.send(*args, **kwargs)
+        await session.close()
 
     async def run_bot(self):
+        # extensions for setup in bot
+        self.extensions_ = [
+            "admin", "edit", "misc", "owner",
+            "visual", "write", # "events",
+        ]
+
         for extension in self.extensions_:
             try:
-                self.load_extension(f"cogs.{extension}")
+                self.load_extension(f"app.cogs.{extension}")
                 logger.info(f"Loaded {extension}")
             except Exception as e:
                 # if exception cathced, bot running dont stop
                 logger.error(e)
-
         await self.start(self.token)
 
     async def on_ready(self):
@@ -103,7 +123,7 @@ class Bot(commands.AutoShardedBot, ContextInstanceMixin):
 
         await self.send_with_webhook(random.choice(random_text))
 
-    async def create_error_letter(self, error, ctx: commands.Context):
+    async def create_error_letter(self, error, ctx):
         e = discord.Embed(
             title="Error Message: ",
             description=f"Your Error Ticket #{self.invoke_errors}"

@@ -1,5 +1,7 @@
 from discord.ext import commands
 
+from .utils.file_manager import change_file
+
 
 class Edit(commands.Cog):
     __slots__ = ("bot",)
@@ -8,9 +10,9 @@ class Edit(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def edit_l(self, ctx: commands.Context, *, w_text: str):
-        """Edit Current Line"""
-        pass
+    async def edit_l(self, ctx, line: int, *, w_text: str):
+        """Edit Selected Line"""
+
 
 
 def setup(bot):

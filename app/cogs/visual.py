@@ -8,17 +8,17 @@ class Visual(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def all(self, ctx: commands.Context):
+    async def all(self, ctx):
         """Show whole File."""
         pass
 
     @commands.command(aliases=["o"])
-    async def open(self, ctx: commands.Context, file: str):
+    async def open(self, ctx, file: str):
         """Show Selected File."""
         pass
 
     @commands.command()
-    async def line(self, ctx: commands.Context, line: int):
+    async def line(self, ctx, line: int):
         """Show Selected Line, In Current File"""
         pass
 
