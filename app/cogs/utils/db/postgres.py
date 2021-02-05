@@ -60,8 +60,7 @@ class PostgresConnection(RawConnection):
                 # else:
                 return list(raw)
             else:
-                if model_type:
-                    return PostgresConnection._convert_to_model(raw, model_type)
-                else:
-                    return raw
-
+                # if model_type:
+                #     return PostgresConnection._convert_to_model(raw, model_type)
+                # else:
+                return raw

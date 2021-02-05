@@ -9,10 +9,10 @@ class Owner(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def cog_check(self, ctx: CustomContext) -> bool:
-        sql = "SELECT is_owner FROM users WHERE user_id = $1;"
-        is_owner = await ctx._make_request(sql, (ctx.author.id,), fetch=True)
-        return bool(is_owner)
+    # async def cog_check(self, ctx: CustomContext) -> bool:
+    #     sql = "SELECT is_owner FROM users WHERE user_id = $1;"
+    #     is_owner = await ctx._make_request(sql, (ctx.author.id,), fetch=True)
+    #     return bool(is_owner)
 
     @commands.command()
     async def add_owner(self, ctx: CustomContext, user_id: int, remove: str = "1"):

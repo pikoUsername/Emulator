@@ -1,6 +1,7 @@
-import discord
 from discord.ext import commands
 from loguru import logger
+
+from app.cogs.utils import CustomContext
 
 
 class Events(commands.Cog):
@@ -16,8 +17,7 @@ class Events(commands.Cog):
         await self.bot.process_commands(message)
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx, err):
-        print("he")
+    async def on_command_error(self, ctx: CustomContext, err):
         missing_perms = (
             commands.BotMissingPermissions,
             commands.MissingPermissions

@@ -17,5 +17,6 @@ class ContextInstanceMixin:
     @classmethod
     def set_current(cls: Type[T], value: T):
         if not isinstance(value, cls):
-            raise TypeError(f'Value should be instance of {cls.__name__!r} not {type(value).__name__!r}')
+            raise TypeError(f'Value should be instance of'
+                            f' {cls.__name__!r} not {type(value).__name__!r}')
         cls.__context_mixin.set(value)

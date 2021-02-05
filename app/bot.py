@@ -18,11 +18,6 @@ LOGS_BASE_PATH = str(Path(__name__).parent.parent.parent / "logs")
 __all__ = ("Bot",)
 
 
-async def get_prefix(bot, message):
-    # need to do custom prefix for every user
-    return bot.data['bot']["PREFIX"]
-
-
 def make_intents() -> discord.Intents:
     # i used Intent class, not a none intent, it was a bad idea ;(
     intents = discord.Intents.none()
@@ -36,7 +31,7 @@ def make_intents() -> discord.Intents:
 class Bot(commands.AutoShardedBot, ContextInstanceMixin):
     def __init__(self):
         super().__init__(
-            command_prefix=get_prefix,
+            command_prefix=self.get_prefix,
             intents=make_intents()
         )
         # setup in __init__
@@ -57,6 +52,9 @@ class Bot(commands.AutoShardedBot, ContextInstanceMixin):
         if message.guild:
             return
         return await super().get_context(message, cls=cls)
+
+    async def get_prefix(self, message):
+        return self.data['bot']['PREFIX']
 
     @property
     def token(self):
@@ -99,11 +97,14 @@ class Bot(commands.AutoShardedBot, ContextInstanceMixin):
         await webhook.send(*args, **kwargs)
         await session.close()
 
+    async def wait_until_r(self):
+        await self.wait_until_ready()
+
     async def run_bot(self):
         # extensions for setup in bot
         self.extensions_ = [
             "admin", "edit", "misc", "owner",
-            "visual", "write", # "events",
+            "visual", "write", "events",
         ]
 
         for extension in self.extensions_:
@@ -121,7 +122,10 @@ class Bot(commands.AutoShardedBot, ContextInstanceMixin):
             "is Ready Bot, Yes is it", "I gonna Fu...",
         ]
 
-        await self.send_with_webhook(random.choice(random_text))
+        logger.info("BOT READY")
+        await self.wait_until_r()
+
+        # await self.send_with_webhook(random.choice(random_text))
 
     async def create_error_letter(self, error, ctx):
         e = discord.Embed(

@@ -1,6 +1,4 @@
-import discord
 from discord.ext import commands
-from loguru import logger
 
 
 class Admin(commands.Cog):

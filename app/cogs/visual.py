@@ -1,5 +1,7 @@
 from discord.ext import commands
 
+from app.cogs.utils import CustomContext
+
 
 class Visual(commands.Cog):
     __slots__ = ("bot",)
@@ -13,12 +15,12 @@ class Visual(commands.Cog):
         pass
 
     @commands.command(aliases=["o"])
-    async def open(self, ctx, file: str):
+    async def open(self, ctx: CustomContext, file: str):
         """Show Selected File."""
         pass
 
     @commands.command()
-    async def line(self, ctx, line: int):
+    async def line(self, ctx: CustomContext, line: int):
         """Show Selected Line, In Current File"""
         pass
 

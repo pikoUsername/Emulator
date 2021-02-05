@@ -1,5 +1,7 @@
 from discord.ext import commands
 
+from app.cogs.utils import CustomContext
+
 
 class Write(commands.Cog):
     __slots__ = ("bot",)
@@ -8,7 +10,7 @@ class Write(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=['w'])
-    async def write(self, ctx, *, txt: str):
+    async def write(self, ctx: CustomContext, *, txt: str):
         """Write To Cursor Position"""
         pass
 

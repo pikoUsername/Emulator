@@ -4,16 +4,19 @@ import discord
 from discord.ext import commands
 import aiofiles
 
+from app.cogs.utils import CustomContext
+
 
 class Misc(commands.Cog):
     __slots__ = ("bot",)
 
-    def __init__(self, bot: 'Bot'):
+    def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["q"])
-    async def quit(self, ctx):
-        pass
+    async def cog_check(self, ctx) -> bool:
+        if ctx.guild:
+            return False
+        return True
 
     async def search_in_all_files(self, fp: str, regex: str):
         import glob
@@ -34,8 +37,12 @@ class Misc(commands.Cog):
             return [m if m in [f'{query}\n', query]  # todo search with regex
                     else None for m in f.readlines()]
 
-    @commands.command(aliases=["s/"])
-    async def search(self, ctx, *, args: str):
+    @commands.command(aliases=["q"])
+    async def quit(self, ctx):
+        pass
+
+    @commands.command(aliases=["s"])
+    async def search(self, ctx: CustomContext, *, args: str):
         """
         Command Search in files(file)
 
@@ -100,7 +107,7 @@ class Misc(commands.Cog):
             return await ctx.send("No Results Found...")
 
     @commands.command()
-    async def start(self, ctx, ref_id: int):
+    async def start(self, ctx: CustomContext):
         """
         On Type command, check out if user exists,
         and if user exists, then he ll send the fuck
@@ -110,7 +117,7 @@ class Misc(commands.Cog):
         ```
         """
         sql = "INSERT INTO users(user_id, name, is_owner) VALUES($1, $2, $3);"
-        print(ctx)
+
         await ctx._make_request(sql, (
             ctx.author.id, ctx.author.display_name, False
         ), fetch=True)
