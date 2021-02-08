@@ -1,3 +1,4 @@
+import glob
 import re
 
 import aiofiles
@@ -12,8 +13,6 @@ class Search(commands.Cog):
         self.bot = bot
 
     async def search_in_all_files(self, fp: str, regex: str):
-        import glob
-
         results = []
         for f in glob.glob(f"{fp}/*"):
             async with aiofiles.open(f) as file:

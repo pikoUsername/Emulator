@@ -2,6 +2,7 @@ import asyncio
 import os
 from os.path import join
 
+import aiofiles
 from discord.ext import commands
 from loguru import logger
 import discord
@@ -33,27 +34,8 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """
         Create Repo In Your User Directory, And Its Not Working.
         """
-        [_, user] = await reg_user(ctx, check=False)
-        await load_code_from_github(owner, repo, user.user_path, branch)
-
-    @commands.command()
-    async def start(self, ctx: commands.Context):
-        """ register user, and create user folder in guild"""
-        try:
-            [result, _] = await reg_user(ctx)
-        except ValueError:
-            result = None
-
-        if result is None:
-            await ctx.send("User Aleardy Exists")
-        return await ctx.send("Success Fully :white_check_mark: ")
-
-    @commands.command()
-    async def add(self, ctx: commands.Context, *, text: str):
-        """ add current file text which you add in command """
-        [_, user] = await reg_user(ctx, check=False)
-        await self.fm.write_to_file(text, user.user_path)
-        await ctx.message.add_reaction("✅")
+        user_path = str(create_path(ctx.guild.id, ctx.author.id))
+        await load_code_from_github(owner, repo, user_path, branch)
 
     @commands.command()
     async def go_to_file(self, ctx: commands.Context, *, file: str):
@@ -70,24 +52,18 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         await ctx.send(embed=discord.Embed(title=f"Success, {self.bot.APPLY_EMOJI}",
                                            description=f"Now your current file is ``{file}``"))
 
-    @commands.command(aliases=["remove_line"])
-    async def rm_line(self, ctx: commands.Context, *, line: str):
-        """ remove selected line in currect file, make sure you know what there"""
-        if not line.isdigit():
-            await ctx.send("perameter not a digit!")
-            return
-
-        [_, user] = await reg_user(ctx)
-
-        embed = discord.Embed(
-            title=f"Success deleted line, {self.bot.APPLY_EMOJI}",
-            description=f"Deleted line {line}")
-
-        await self.fm.change_line(user.current_file, line)
-        await ctx.send(embed=embed)
-
     @commands.command(aliases=("mv",))
-    async def move(self, ctx: commands.Context, file: str, *, to_change: str):
+    async def move(self, ctx: commands.Context, *, args: str):
+        """
+        Rename file, have some mods
+
+        ========= ============================
+        Chareters Meaning
+        --------- ----------------------------
+        '-f'      flag for some files
+        '-U'      check for unicode
+        ========= ============================
+        """
         [_, user] = await reg_user(ctx, check=False)
 
         try:
@@ -102,36 +78,38 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
 
     @commands.command(alises=("w",))
     async def write(self, ctx: commands.Context, file: str, *, text: str):
-        """ Write to current file, if you do not select file. You can type anything """
+        """
+        Write to current file,
+        if you do not select file.
+        You can type anything.
+
+        * Write to file, not append, this command have some mods
+
+        ========= ===============================================================
+        Character Meaning
+        --------- ---------------------------------------------------------------
+        'append'  append to end of file
+        'start'   add text to start of file
+        'center'  add to center of file
+        'line'    selected line ll re-write
+        ========= ===============================================================
+        """
         [_, user] = await reg_user(ctx, check=False)
+
         user_file = file or user.current_file
         embed = discord.Embed(colour=discord.Colour.random())
 
         try:
-            with os.open(user_file, os.O_RDONLY) as file:
+            async with aiofiles.open(user_file) as file:
                 await self.bot.loop.run_in_executor(None, file.write, text)
+
             embed.title = f"Succes {self.bot.APPLY_EMOJI}"
             embed.description = f"Writed to current file, check it out with command, {self.bot.command_prefix}cf."
+            return await ctx.send(embed=embed)
         except FileNotFoundError:
-            embed.title = f"ERROR, {self.bot.X_EMOJI}"
-            embed.description = "Error, file not exists"
+            pass
         except UnicodeEncodeError:
-            embed.title = f"ERROR {self.bot.X_EMOJI}"
-            embed.description = "You try write to file, emoji or something like this, its unacceptable"
-        return await ctx.send(embed=embed)
-
-    @commands.command(aliases=("cf",))
-    async def current_file(self, ctx: commands.Context):
-        """ get current user file """
-        user = await User.get_user_by_id(ctx.author.id)
-
-        try:
-            if not os.path.exists(user.current_file):
-                await create_files(ctx.guild.id, user_id=ctx.author.id)
-            await ctx.send(f"Your current file ```{user.current_file}```")
-        except AttributeError as exc:
-            logger.error(exc)
-            await ctx.send("You Not Authed as User")
+            pass
 
     @commands.command(aliases=("rm", "remove_file", "remove"))
     async def rm_file(self, ctx: commands.Context, file: str):
@@ -156,20 +134,6 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
             return await ctx.message.add_reaction("❌")
         except FileNotFoundError:
             return await ctx.send("File Not Exists")
-        await ctx.message.add_reaction("✅")
-
-    @commands.command()
-    async def mkdir(self, ctx: commands.Context, path: str, *, name: str):
-        """ make dir in any directory! only owner """
-        user = await User.get_user_by_id(ctx.author.id)
-
-        if not user.is_owner and user:
-            return
-
-        loop = asyncio.get_running_loop()
-
-        to_create = f"{path}/{name}"
-        await loop.run_in_executor(None, os.mkdir, to_create)
         await ctx.message.add_reaction("✅")
 
     @commands.command(aliases=["create_file"])
@@ -203,8 +167,10 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """
         user_id = member.id if member else ctx.author.id
         user_path = create_path(ctx.guild.id, user_id)
+
         if not os.path.exists(user_path):
             return await ctx.send("Type Start for to able activate this command")
+
         loop = asyncio.get_running_loop()
         all_files = await loop.run_in_executor(
             None, os.listdir, user_path)
@@ -271,20 +237,6 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
     def get_date_as_string(dt):
         import time
         return time.strftime('%H:%M:%S %m.%d.%y', time.gmtime(dt))
-
-    @commands.command(aliases=['s/'])
-    async def search(self, ctx: commands.Context, *, query: str):
-        """
-        Search In current File
-        """
-        [_, user] = await reg_user(ctx)
-
-        results = await self.fm.search_in_file(query, user.current_file)
-        if not results:
-            return await ctx.send(embed=discord.Embed(title="Results",
-                                                      description="No Results Found..."))
-        return await ctx.send(embed=discord.Embed(title="Results",
-                                                  description="```{}```".format(''.join(results))))
 
 
 def setup(bot):

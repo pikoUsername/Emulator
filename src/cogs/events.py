@@ -1,3 +1,4 @@
+import os
 import sys
 
 from discord.ext import commands
@@ -17,7 +18,6 @@ class DiscordEvents(commands.Cog, name="Events"):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        import os
         if os.environ.get("notify_admins"):
             await notify_all_owners(self.bot, text="BOT STARTED")
 
@@ -34,7 +34,7 @@ class DiscordEvents(commands.Cog, name="Events"):
         logger.info("leaved and deleted thats guild folder")
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, err):
+    async def on_command_error(self, ctx, err):
         if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
             helper = str(ctx.invoked_subcommand) if ctx.invoked_subcommand else str(ctx.command)
             await ctx.send_help(helper)
@@ -56,14 +56,12 @@ class DiscordEvents(commands.Cog, name="Events"):
         elif isinstance(err, errors.MissingPermissions):
             await ctx.send(embed=discord.Embed(
                 title=f"Fail {self.bot.X_EMOJI}",
-                description="Permission ERROR",
-            ))
+                description="Permission ERROR"))
 
         elif isinstance(err, errors.CheckFailure):
             await ctx.send(embed=discord.Embed(
                 title=f"Fail {self.bot.X_EMOJI}",
-                description="You cant made this",
-            ))
+                description="You cant made this"))
 
         elif isinstance(err, errors.MaxConcurrencyReached):
             await ctx.send(
@@ -79,8 +77,9 @@ class DiscordEvents(commands.Cog, name="Events"):
             pass
 
         elif isinstance(err, errors.NoPrivateMessage):
-            await ctx.send(embed=discord.Embed(title="Private message Not work",
-                                               description="Bot work only in guild channels"))
+            await ctx.send(
+                embed=discord.Embed(title="Private message Not work",
+                                    description="Bot work only in guild channels"))
 
         else:
             logger.exception(err)

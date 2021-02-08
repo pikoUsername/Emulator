@@ -12,15 +12,17 @@ from src.config import PREFIX
 
 
 class DiscordInfo(commands.Cog):
-    __slots__ = "bot",
+    __slots__ = ("bot")
     """ Info about bot and etc. """
     def __init__(self, bot):
         self.bot = bot
 
     async def cog_check(self, ctx):
         if not ctx.guild:
-            raise commands.NoPrivateMessage
+            return False
+
         return True
+
 
     @commands.command(aliases=("?",))
     async def info(self, ctx: commands.Context):
@@ -61,12 +63,12 @@ class DiscordInfo(commands.Cog):
     @commands.command()
     async def ping(self, ctx: commands.Context):
         """ Pong """
-        first_time = time.perf_counter()
+        first_time = time.time()
 
         message = await ctx.send("...")
         ping = int(self.bot.latency * 1000)
 
-        second_time = first_time - time.perf_counter()
+        second_time = first_time - time.time()
         text = (
             f"Message Ping: {int(second_time + ping)}",
             f"Bot Latency: {ping}",
@@ -132,20 +134,6 @@ class DiscordInfo(commands.Cog):
             embed=discord.Embed(title="Invite",
                                 description="[Click here to invite]"
                                             f"({discord.utils.oauth_url(self.bot.client_id, perms)})"))
-
-    @commands.command()
-    async def select(self, ctx: commands.Context, *, user_id: int = None):
-        """ Get Selected User."""
-        user_id = user_id or ctx.author.id
-        user = await User.get_user_by_id(user_id)
-        try:
-            embed = discord.Embed(
-                title="Selected User",
-                description=f"name: {user.username}\nis owner: {user.is_owner}\ncurrent_file: {user.current_file}"
-                            f"\nuser path: {user.user_path}\ncreated at: {user.created_at}")
-        except AttributeError:
-            return await ctx.send("User Not Authed as User")
-        return await ctx.send(embed=embed)
 
 
 def setup(bot):

@@ -3,9 +3,9 @@ from typing import List
 import os
 from math import ceil
 
+import aiofiles
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from src.config import LOGS_BASE_PATH
 from src.utils.set_owner import create_owner_user
@@ -96,7 +96,7 @@ class OwnerCommands(commands.Cog, name="Owner"):
         file_ = self.last_log
         file_name = ''.join(file_)
 
-        with open(f"{file_name}", "r") as file:
+        async with aiofiles.open(f"{file_name}", "r") as file:
             text = file.read()
 
         if len(text) <= 2048:
