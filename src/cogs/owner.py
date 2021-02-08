@@ -143,26 +143,6 @@ class OwnerCommands(commands.Cog, name="Owner"):
 
         await ctx.send(f"Successfully reloaded:\n{', '.join(successful)}")
 
-    def change_error_channel(self, channel_id: int):
-        err_channel = getattr(self.bot, '_error_channel', None)
-        if not err_channel:
-            logger.error("Error channel not exists")
-            raise ValueError("Error channel not exists")
-
-        new_err_channel = self.bot.get_channel(channel_id)
-        setattr(self.bot, '_error_channel', new_err_channel)
-
-    @commands.command()
-    async def change_err_channel(self, ctx: commands.Context, channel_id: int):
-        try:
-            result = self.change_error_channel(channel_id)
-        except ValueError:
-            result = None
-
-        if not result:
-            return await ctx.send("Error channel not exists")
-        await ctx.message.add_reaction("✅")
-
 
 def setup(bot):
     """Setup Owner Commands"""

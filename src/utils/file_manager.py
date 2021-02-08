@@ -1,18 +1,7 @@
 import asyncio
-import functools
 import os
-from typing import List
-from pathlib import Path
-import shutil
-import glob
-
-from loguru import logger
-
-from ..config import BASE_PATH
-from .mixins import ContextInstanceMixin
-
-
-__all__ = ("FileManager", "wrap")
+import functools
+from typing import IO, List
 
 
 def wrap(func):
@@ -26,220 +15,89 @@ def wrap(func):
     return run
 
 
-class FileManager(ContextInstanceMixin):
-    def __init__(self, loop=None):
-        """
-        :param loop: need for execute blocking IO
-        """
-        if loop is None:
-            self._loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
-        self._loop: asyncio.AbstractEventLoop = loop
+@wrap
+def read_file(fp: str) -> List[str]:
+    f = open(fp, "r")
+    try:
+        saved = f.readlines()
+    finally:
+        f.close()
+    return saved
 
-    @staticmethod
-    def _create_file(name: str, user_path: str) -> None:
-        """
-        Private func
 
-        it uses for creating file, but its blocking io
-        and this func run in executor
-        calling for create file
+stat = wrap(os.stat)
+rename = wrap(os.rename)
+remove = wrap(os.remove)
+mkdir = wrap(os.mkdir)
+rmdir = wrap(os.rmdir)
 
-        :param name:
-        :param user_path:
-        :return:
-        """
-        if not name:
-            return
-        with open(f"{user_path}/{name}", "w"):
-            pass
 
-    @staticmethod
-    def list_files(user) -> List[str]:
-        """
-        Get user path based on user model
-        no checks
+@wrap
+def create_file(fp: str, name: str):
+    with open(fr"{fp}\{name}", "w"):
+        pass
 
-        :param user:
-        :return:
-        """
-        file_path = user.user_path
 
-        files = os.listdir(file_path)
-        return files
+@wrap
+def change_file(fp: str, text: str, mode: str, *, line: int = None):  # changed or add lines
+    """
+    changed file, with modes
 
-    @staticmethod
-    @wrap
-    def create_guild_folder(guild_id: int):
-        """
-        create guild folder, and when bot joins guild folder will create
+    :param fp: path to file
+    :param text: to edit
+    :param mode: available modes
+    modes cant be both, this mutually modes
 
-        :param guild_id:
-        :return:
-        """
-        bs_p = Path(__file__).parent.parent.parent
-        guild_path = fr"{bs_p}\{BASE_PATH}\guild_{guild_id}"
+    ========= ===============================================================
+    Character Meaning
+    --------- ---------------------------------------------------------------
+    'append'  append to end of file
+    'start'   add text to start of file
+    'center'  add to center of file
+    'line'    selected line ll re-write
+    ========= ===============================================================
 
-        p = fr"{bs_p}\{BASE_PATH}"
-        if os.path.exists(p):
-            pass
+    :param line: need for 'line' mode
+    * if text not ends with '\n', automacly adds char
+    """
+    available_modes = (
+        "append", "start", "center", "line")
+    fp = open(fp, "w")
+
+    if mode not in available_modes or "w" not in fp.mode:
+        fp.close()
+        raise TypeError("Invalid Mode")
+
+    if not text.endswith('\n'):
+        text += "\n"
+
+    if line:
+        if mode != "line":
+            raise ValueError("line and not line mode is unacaptable")  # for handling in handle
         else:
-            os.mkdir(p)
+            c = change_line(fp, text, line)
 
-        if os.path.exists(guild_path):
-            return
+    elif mode == available_modes[0]:
+        c = change_line(fp=fp, text=text, line=-1)
 
-        os.mkdir(guild_path)
+    elif mode == available_modes[1] and line is None:
+        c = change_line(fp, text, 0)
 
-    @staticmethod
-    @wrap
-    def create_user_folder(user_path: str, user_id: int):
-        """
-        Private function
-        get user_path and create user folder in guild_{guild_id}/ path
+    elif mode == available_modes[2]:
+        center = int(len(fp.readlines()) / 2)
+        c = change_line(fp, text, center)
+    fp.close()
+    try:
+        return c
+    except NameError:
+        return 1
 
-        :param user_path:
-        :param user_id:
-        :return:
-        """
-        user_path = user_path
-        user_path_len = len(user_path)
 
-        path_to_slice = len(f"user_{user_id}")
-        path_final = user_path_len - path_to_slice
-        print(user_path[0:path_final])
-        if not os.path.exists(user_path[0:path_final]):
-            os.mkdir(user_path[0:path_final])
-        if os.path.exists(user_path):
-            return
-        os.mkdir(user_path)
-
-    @staticmethod
-    async def delete_all_guild_files(guild_id: int = None):
-        """
-        Deleting all files from working directory!
-        if DELETE_ALL_FILES is true that delete all files from file/ directory
-        :return:
-        """
-        if not guild_id:
-            list_dirs = glob.glob(fr"{BASE_PATH}\*")
-        else:
-            list_dirs = glob.glob(fr"{BASE_PATH}\guild_{guild_id}")
-        successful = []
-        unsuccessful = {}
-        for dirs in list_dirs:
-            try:
-                shutil.rmtree(dirs)
-                successful.append(dirs)
-            except (FileExistsError, FileNotFoundError, NotADirectoryError) as exc:
-                unsuccessful[dirs] = exc
-
-    @staticmethod
-    @wrap
-    def remove_user_folder(user):
-        """
-        Removes user folder, with all files directory
-
-        :param user:
-        :return:
-        """
-        user_path = user.user_path
-
-        if not user_path:
-            return
-
-        list_files = os.listdir(user_path)
-        for file in list_files:
-            os.remove(f"{user_path}/{file}")
-        shutil.rmtree(user_path)
-        user.delete()
-
-    @staticmethod
-    @wrap
-    def get_line(line: int, user):
-        """
-        get user path and select this, and open it
-
-        :param line:
-        :param user:
-        :return:
-        """
-        user_file = user.current_file
-        with open(user_file, "r") as f:
-            data = f.readlines()
-
-        return data[line]
-
-    @staticmethod
-    @wrap
-    def change_line(user_cur_f: str, line: int, to_change: str):
-        with open(user_cur_f, "w") as file:
-            file.seek(line)
-            file.write(to_change)
-
-    async def change_file_name(self, user_path: str, file: str, to_change: str):
-        await self._loop.run_in_executor(None, os.rename, fr"{user_path}\{file}", fr"{user_path}\{to_change}")
-
-    async def create_file(self, file_name: str, user_path: str):
-        """
-        Create file based on user path
-        and user can set type of file
-        if not type then creates .py file
-
-        :param file_name:
-        :param user_path:
-        :return:
-        """
-
-        if not os.path.exists(f"{user_path}/{file_name}"):
-            loop = self._loop
-            try:
-                await loop.run_in_executor(None, self._create_file, file_name, user_path)
-            except OSError as exc:
-                logger.error(exc)
-
-    async def remove_file(self, filename: str, user_path: str):
-        """
-        need user, and filename argument for delete file
-        run os.remove blocking io in executor
-
-        :param filename:
-        :param user_path:
-        :return:
-        """
-
-        if not filename:
-            return
-        await self._loop.run_in_executor(None, os.remove, f"{user_path}/{filename}")
-
-    async def read_file(self, filename: str, user_path: str):
-        with open(fr"{user_path}\{filename}", "r") as f:
-            return f.readlines()
-
-    @wrap
-    def open_file(self, fp: str, mode: str):
-        return open(fp, mode)
-
-    @wrap
-    def write_to_file(self, text: str, current_file: str):
-        """
-        checks for user current file if not current file
-        function dissmiss it.
-        in stock user.current_file is main.py, starter script
-
-        :param text:
-        :param current_file:
-        :return:
-        """
-        if not self.list_files:
-            return
-
-        with open(current_file, "r") as f:
-            saved_lines = f.readlines()
-            with open(current_file, "w") as file:
-                saved_lines.append(text)
-                file.write("".join(saved_lines))
-
-    @wrap
-    def search_in_file(self, query: str, current_file: str):
-        with open(current_file, 'r') as f:
-            return [m if m in [f'{query}\n', query] else None for m in f.readlines()]
+@wrap
+def change_line(fp: IO, text: str, line: int) -> int:
+    saved = fp.readlines()
+    if not saved:
+        fp.write(text)
+    saved[line] = text
+    c = fp.write(saved)
+    return c
