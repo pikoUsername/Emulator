@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import os
 from os.path import join
@@ -7,10 +8,10 @@ from discord.ext import commands
 from loguru import logger
 import discord
 
-from src.utils.file_manager import FileManager
 from .utils.upload import load_code_from_github
-from src.models import User, reg_user, create_files
+from src.models import User, reg_user
 from src.config import BASE_PATH
+from src.utils.file_manager import remove, rename, change_file
 
 __all__ = ("setup",)
 
@@ -22,7 +23,6 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
     """Files Redactor..."""
     def __init__(self, bot):
         self.bot = bot
-        self.fm = FileManager.get_current()
 
     async def cog_check(self, ctx):
         if not ctx.guild:
@@ -37,37 +37,21 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         user_path = str(create_path(ctx.guild.id, ctx.author.id))
         await load_code_from_github(owner, repo, user_path, branch)
 
-    @commands.command()
-    async def go_to_file(self, ctx: commands.Context, *, file: str):
-        """
-        Set current file, and checks you out
-        If you exists, your table current_file changes
-        """
-        [_, user] = await reg_user(ctx, check=False)
-
-        if not os.path.exists(f"{user.user_path}/{file}"):
-            return await ctx.send("File not exists")
-
-        await user.update(current_file=f"{user.user_path}/{file}").apply()
-        await ctx.send(embed=discord.Embed(title=f"Success, {self.bot.APPLY_EMOJI}",
-                                           description=f"Now your current file is ``{file}``"))
-
     @commands.command(aliases=("mv",))
-    async def move(self, ctx: commands.Context, *, args: str):
+    async def move(self, ctx: commands.Context, file: str, to_change: str):
         """
         Rename file, have some mods
 
         ========= ============================
         Chareters Meaning
         --------- ----------------------------
-        '-f'      flag for some files
-        '-U'      check for unicode
+        '-f'      file to rename
         ========= ============================
         """
-        [_, user] = await reg_user(ctx, check=False)
+        path = create_path(ctx.guild.id, ctx.author.id)
 
         try:
-            result = await self.fm.change_file_name(user.user_path, file, to_change)
+            result = await rename(f"{path}/{file}", f"{path}/{to_change}")
         except (FileNotFoundError, PermissionError) as e:
             logger.error(e)
             result = None
@@ -77,7 +61,7 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         return await ctx.message.add_reaction("✅")
 
     @commands.command(alises=("w",))
-    async def write(self, ctx: commands.Context, file: str, *, text: str):
+    async def write(self, ctx: commands.Context, *args: str):
         """
         Write to current file,
         if you do not select file.
@@ -85,31 +69,18 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
 
         * Write to file, not append, this command have some mods
 
-        ========= ===============================================================
-        Character Meaning
-        --------- ---------------------------------------------------------------
-        'append'  append to end of file
-        'start'   add text to start of file
-        'center'  add to center of file
-        'line'    selected line ll re-write
+        ========== ===============================================================
+        Character  Meaning
+        ---------- ---------------------------------------------------------------
+        '--append'  append to end of file
+        '--start'   add text to start of file
+        '--center'  add to center of file
+        '--line'    selected line ll re-write
         ========= ===============================================================
         """
-        [_, user] = await reg_user(ctx, check=False)
-
-        user_file = file or user.current_file
-        embed = discord.Embed(colour=discord.Colour.random())
-
-        try:
-            async with aiofiles.open(user_file) as file:
-                await self.bot.loop.run_in_executor(None, file.write, text)
-
-            embed.title = f"Succes {self.bot.APPLY_EMOJI}"
-            embed.description = f"Writed to current file, check it out with command, {self.bot.command_prefix}cf."
-            return await ctx.send(embed=embed)
-        except FileNotFoundError:
-            pass
-        except UnicodeEncodeError:
-            pass
+        p = argparse.ArgumentParser()
+        p.add_argument('--append', '-a')
+        change_file()
 
     @commands.command(aliases=("rm", "remove_file", "remove"))
     async def rm_file(self, ctx: commands.Context, file: str):
@@ -129,11 +100,13 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
             return await ctx.send(f"Type {self.bot.command_prefix}start, and come here again")
 
         try:
-            await self.fm.remove_file(file, user.user_path)
+
         except AttributeError:
             return await ctx.message.add_reaction("❌")
+
         except FileNotFoundError:
             return await ctx.send("File Not Exists")
+
         await ctx.message.add_reaction("✅")
 
     @commands.command(aliases=["create_file"])
@@ -142,11 +115,15 @@ class TextRedacotorCog(commands.Cog, name="Redactor"):
         """ create file in your folder """
         if len(file_name) >= 78:
             return
+
         elif os.path.exists(f"{BASE_PATH}/{file_name}"):
             await ctx.send("this File aleardy exists")
 
         user_path = create_path(ctx.guild.id, ctx.author.id)
-        await self.fm.create_file(file_name=file_name, user_path=user_path)
+
+        async with aiofiles.open(f"{user_path}/{file_name}", "w"):
+            pass
+
         await ctx.message.add_reaction("✅")
 
     @commands.command(aliases=["list", "list_files"])

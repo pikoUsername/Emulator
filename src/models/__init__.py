@@ -1,9 +1,8 @@
 from .guild import Guild
-from .user import User, reg_user, create_files
+from .user import User, reg_user
 
 __all__ = (
     "Guild",
     "User",
     "reg_user",
-    "create_files"
 )

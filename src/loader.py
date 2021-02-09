@@ -26,11 +26,10 @@ from .config import POSTGRES_URI, WEB_HOOK_URL
 
 
 class Bot(commands.AutoShardedBot, ):
-    def __init__(self, fm):
+    def __init__(self):
         super().__init__(command_prefix=PREFIX, description=description,
                          help_attrs=dict(hidden=True), pm_help=None)
 
-        self.fm = fm
         self.spammer = Spammer(self)
         self.help_command = HelpFormat()
         self.token = TOKEN

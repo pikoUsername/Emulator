@@ -8,4 +8,5 @@ discord-flags
 alembic==1.4.3
 click==7.1.2
 aiohttp-autoreload==0.0.1
+aiofiles
 git+https://github.com/Rapptz/discord-ext-menus

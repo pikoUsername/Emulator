@@ -33,12 +33,6 @@ rmdir = wrap(os.rmdir)
 
 
 @wrap
-def create_file(fp: str, name: str):
-    with open(fr"{fp}\{name}", "w"):
-        pass
-
-
-@wrap
 def change_file(fp: str, text: str, mode: str, *, line: int = None):  # changed or add lines
     """
     changed file, with modes

@@ -5,7 +5,6 @@ from loguru import logger
 import click
 
 from ..loader import Bot
-from .file_manager import FileManager
 
 try:
     import aiohttp_autoreload
@@ -43,9 +42,7 @@ def auto_reload_mixin(func):
 @cli.command()
 @auto_reload_mixin
 def polling():
-    fm = FileManager()
-    FileManager.set_current(fm)
-    bot = Bot(fm=fm)
+    bot = Bot()
     loop = asyncio.get_event_loop()
     run = loop.run_until_complete
 
